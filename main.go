@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/likecoin/tm-postgres-indexer/cmd"
+	"github.com/likecoin/likecoin-chain-tx-indexer/cmd"
 )
 
 func main() {

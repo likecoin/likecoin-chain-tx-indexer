@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackc/pgx/v4"
 	"github.com/likecoin/likechain/app"
-	"github.com/likecoin/tm-postgres-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/state/txindex/kv"
 	"github.com/tendermint/tendermint/store"

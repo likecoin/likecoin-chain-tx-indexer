@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/likecoin/likechain/app"
-	"github.com/likecoin/tm-postgres-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/tendermint/go-amino"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	coreTypes "github.com/tendermint/tendermint/rpc/core/types"

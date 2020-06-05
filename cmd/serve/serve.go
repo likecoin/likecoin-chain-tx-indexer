@@ -3,9 +3,9 @@ package serve
 import (
 	"context"
 
-	"github.com/likecoin/tm-postgres-indexer/db"
-	"github.com/likecoin/tm-postgres-indexer/poller"
-	"github.com/likecoin/tm-postgres-indexer/rest"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/poller"
+	"github.com/likecoin/likecoin-chain-tx-indexer/rest"
 	"github.com/spf13/cobra"
 )
 

@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/likecoin/tm-postgres-indexer/db"
-	"github.com/likecoin/tm-postgres-indexer/importdb"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/importdb"
 )
 
 var Command = &cobra.Command{

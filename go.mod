@@ -1,4 +1,4 @@
-module github.com/likecoin/tm-postgres-indexer
+module github.com/likecoin/likecoin-chain-tx-indexer
 
 go 1.14
 

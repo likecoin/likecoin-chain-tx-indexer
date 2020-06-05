@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/likecoin/tm-postgres-indexer/cmd/importdb"
-	"github.com/likecoin/tm-postgres-indexer/cmd/serve"
-	"github.com/likecoin/tm-postgres-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/cmd/importdb"
+	"github.com/likecoin/likecoin-chain-tx-indexer/cmd/serve"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 )
 
 var rootCmd = &cobra.Command{
