@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"fmt"
+	"net/http/httputil"
 	"net/url"
 	"strconv"
 	"strings"
@@ -84,60 +85,84 @@ type Response struct {
 	Txs        []interface{} `json:"txs"`
 }
 
-func Run(conn *pgx.Conn, listenAddr string) {
-	router := gin.New()
-	router.GET("/txs", func(c *gin.Context) {
-		q := c.Request.URL.Query()
-		var page int64
-		var limit int64
-		var err error
-		pageStr := q.Get("page")
-		if pageStr == "" {
-			page = 1
-		} else {
-			page, err = strconv.ParseInt(pageStr, 10, 64)
-			if err != nil || page < 1 {
-				c.AbortWithStatus(400)
-				return
-			}
-		}
-		limitStr := q.Get("limit")
-		if limitStr == "" {
-			limit = 1
-		} else {
-			limit, err = strconv.ParseInt(limitStr, 10, 64)
-			if err != nil || limit < 1 || limit > 100 {
-				c.AbortWithStatus(400)
-				return
-			}
-		}
-		attrs := getAttributes(q)
-		if len(attrs) == 0 {
-			c.AbortWithStatusJSON(400, "Need attribute")
+func handleTxsSearch(c *gin.Context, conn *pgx.Conn) {
+	q := c.Request.URL.Query()
+	var page int64
+	var limit int64
+	var err error
+	pageStr := q.Get("page")
+	if pageStr == "" {
+		page = 1
+	} else {
+		page, err = strconv.ParseInt(pageStr, 10, 64)
+		if err != nil || page < 1 {
+			c.AbortWithStatus(400)
 			return
 		}
-		if len(attrs) > 1 {
-			c.AbortWithStatusJSON(400, "only 1 attribute supported")
+	}
+	limitStr := q.Get("limit")
+	if limitStr == "" {
+		limit = 1
+	} else {
+		limit, err = strconv.ParseInt(limitStr, 10, 64)
+		if err != nil || limit < 1 || limit > 100 {
+			c.AbortWithStatus(400)
 			return
 		}
-		attr := attrs[0]
-		totalCount, err := queryCount(conn, attr)
-		if err != nil {
-			c.AbortWithError(500, err)
-		}
-		totalPages := (totalCount-1)/limit + 1
-		txs, err := queryTxs(conn, attr, limit, page)
-		if err != nil {
-			c.AbortWithError(500, err)
-		}
-		c.JSON(200, Response{
-			TotalCount: fmt.Sprintf("%d", totalCount),
-			Count:      fmt.Sprintf("%d", len(txs)),
-			Page:       fmt.Sprintf("%d", page),
-			PageTotal:  fmt.Sprintf("%d", totalPages),
-			Limit:      fmt.Sprintf("%d", limit),
-			Txs:        txs,
-		})
+	}
+	attrs := getAttributes(q)
+	if len(attrs) == 0 {
+		c.AbortWithStatusJSON(400, "Need attribute")
+		return
+	}
+	if len(attrs) > 1 {
+		c.AbortWithStatusJSON(400, "only 1 attribute supported")
+		return
+	}
+	attr := attrs[0]
+	totalCount, err := queryCount(conn, attr)
+	if err != nil {
+		c.AbortWithError(500, err)
+	}
+	totalPages := (totalCount-1)/limit + 1
+	txs, err := queryTxs(conn, attr, limit, page)
+	if err != nil {
+		c.AbortWithError(500, err)
+	}
+	c.JSON(200, Response{
+		TotalCount: fmt.Sprintf("%d", totalCount),
+		Count:      fmt.Sprintf("%d", len(txs)),
+		Page:       fmt.Sprintf("%d", page),
+		PageTotal:  fmt.Sprintf("%d", totalPages),
+		Limit:      fmt.Sprintf("%d", limit),
+		Txs:        txs,
 	})
+}
+
+func Run(conn *pgx.Conn, listenAddr string, lcdEndpoint string) {
+	lcdURL, err := url.Parse(lcdEndpoint)
+	if err != nil {
+		panic(err)
+	}
+	proxy := httputil.NewSingleHostReverseProxy(lcdURL)
+	proxyHandler := func(c *gin.Context) {
+		proxy.ServeHTTP(c.Writer, c.Request)
+	}
+
+	router := gin.New()
+	router.GET("/*endpoint", func(c *gin.Context) {
+		endpoint, ok := c.Params.Get("endpoint")
+		if !ok {
+			// ??? Gin bug?
+			c.AbortWithStatus(500)
+			return
+		}
+		if endpoint == "/txs" {
+			handleTxsSearch(c, conn)
+			return
+		}
+		proxyHandler(c)
+	})
+	router.POST("/*endpoint", proxyHandler)
 	router.Run(listenAddr)
 }

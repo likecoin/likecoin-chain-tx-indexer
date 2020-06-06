@@ -35,7 +35,7 @@ var Command = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		go rest.Run(restConn, listenAddr)
+		go rest.Run(restConn, listenAddr, lcdEndpoint)
 		poller.Run(pollerConn, lcdEndpoint)
 	},
 }
