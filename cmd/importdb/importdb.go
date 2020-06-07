@@ -2,13 +2,12 @@ package importdb
 
 import (
 	"context"
-	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/importdb"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
 var Command = &cobra.Command{
@@ -34,8 +33,7 @@ var Command = &cobra.Command{
 
 func Execute() {
 	if err := Command.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		logger.L.Fatalw("Import command execution failed", "error", err)
 	}
 }
 

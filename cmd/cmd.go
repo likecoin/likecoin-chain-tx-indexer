@@ -1,14 +1,12 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/cmd/importdb"
 	"github.com/likecoin/likecoin-chain-tx-indexer/cmd/serve"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
 var rootCmd = &cobra.Command{
@@ -18,8 +16,7 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		logger.L.Fatalw("Root command execution failed", "error", err)
 	}
 }
 

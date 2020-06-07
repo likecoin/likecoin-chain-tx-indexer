@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/tendermint/go-amino"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	coreTypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -97,7 +98,7 @@ func Run(conn *pgx.Conn, lcdEndpoint string) {
 			}
 			for txIndex, tx := range blockResult.Block.Data.Txs {
 				txHash := cmn.HexBytes(tx.Hash())
-				fmt.Printf("Getting tx %s (%d, %d)\n", txHash, height, txIndex)
+				logger.L.Infow("Getting transaction", "txhash", txHash, "height", height, "index", txIndex)
 				url := fmt.Sprintf("%s/txs/%s", ctx.LcdEndpoint, txHash.String())
 				txResJSON, err := getResponse(ctx.Client, url)
 				if err != nil {

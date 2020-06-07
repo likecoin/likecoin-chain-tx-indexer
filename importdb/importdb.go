@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/state/txindex/kv"
 	"github.com/tendermint/tendermint/store"
@@ -47,7 +48,7 @@ func Run(conn *pgx.Conn, likedPath string) {
 			txResult, err := txIndexer.Get(txHash)
 			var txRes sdk.TxResponse
 			if err != nil || txResult == nil {
-				fmt.Printf("Warning: invalid result for transaction %s, replacing with empty txResult\n", txHash)
+				logger.L.Warnw("Invalida transaction result, replacing with empty result", "txhash", txHash)
 				txRes = sdk.TxResponse{Height: height, TxHash: txHash.String()}
 			} else {
 				txRes, err = formatTxResult(txHash, txResult, block)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -50,6 +51,7 @@ func NewConnFromCmdArgs(cmd *cobra.Command) (*pgx.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
+	// TODO: any injection consideration?
 	s := fmt.Sprintf("dbname=%s host=%s port=%s user=%s password=%s", dbname, host, port, user, pwd)
 	return pgx.Connect(context.Background(), s)
 }
@@ -81,7 +83,7 @@ func InitDB(conn *pgx.Conn) error {
 func GetLatestHeight(conn *pgx.Conn) (int64, error) {
 	rows, err := conn.Query(context.Background(), "SELECT max(height) FROM txs")
 	if err != nil {
-		fmt.Printf("'%s'\n", err.Error())
+		logger.L.Warnw("Cannot get latest height from Postgres", "error", err)
 		return 0, err
 	}
 	defer rows.Close()
@@ -138,7 +140,7 @@ func (batch *Batch) InsertTx(txJSON []byte, height int64, txIndex int) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Inserting transaction %s (at height %d index %d)\n", txRes.TxHash, height, txIndex)
+	logger.L.Infow("Processing transaction", "txhash", txRes.TxHash, "height", height, "index", txIndex)
 	batch.Batch.Queue("INSERT INTO txs (height, tx_index, tx) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING", height, txIndex, txJSON)
 	for _, log := range txRes.Logs {
 		for _, event := range log.Events {
@@ -151,13 +153,13 @@ func (batch *Batch) InsertTx(txJSON []byte, height int64, txIndex int) error {
 		}
 	}
 	batch.prevHeight = height
-	fmt.Printf("Batch size = %d\n", batch.Batch.Len())
+	logger.L.Debugw("Processed height", "height", height, "batch_size", batch.Batch.Len())
 	return nil
 }
 
 func (batch *Batch) Flush() error {
 	if batch.Batch.Len() > 0 {
-		fmt.Println("Batch inserting into Postgres")
+		logger.L.Debugw("Inserting transactions into Postgres in batch", "batch_size", batch.Batch.Len())
 		result := batch.Conn.SendBatch(context.Background(), &batch.Batch)
 		_, err := result.Exec()
 		if err != nil {

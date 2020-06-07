@@ -12,4 +12,5 @@ require (
 	github.com/tendermint/go-amino v0.15.0
 	github.com/tendermint/tendermint v0.32.7
 	github.com/tendermint/tm-db v0.2.0
+	go.uber.org/zap v1.15.0
 )
