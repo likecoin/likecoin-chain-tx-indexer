@@ -16,16 +16,16 @@ var Command = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		conn, err := db.NewConnFromCmdArgs(cmd)
 		if err != nil {
-			panic(err)
+			logger.L.Panicw("Cannot connect to Postgres", "error", err)
 		}
 		defer conn.Close(context.Background())
 		err = db.InitDB(conn)
 		if err != nil {
-			panic(err)
+			logger.L.Panicw("Cannot initialize Postgres database", "error", err)
 		}
 		likedPath, err := cmd.PersistentFlags().GetString("liked-path")
 		if err != nil {
-			panic(err)
+			logger.L.Panicw("Cannot get liked data folder path from command line parameters", "error", err)
 		}
 		importdb.Run(conn, likedPath)
 	},

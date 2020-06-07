@@ -79,7 +79,8 @@ func Run(conn *pgx.Conn, lcdEndpoint string) {
 	batch := db.NewBatch(conn, batchSize)
 	dbHeight, err := db.GetLatestHeight(conn)
 	if err != nil {
-		panic(err)
+		// TODO: retry
+		logger.L.Panicw("Cannot get height from database", "error", err)
 	}
 	lastHeight := dbHeight - 1
 	if lastHeight < 0 {
@@ -88,13 +89,14 @@ func Run(conn *pgx.Conn, lcdEndpoint string) {
 	for {
 		blockResult, err := getBlock(&ctx, 0)
 		if err != nil {
-			panic(err)
+			// TODO: retry
+			logger.L.Panicw("Cannot get latest block from lcd", "error", err)
 		}
 		maxHeight := blockResult.Block.Height
 		for height := lastHeight + 1; height <= maxHeight; height++ {
 			blockResult, err := getBlock(&ctx, height)
 			if err != nil {
-				panic(err)
+				logger.L.Panicw("Cannot get block from lcd", "height", height, "error", err)
 			}
 			for txIndex, tx := range blockResult.Block.Data.Txs {
 				txHash := cmn.HexBytes(tx.Hash())
@@ -102,19 +104,20 @@ func Run(conn *pgx.Conn, lcdEndpoint string) {
 				url := fmt.Sprintf("%s/txs/%s", ctx.LcdEndpoint, txHash.String())
 				txResJSON, err := getResponse(ctx.Client, url)
 				if err != nil {
-					panic(err)
+					logger.L.Panicw("Cannot get tx response from lcd", "txhash", txHash, "height", height, "index", txIndex, "error", err)
 				}
 				err = batch.InsertTx(txResJSON, height, txIndex)
 				if err != nil {
-					panic(err)
+					logger.L.Panicw("Cannot insert transaction", "txhash", txHash, "height", height, "index", txIndex, "tx_json", txResJSON, "error", err)
 				}
 			}
 		}
 		err = batch.Flush()
 		if err != nil {
-			panic(err)
+			logger.L.Panicw("Cannot flush transaction batch", "batch", batch, "error", err)
 		}
 		lastHeight = maxHeight
+		// TODO: move into config
 		time.Sleep(5 * time.Second)
 	}
 }

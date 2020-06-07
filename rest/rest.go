@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
 type Attribute struct {
@@ -142,7 +143,7 @@ func handleTxsSearch(c *gin.Context, conn *pgx.Conn) {
 func Run(conn *pgx.Conn, listenAddr string, lcdEndpoint string) {
 	lcdURL, err := url.Parse(lcdEndpoint)
 	if err != nil {
-		panic(err)
+		logger.L.Panicw("Cannot parse lcd URL", "lcd_endpoint", lcdEndpoint, "error", err)
 	}
 	proxy := httputil.NewSingleHostReverseProxy(lcdURL)
 	proxyHandler := func(c *gin.Context) {

@@ -21,13 +21,13 @@ func Run(conn *pgx.Conn, likedPath string) {
 	likedDataDir := fmt.Sprintf("%s/data", likedPath)
 	blockDB, err := dbm.NewGoLevelDB("blockstore", likedDataDir)
 	if err != nil {
-		panic(err)
+		logger.L.Panicw("Cannot initialize blockstore database from liked data", "error", err)
 	}
 	defer blockDB.Close()
 	blockStore := store.NewBlockStore(blockDB)
 	txIndexDB, err := dbm.NewGoLevelDB("tx_index", likedDataDir)
 	if err != nil {
-		panic(err)
+		logger.L.Panicw("Cannot initialize tx_index database from liked data", "error", err)
 	}
 	defer txIndexDB.Close()
 	txIndexer := kv.NewTxIndex(txIndexDB)
@@ -53,21 +53,21 @@ func Run(conn *pgx.Conn, likedPath string) {
 			} else {
 				txRes, err = formatTxResult(txHash, txResult, block)
 				if err != nil {
-					panic(err)
+					logger.L.Panicw("Cannot parse transaction", "txhash", txHash, "tx_raw", txResult.Tx, "error", err)
 				}
 			}
 			txJSON, err := cdc.MarshalJSON(txRes)
 			if err != nil {
-				panic(err)
+				logger.L.Panicw("Cannot marshal tx response to JSON", "txhash", txHash, "tx_response", txRes, "error", err)
 			}
 			err = batch.InsertTx(txJSON, height, txIndex)
 			if err != nil {
-				panic(err)
+				logger.L.Panicw("Cannot insert transcation", "txhash", txHash, "tx_response", txRes, "tx_json", txJSON, "error", err)
 			}
 		}
 	}
 	err = batch.Flush()
 	if err != nil {
-		panic(err)
+		logger.L.Panicw("Cannot flush transcation batch", "batch", batch, "error", err)
 	}
 }
