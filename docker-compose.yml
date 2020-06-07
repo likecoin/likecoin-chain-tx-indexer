@@ -5,8 +5,6 @@ services:
     user: "1000:1000"
     volumes:
      - ./data:/var/lib/postgresql/data
-    ports: 
-     - 5432:5432
     restart: always
     environment:
       POSTGRES_PASSWORD: password
