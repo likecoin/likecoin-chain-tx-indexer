@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
@@ -30,7 +31,7 @@ func ConfigCmd(cmd *cobra.Command) {
 	cmd.PersistentFlags().String(CmdDBPassword, DefaultDBPassword, "Postgres password")
 }
 
-func NewConnFromCmdArgs(cmd *cobra.Command) (*pgx.Conn, error) {
+func NewConnFromCmdArgs(cmd *cobra.Command) (conn *pgx.Conn, err error) {
 	dbname, err := cmd.Flags().GetString(CmdDBName)
 	if err != nil {
 		return nil, err
@@ -51,9 +52,17 @@ func NewConnFromCmdArgs(cmd *cobra.Command) (*pgx.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO: any injection consideration?
 	s := fmt.Sprintf("dbname=%s host=%s port=%s user=%s password=%s", dbname, host, port, user, pwd)
-	return pgx.Connect(context.Background(), s)
+	maxRetry := 5
+	for i := 0; i < maxRetry; i++ {
+		conn, err = pgx.Connect(context.Background(), s)
+		if err == nil || i == maxRetry-1 {
+			return conn, err
+		}
+		logger.L.Errorw("Initialize connection failed, retrying", "error", err, "remaining_retry", 4-i)
+		time.Sleep(time.Duration(1<<i) * time.Second)
+	}
+	return nil, err
 }
 
 func InitDB(conn *pgx.Conn) error {
