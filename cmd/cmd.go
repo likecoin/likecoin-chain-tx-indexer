@@ -12,6 +12,9 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "indexer",
 	Short: "The indexing service for LikeCoin chain transactions",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		logger.SetupLoggerFromCmdArgs(cmd)
+	},
 }
 
 func Execute() {
@@ -22,6 +25,7 @@ func Execute() {
 
 func init() {
 	db.ConfigCmd(rootCmd)
+	logger.ConfigCmd(rootCmd)
 	rootCmd.AddCommand(importdb.Command)
 	rootCmd.AddCommand(serve.Command)
 }
