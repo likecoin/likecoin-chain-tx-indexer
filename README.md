@@ -6,11 +6,15 @@ This is a tool for indexing transaction from [LikeCoin chain](https://github.com
 
 `go build -o indexer main.go`
 
+For Docker image, run `./build.sh` to build and tag the Docker image.
+
 ## Usage
 
 You need a Postgres server as the storage database of indexed transactions.
 
 In the following commands, you can specify the Postgres connection by providing `postgres-db`, `postgres-host`, `postgres-port`, `postgres-user`, `postgres-pwd` parameters.
+
+You may refer to the `docker-compose.yml` provided for Docker setup.
 
 ### import
 
