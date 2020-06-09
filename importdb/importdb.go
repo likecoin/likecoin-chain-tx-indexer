@@ -34,6 +34,9 @@ func Run(conn *pgx.Conn, likedPath string) {
 	maxHeight := blockStore.Height()
 
 	lastHeight, err := db.GetLatestHeight(conn)
+	if err != nil {
+		logger.L.Panicw("Cannot get height from database", "error", err)
+	}
 	startHeight := lastHeight
 	if lastHeight <= 0 {
 		startHeight = 1

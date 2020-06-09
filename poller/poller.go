@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4"
-	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/tendermint/go-amino"
@@ -34,7 +33,7 @@ type CosmosCallContext struct {
 	LcdEndpoint string
 }
 
-func getBlock(ctx *CosmosCallContext, height int64) (*coreTypes.ResultBlock, error) {
+func GetBlock(ctx *CosmosCallContext, height int64) (*coreTypes.ResultBlock, error) {
 	heightStr := "latest"
 	if height > 0 {
 		heightStr = fmt.Sprintf("%d", height)
@@ -65,16 +64,7 @@ type TxResult struct {
 	} `json:"logs"`
 }
 
-func Run(conn *pgx.Conn, lcdEndpoint string) {
-	if lcdEndpoint[len(lcdEndpoint)-1] == '/' {
-		lcdEndpoint = lcdEndpoint[:len(lcdEndpoint)-1]
-	}
-	ctx := CosmosCallContext{
-		Codec:       app.MakeCodec(),
-		Client:      &http.Client{},
-		LcdEndpoint: lcdEndpoint,
-	}
-
+func Run(conn *pgx.Conn, ctx *CosmosCallContext) {
 	batchSize := 1000
 	batch := db.NewBatch(conn, batchSize)
 	dbHeight, err := db.GetLatestHeight(conn)
@@ -87,14 +77,14 @@ func Run(conn *pgx.Conn, lcdEndpoint string) {
 		lastHeight = 0
 	}
 	for {
-		blockResult, err := getBlock(&ctx, 0)
+		blockResult, err := GetBlock(ctx, 0)
 		if err != nil {
 			// TODO: retry
 			logger.L.Panicw("Cannot get latest block from lcd", "error", err)
 		}
 		maxHeight := blockResult.Block.Height
 		for height := lastHeight + 1; height <= maxHeight; height++ {
-			blockResult, err := getBlock(&ctx, height)
+			blockResult, err := GetBlock(ctx, height)
 			if err != nil {
 				logger.L.Panicw("Cannot get block from lcd", "height", height, "error", err)
 			}

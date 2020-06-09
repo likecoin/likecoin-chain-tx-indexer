@@ -2,7 +2,9 @@ package serve
 
 import (
 	"context"
+	"net/http"
 
+	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/poller"
@@ -36,12 +38,37 @@ var Command = &cobra.Command{
 		if err != nil {
 			logger.L.Panicw("Cannot get lcd endpoint address from command line parameters", "error", err)
 		}
+		ignoreHeightDiff, err := cmd.PersistentFlags().GetBool("ignore-height-difference")
+		if err != nil {
+			logger.L.Panicw("Cannot get ignore-height-difference param from command line parameters", "error", err)
+		}
+		if lcdEndpoint[len(lcdEndpoint)-1] == '/' {
+			lcdEndpoint = lcdEndpoint[:len(lcdEndpoint)-1]
+		}
+		ctx := poller.CosmosCallContext{
+			Codec:       app.MakeCodec(),
+			Client:      &http.Client{},
+			LcdEndpoint: lcdEndpoint,
+		}
+
+		if !ignoreHeightDiff {
+			dbHeight, err := db.GetLatestHeight(restConn)
+			if err != nil {
+				logger.L.Panicw("Cannot get height from database", "error", err)
+			}
+			blockResult, err := poller.GetBlock(&ctx, 0)
+			lcdHeight := blockResult.Block.Height
+			if lcdHeight-dbHeight > 10000 {
+				logger.L.Fatalw("height difference too large, please run `import` or add --ignore-height-difference flag", "db_height", dbHeight, "lcd_height", lcdHeight)
+			}
+		}
 		go rest.Run(restConn, listenAddr, lcdEndpoint)
-		poller.Run(pollerConn, lcdEndpoint)
+		poller.Run(pollerConn, &ctx)
 	},
 }
 
 func init() {
 	Command.PersistentFlags().String("lcd-endpoint", "http://localhost:1317", "LikeCoin chain lite client RPC endpoint")
 	Command.PersistentFlags().String("listen-addr", "localhost:8997", "HTTP API serving address")
+	Command.PersistentFlags().Bool("ignore-height-difference", false, "start serving and polling without import even if the height lags behind too much")
 }
