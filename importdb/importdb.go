@@ -35,7 +35,7 @@ func Run(conn *pgx.Conn, likedPath string) {
 
 	lastHeight, err := db.GetLatestHeight(conn)
 	startHeight := lastHeight
-	if lastHeight == 0 {
+	if lastHeight <= 0 {
 		startHeight = 1
 	}
 
@@ -48,7 +48,7 @@ func Run(conn *pgx.Conn, likedPath string) {
 			txResult, err := txIndexer.Get(txHash)
 			var txRes sdk.TxResponse
 			if err != nil || txResult == nil {
-				logger.L.Warnw("Invalida transaction result, replacing with empty result", "txhash", txHash)
+				logger.L.Warnw("Invalid transaction result, replacing with empty result", "txhash", txHash)
 				txRes = sdk.TxResponse{Height: height, TxHash: txHash.String()}
 			} else {
 				txRes, err = formatTxResult(txHash, txResult, block)

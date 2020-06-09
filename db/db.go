@@ -78,7 +78,7 @@ func InitDB(conn *pgx.Conn) error {
 	if err != nil {
 		return err
 	}
-	_, err = conn.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS tx_events (type TEXT, key TEXT, value TEXT, height BIGINT, tx_index INT)")
+	_, err = conn.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS tx_events (type TEXT, key TEXT, value TEXT, height BIGINT, tx_index INT, UNIQUE(type, key, value, height, tx_index))")
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func (batch *Batch) InsertTx(txJSON []byte, height int64, txIndex int) error {
 		for _, event := range log.Events {
 			for _, attr := range event.Attributes {
 				batch.Batch.Queue(
-					"INSERT INTO tx_events (type, key, value, height, tx_index) VALUES ($1, $2, $3, $4, $5)",
+					"INSERT INTO tx_events (type, key, value, height, tx_index) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING",
 					event.Type, attr.Key, attr.Value, height, txIndex,
 				)
 			}
