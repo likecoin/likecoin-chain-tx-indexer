@@ -52,14 +52,15 @@ var Command = &cobra.Command{
 		}
 
 		if !ignoreHeightDiff {
+			const heightDiffLimit = 10000
 			dbHeight, err := db.GetLatestHeight(restConn)
 			if err != nil {
 				logger.L.Panicw("Cannot get height from database", "error", err)
 			}
 			blockResult, err := poller.GetBlock(&ctx, 0)
 			lcdHeight := blockResult.Block.Height
-			if lcdHeight-dbHeight > 10000 {
-				logger.L.Fatalw("height difference too large, please run `import` or add --ignore-height-difference flag", "db_height", dbHeight, "lcd_height", lcdHeight)
+			if lcdHeight-dbHeight > heightDiffLimit {
+				logger.L.Fatalw("height difference larger than limit, please run `import` or add --ignore-height-difference flag", "db_height", dbHeight, "lcd_height", lcdHeight, "limit", heightDiffLimit)
 			}
 		}
 		go rest.Run(restConn, listenAddr, lcdEndpoint)
