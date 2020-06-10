@@ -1,0 +1,28 @@
+version: '3.1'
+services:
+  db:
+    image: postgres:12.3
+    user: "1000:1000"
+    volumes:
+     - ./data:/var/lib/postgresql/data
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+  tx-indexer:
+    image: likechain/tx-indexer
+    depends_on:
+     - db
+    ports: 
+     - 8997:8997
+    restart: always
+    environment:
+      GIN_MODE: release
+    command: [
+        "tx-indexer", "serve",
+        "--postgres-db", "postgres",
+        "--postgres-host", "db",
+        "--postgres-port", "5432",
+        "--postgres-user", "postgres",
+        "--postgres-pwd", "password",
+        "--lcd-endpoint", "http://192.168.1.186:1317",
+        "--listen-addr", ":8997"]

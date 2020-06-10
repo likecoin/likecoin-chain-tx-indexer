@@ -1,0 +1,25 @@
+version: '3.1'
+services:
+  db:
+    image: postgres:12.3
+    user: "1000:1000"
+    volumes:
+     - ./data:/var/lib/postgresql/data
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+  tx-indexer:
+    image: likechain/tx-indexer
+    depends_on:
+     - db
+    # Note that no 'restart: always' here
+    volumes:
+     - /somewhere/likecoin-chain/.liked:/liked
+    command: [
+        "tx-indexer", "import",
+        "--postgres-db", "postgres",
+        "--postgres-host", "db",
+        "--postgres-port", "5432",
+        "--postgres-user", "postgres",
+        "--postgres-pwd", "password",
+        "--liked-path", "/liked"]
