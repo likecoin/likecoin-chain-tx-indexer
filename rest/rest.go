@@ -113,7 +113,7 @@ func handleTxsSearch(c *gin.Context, conn *pgx.Conn) {
 	}
 	attrs := getAttributes(q)
 	if len(attrs) == 0 {
-		c.AbortWithStatusJSON(400, "Need attribute")
+		c.AbortWithStatusJSON(400, "attribute needed")
 		return
 	}
 	if len(attrs) > 1 {
@@ -123,12 +123,16 @@ func handleTxsSearch(c *gin.Context, conn *pgx.Conn) {
 	attr := attrs[0]
 	totalCount, err := queryCount(conn, attr)
 	if err != nil {
-		c.AbortWithError(500, err)
+		logger.L.Errorw("Cannot get total tx count from database", "attr", attr, "error", err)
+		c.AbortWithStatusJSON(500, err)
+		return
 	}
 	totalPages := (totalCount-1)/limit + 1
 	txs, err := queryTxs(conn, attr, limit, page)
 	if err != nil {
-		c.AbortWithError(500, err)
+		logger.L.Errorw("Cannot get txs from database", "attr", attr, "limit", limit, "page", page, "error", err)
+		c.AbortWithStatusJSON(500, err)
+		return
 	}
 	c.JSON(200, Response{
 		TotalCount: fmt.Sprintf("%d", totalCount),
