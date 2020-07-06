@@ -14,6 +14,8 @@ import (
 	coreTypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
+const batchSize = 1000
+
 func getResponse(client *http.Client, url string) ([]byte, error) {
 	resp, err := client.Get(url)
 	if err != nil {
@@ -81,49 +83,52 @@ func getHeight(pool *pgxpool.Pool) (int64, error) {
 	return lastHeight, nil
 }
 
+func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) int64 {
+	conn, err := db.AcquireFromPool(pool)
+	if err != nil {
+		logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
+	}
+	defer conn.Release()
+	batch := db.NewBatch(conn, batchSize)
+	blockResult, err := GetBlock(ctx, 0)
+	if err != nil {
+		// TODO: retry
+		logger.L.Panicw("Cannot get latest block from lcd", "error", err)
+	}
+	maxHeight := blockResult.Block.Height
+	for height := lastHeight + 1; height <= maxHeight; height++ {
+		blockResult, err := GetBlock(ctx, height)
+		if err != nil {
+			logger.L.Panicw("Cannot get block from lcd", "height", height, "error", err)
+		}
+		for txIndex, tx := range blockResult.Block.Data.Txs {
+			txHash := cmn.HexBytes(tx.Hash())
+			logger.L.Infow("Getting transaction", "txhash", txHash, "height", height, "index", txIndex)
+			url := fmt.Sprintf("%s/txs/%s", ctx.LcdEndpoint, txHash.String())
+			txResJSON, err := getResponse(ctx.Client, url)
+			if err != nil {
+				logger.L.Panicw("Cannot get tx response from lcd", "txhash", txHash, "height", height, "index", txIndex, "error", err)
+			}
+			err = batch.InsertTx(txResJSON, height, txIndex)
+			if err != nil {
+				logger.L.Panicw("Cannot insert transaction", "txhash", txHash, "height", height, "index", txIndex, "tx_json", txResJSON, "error", err)
+			}
+		}
+	}
+	err = batch.Flush()
+	if err != nil {
+		logger.L.Panicw("Cannot flush transaction batch", "batch", batch, "error", err)
+	}
+	return maxHeight
+}
+
 func Run(pool *pgxpool.Pool, ctx *CosmosCallContext) {
 	lastHeight, err := getHeight(pool)
 	if err != nil {
 		logger.L.Panicw("Cannot get height from database", "error", err)
 	}
-	batchSize := 1000
 	for {
-		conn, err := db.AcquireFromPool(pool)
-		if err != nil {
-			logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
-		}
-		defer conn.Release()
-		batch := db.NewBatch(conn, batchSize)
-		blockResult, err := GetBlock(ctx, 0)
-		if err != nil {
-			// TODO: retry
-			logger.L.Panicw("Cannot get latest block from lcd", "error", err)
-		}
-		maxHeight := blockResult.Block.Height
-		for height := lastHeight + 1; height <= maxHeight; height++ {
-			blockResult, err := GetBlock(ctx, height)
-			if err != nil {
-				logger.L.Panicw("Cannot get block from lcd", "height", height, "error", err)
-			}
-			for txIndex, tx := range blockResult.Block.Data.Txs {
-				txHash := cmn.HexBytes(tx.Hash())
-				logger.L.Infow("Getting transaction", "txhash", txHash, "height", height, "index", txIndex)
-				url := fmt.Sprintf("%s/txs/%s", ctx.LcdEndpoint, txHash.String())
-				txResJSON, err := getResponse(ctx.Client, url)
-				if err != nil {
-					logger.L.Panicw("Cannot get tx response from lcd", "txhash", txHash, "height", height, "index", txIndex, "error", err)
-				}
-				err = batch.InsertTx(txResJSON, height, txIndex)
-				if err != nil {
-					logger.L.Panicw("Cannot insert transaction", "txhash", txHash, "height", height, "index", txIndex, "tx_json", txResJSON, "error", err)
-				}
-			}
-		}
-		err = batch.Flush()
-		if err != nil {
-			logger.L.Panicw("Cannot flush transaction batch", "batch", batch, "error", err)
-		}
-		lastHeight = maxHeight
+		lastHeight = poll(pool, ctx, lastHeight)
 		// TODO: move into config
 		time.Sleep(5 * time.Second)
 	}
