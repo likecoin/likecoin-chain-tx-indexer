@@ -9,7 +9,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
@@ -35,7 +36,7 @@ func getAttributes(query url.Values) (attrs []Attribute) {
 	return attrs
 }
 
-func queryCount(conn *pgx.Conn, attr Attribute) (int64, error) {
+func queryCount(conn *pgxpool.Conn, attr Attribute) (int64, error) {
 	sql := `
 SELECT count(DISTINCT (height, tx_index)) FROM tx_events
 WHERE type = $1 AND key = $2 AND value = $3
@@ -49,7 +50,7 @@ WHERE type = $1 AND key = $2 AND value = $3
 	return count, nil
 }
 
-func queryTxs(conn *pgx.Conn, attr Attribute, limit int64, page int64) ([]interface{}, error) {
+func queryTxs(conn *pgxpool.Conn, attr Attribute, limit int64, page int64) ([]interface{}, error) {
 	offset := limit * (page - 1)
 	sql := `
 SELECT txs.tx FROM (
@@ -86,7 +87,7 @@ type Response struct {
 	Txs        []interface{} `json:"txs"`
 }
 
-func handleTxsSearch(c *gin.Context, conn *pgx.Conn) {
+func handleTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
 	var page int64
 	var limit int64
@@ -121,6 +122,11 @@ func handleTxsSearch(c *gin.Context, conn *pgx.Conn) {
 		return
 	}
 	attr := attrs[0]
+	conn, err := db.AcquireFromPool(pool)
+	if err != nil {
+		logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
+	}
+	defer conn.Release()
 	totalCount, err := queryCount(conn, attr)
 	if err != nil {
 		logger.L.Errorw("Cannot get total tx count from database", "attr", attr, "error", err)
@@ -144,7 +150,7 @@ func handleTxsSearch(c *gin.Context, conn *pgx.Conn) {
 	})
 }
 
-func Run(conn *pgx.Conn, listenAddr string, lcdEndpoint string) {
+func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 	lcdURL, err := url.Parse(lcdEndpoint)
 	if err != nil {
 		logger.L.Panicw("Cannot parse lcd URL", "lcd_endpoint", lcdEndpoint, "error", err)
@@ -163,7 +169,7 @@ func Run(conn *pgx.Conn, listenAddr string, lcdEndpoint string) {
 			return
 		}
 		if endpoint == "/txs" {
-			handleTxsSearch(c, conn)
+			handleTxsSearch(c, pool)
 			return
 		}
 		proxyHandler(c)

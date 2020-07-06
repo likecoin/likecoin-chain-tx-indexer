@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/tendermint/go-amino"
@@ -64,19 +64,36 @@ type TxResult struct {
 	} `json:"logs"`
 }
 
-func Run(conn *pgx.Conn, ctx *CosmosCallContext) {
-	batchSize := 1000
-	batch := db.NewBatch(conn, batchSize)
+func getHeight(pool *pgxpool.Pool) (int64, error) {
+	conn, err := db.AcquireFromPool(pool)
+	if err != nil {
+		return 0, err
+	}
+	defer conn.Release()
 	dbHeight, err := db.GetLatestHeight(conn)
 	if err != nil {
-		// TODO: retry
-		logger.L.Panicw("Cannot get height from database", "error", err)
+		return 0, err
 	}
 	lastHeight := dbHeight - 1
 	if lastHeight < 0 {
 		lastHeight = 0
 	}
+	return lastHeight, nil
+}
+
+func Run(pool *pgxpool.Pool, ctx *CosmosCallContext) {
+	lastHeight, err := getHeight(pool)
+	if err != nil {
+		logger.L.Panicw("Cannot get height from database", "error", err)
+	}
+	batchSize := 1000
 	for {
+		conn, err := db.AcquireFromPool(pool)
+		if err != nil {
+			logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
+		}
+		defer conn.Release()
+		batch := db.NewBatch(conn, batchSize)
 		blockResult, err := GetBlock(ctx, 0)
 		if err != nil {
 			// TODO: retry

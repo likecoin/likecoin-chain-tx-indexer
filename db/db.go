@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/spf13/cobra"
 )
@@ -31,7 +32,7 @@ func ConfigCmd(cmd *cobra.Command) {
 	cmd.PersistentFlags().String(CmdDBPassword, DefaultDBPassword, "Postgres password")
 }
 
-func NewConnFromCmdArgs(cmd *cobra.Command) (conn *pgx.Conn, err error) {
+func NewConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) {
 	dbname, err := cmd.Flags().GetString(CmdDBName)
 	if err != nil {
 		return nil, err
@@ -55,17 +56,21 @@ func NewConnFromCmdArgs(cmd *cobra.Command) (conn *pgx.Conn, err error) {
 	s := fmt.Sprintf("dbname=%s host=%s port=%s user=%s password=%s", dbname, host, port, user, pwd)
 	maxRetry := 5
 	for i := 0; i < maxRetry; i++ {
-		conn, err = pgx.Connect(context.Background(), s)
+		pool, err := pgxpool.Connect(context.Background(), s)
 		if err == nil || i == maxRetry-1 {
-			return conn, err
+			return pool, err
 		}
-		logger.L.Errorw("Initialize connection failed, retrying", "error", err, "remaining_retry", 4-i)
+		logger.L.Errorw("Initialize connection pool failed, retrying", "error", err, "remaining_retry", 4-i)
 		time.Sleep(time.Duration(1<<i) * time.Second)
 	}
 	return nil, err
 }
 
-func InitDB(conn *pgx.Conn) error {
+func AcquireFromPool(pool *pgxpool.Pool) (*pgxpool.Conn, error) {
+	return pool.Acquire(context.Background())
+}
+
+func InitDB(conn *pgxpool.Conn) error {
 	_, err := conn.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS txs (id BIGSERIAL PRIMARY KEY, height BIGINT, tx_index INT, tx JSONB, UNIQUE (height, tx_index))")
 	if err != nil {
 		return err
@@ -89,7 +94,7 @@ func InitDB(conn *pgx.Conn) error {
 	return nil
 }
 
-func GetLatestHeight(conn *pgx.Conn) (int64, error) {
+func GetLatestHeight(conn *pgxpool.Conn) (int64, error) {
 	rows, err := conn.Query(context.Background(), "SELECT max(height) FROM txs")
 	if err != nil {
 		logger.L.Warnw("Cannot get latest height from Postgres", "error", err)
@@ -109,13 +114,13 @@ func GetLatestHeight(conn *pgx.Conn) (int64, error) {
 }
 
 type Batch struct {
-	Conn       *pgx.Conn
+	Conn       *pgxpool.Conn
 	Batch      pgx.Batch
 	limit      int
 	prevHeight int64
 }
 
-func NewBatch(conn *pgx.Conn, limit int) Batch {
+func NewBatch(conn *pgxpool.Conn, limit int) Batch {
 	return Batch{
 		Conn:       conn,
 		Batch:      pgx.Batch{},

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
@@ -16,7 +16,7 @@ import (
 
 const batchSize = 10000
 
-func Run(conn *pgx.Conn, likedPath string) {
+func Run(pool *pgxpool.Pool, likedPath string) {
 	cdc = app.MakeCodec()
 	likedDataDir := fmt.Sprintf("%s/data", likedPath)
 	blockDB, err := dbm.NewGoLevelDB("blockstore", likedDataDir)
@@ -33,6 +33,11 @@ func Run(conn *pgx.Conn, likedPath string) {
 	txIndexer := kv.NewTxIndex(txIndexDB)
 	maxHeight := blockStore.Height()
 
+	conn, err := db.AcquireFromPool(pool)
+	if err != nil {
+		logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
+	}
+	defer conn.Release()
 	lastHeight, err := db.GetLatestHeight(conn)
 	if err != nil {
 		logger.L.Panicw("Cannot get height from database", "error", err)

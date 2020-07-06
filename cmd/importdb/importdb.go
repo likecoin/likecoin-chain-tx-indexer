@@ -1,8 +1,6 @@
 package importdb
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
@@ -14,20 +12,24 @@ var Command = &cobra.Command{
 	Use:   "import",
 	Short: "Import from existing LikeCoin chain database",
 	Run: func(cmd *cobra.Command, args []string) {
-		conn, err := db.NewConnFromCmdArgs(cmd)
-		if err != nil {
-			logger.L.Panicw("Cannot connect to Postgres", "error", err)
-		}
-		defer conn.Close(context.Background())
-		err = db.InitDB(conn)
-		if err != nil {
-			logger.L.Panicw("Cannot initialize Postgres database", "error", err)
-		}
 		likedPath, err := cmd.PersistentFlags().GetString("liked-path")
 		if err != nil {
 			logger.L.Panicw("Cannot get liked data folder path from command line parameters", "error", err)
 		}
-		importdb.Run(conn, likedPath)
+		pool, err := db.NewConnPoolFromCmdArgs(cmd)
+		if err != nil {
+			logger.L.Panicw("Cannot connect to Postgres", "error", err)
+		}
+		conn, err := db.AcquireFromPool(pool)
+		if err != nil {
+			logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
+		}
+		err = db.InitDB(conn)
+		if err != nil {
+			logger.L.Panicw("Cannot initialize Postgres database", "error", err)
+		}
+		conn.Release()
+		importdb.Run(pool, likedPath)
 	},
 }
 

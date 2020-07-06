@@ -1,7 +1,6 @@
 package serve
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/likecoin/likechain/app"
@@ -16,20 +15,15 @@ var Command = &cobra.Command{
 	Use:   "serve",
 	Short: "Run the indexing service and expose HTTP API",
 	Run: func(cmd *cobra.Command, args []string) {
-		restConn, err := db.NewConnFromCmdArgs(cmd)
+		pool, err := db.NewConnPoolFromCmdArgs(cmd)
 		if err != nil {
 			logger.L.Panicw("Cannot connect to Postgres", "error", err)
 		}
-		defer restConn.Close(context.Background())
-		pollerConn, err := db.NewConnFromCmdArgs(cmd)
+		conn, err := db.AcquireFromPool(pool)
 		if err != nil {
-			logger.L.Panicw("Cannot connect to Postgres", "error", err)
+			logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
 		}
-		defer pollerConn.Close(context.Background())
-		err = db.InitDB(pollerConn)
-		if err != nil {
-			logger.L.Panicw("Cannot initialize Postgres database", "error", err)
-		}
+		err = db.InitDB(conn)
 		listenAddr, err := cmd.PersistentFlags().GetString("listen-addr")
 		if err != nil {
 			logger.L.Panicw("Cannot get listen address from command line parameters", "error", err)
@@ -53,7 +47,7 @@ var Command = &cobra.Command{
 
 		if !ignoreHeightDiff {
 			const heightDiffLimit = 10000
-			dbHeight, err := db.GetLatestHeight(restConn)
+			dbHeight, err := db.GetLatestHeight(conn)
 			if err != nil {
 				logger.L.Panicw("Cannot get height from database", "error", err)
 			}
@@ -63,8 +57,10 @@ var Command = &cobra.Command{
 				logger.L.Fatalw("height difference larger than limit, please run `import` or add --ignore-height-difference flag", "db_height", dbHeight, "lcd_height", lcdHeight, "limit", heightDiffLimit)
 			}
 		}
-		go rest.Run(restConn, listenAddr, lcdEndpoint)
-		poller.Run(pollerConn, &ctx)
+		conn.Release()
+
+		go rest.Run(pool, listenAddr, lcdEndpoint)
+		poller.Run(pool, &ctx)
 	},
 }
 
