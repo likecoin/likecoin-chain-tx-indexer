@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"context"
 	"fmt"
 	"net/http/httputil"
 	"net/url"
@@ -41,7 +40,9 @@ func queryCount(conn *pgxpool.Conn, attr Attribute) (int64, error) {
 SELECT count(DISTINCT (height, tx_index)) FROM tx_events
 WHERE type = $1 AND key = $2 AND value = $3
 `
-	row := conn.QueryRow(context.Background(), sql, attr.Type, attr.Key, attr.Value)
+	ctx, cancel := db.GetTimeoutContext()
+	defer cancel()
+	row := conn.QueryRow(ctx, sql, attr.Type, attr.Key, attr.Value)
 	var count int64
 	err := row.Scan(&count)
 	if err != nil {
@@ -62,7 +63,9 @@ SELECT txs.tx FROM (
 ) as e
 JOIN txs ON txs.height = e.height AND txs.tx_index = e.tx_index
 `
-	rows, err := conn.Query(context.Background(), sql, attr.Type, attr.Key, attr.Value, limit, offset)
+	ctx, cancel := db.GetTimeoutContext()
+	defer cancel()
+	rows, err := conn.Query(ctx, sql, attr.Type, attr.Key, attr.Value, limit, offset)
 	if err != nil {
 		return nil, err
 	}

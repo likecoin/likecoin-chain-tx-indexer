@@ -32,6 +32,11 @@ func ConfigCmd(cmd *cobra.Command) {
 	cmd.PersistentFlags().String(CmdDBPassword, DefaultDBPassword, "Postgres password")
 }
 
+func GetTimeoutContext() (context.Context, context.CancelFunc) {
+	// TODO: move into config
+	return context.WithTimeout(context.Background(), 30*time.Second)
+}
+
 func NewConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) {
 	dbname, err := cmd.Flags().GetString(CmdDBName)
 	if err != nil {
@@ -56,7 +61,9 @@ func NewConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) 
 	s := fmt.Sprintf("dbname=%s host=%s port=%s user=%s password=%s", dbname, host, port, user, pwd)
 	maxRetry := 5
 	for i := 0; i < maxRetry; i++ {
-		pool, err := pgxpool.Connect(context.Background(), s)
+		ctx, cancel := GetTimeoutContext()
+		defer cancel()
+		pool, err := pgxpool.Connect(ctx, s)
 		if err == nil || i == maxRetry-1 {
 			return pool, err
 		}
@@ -67,27 +74,39 @@ func NewConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) 
 }
 
 func AcquireFromPool(pool *pgxpool.Pool) (*pgxpool.Conn, error) {
-	return pool.Acquire(context.Background())
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	return pool.Acquire(ctx)
 }
 
 func InitDB(conn *pgxpool.Conn) error {
-	_, err := conn.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS txs (id BIGSERIAL PRIMARY KEY, height BIGINT, tx_index INT, tx JSONB, UNIQUE (height, tx_index))")
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	_, err := conn.Exec(ctx, "CREATE TABLE IF NOT EXISTS txs (id BIGSERIAL PRIMARY KEY, height BIGINT, tx_index INT, tx JSONB, UNIQUE (height, tx_index))")
 	if err != nil {
 		return err
 	}
-	_, err = conn.Exec(context.Background(), "CREATE INDEX IF NOT EXISTS idx_txs ON txs USING hash ((tx->>'txhash'))")
+	ctx, cancel = GetTimeoutContext()
+	defer cancel()
+	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_txs ON txs USING hash ((tx->>'txhash'))")
 	if err != nil {
 		return err
 	}
-	_, err = conn.Exec(context.Background(), "CREATE INDEX IF NOT EXISTS idx_txs ON txs (height, tx_index)")
+	ctx, cancel = GetTimeoutContext()
+	defer cancel()
+	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_txs ON txs (height, tx_index)")
 	if err != nil {
 		return err
 	}
-	_, err = conn.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS tx_events (type TEXT, key TEXT, value TEXT, height BIGINT, tx_index INT, UNIQUE(type, key, value, height, tx_index))")
+	ctx, cancel = GetTimeoutContext()
+	defer cancel()
+	_, err = conn.Exec(ctx, "CREATE TABLE IF NOT EXISTS tx_events (type TEXT, key TEXT, value TEXT, height BIGINT, tx_index INT, UNIQUE(type, key, value, height, tx_index))")
 	if err != nil {
 		return err
 	}
-	_, err = conn.Exec(context.Background(), "CREATE INDEX IF NOT EXISTS idx_tx_events ON tx_events (type, key, value, height, tx_index)")
+	ctx, cancel = GetTimeoutContext()
+	defer cancel()
+	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_tx_events ON tx_events (type, key, value, height, tx_index)")
 	if err != nil {
 		return err
 	}
@@ -95,7 +114,9 @@ func InitDB(conn *pgxpool.Conn) error {
 }
 
 func GetLatestHeight(conn *pgxpool.Conn) (int64, error) {
-	rows, err := conn.Query(context.Background(), "SELECT max(height) FROM txs")
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	rows, err := conn.Query(ctx, "SELECT max(height) FROM txs")
 	if err != nil {
 		logger.L.Warnw("Cannot get latest height from Postgres", "error", err)
 		return 0, err
@@ -174,7 +195,9 @@ func (batch *Batch) InsertTx(txJSON []byte, height int64, txIndex int) error {
 func (batch *Batch) Flush() error {
 	if batch.Batch.Len() > 0 {
 		logger.L.Debugw("Inserting transactions into Postgres in batch", "batch_size", batch.Batch.Len())
-		result := batch.Conn.SendBatch(context.Background(), &batch.Batch)
+		ctx, cancel := GetTimeoutContext()
+		defer cancel()
+		result := batch.Conn.SendBatch(ctx, &batch.Batch)
 		_, err := result.Exec()
 		if err != nil {
 			return err
