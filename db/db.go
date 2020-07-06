@@ -17,12 +17,16 @@ const CmdDBHost = "postgres-host"
 const CmdDBPort = "postgres-port"
 const CmdDBUser = "postgres-user"
 const CmdDBPassword = "postgres-pwd"
+const CmdDBPoolMin = "postgres-pool-min"
+const CmdDBPoolMax = "postgres-pool-max"
 
 const DefaultDBName = "postgres"
 const DefaultDBHost = "localhost"
 const DefaultDBPort = "5432"
 const DefaultDBUser = "postgres"
 const DefaultDBPassword = "password"
+const DefaultDBPoolMin = 4
+const DefaultDBPoolMax = 32
 
 func ConfigCmd(cmd *cobra.Command) {
 	cmd.PersistentFlags().String(CmdDBName, DefaultDBName, "Postgres database name")
@@ -30,6 +34,8 @@ func ConfigCmd(cmd *cobra.Command) {
 	cmd.PersistentFlags().String(CmdDBPort, DefaultDBPort, "Postgres port")
 	cmd.PersistentFlags().String(CmdDBUser, DefaultDBUser, "Postgres user")
 	cmd.PersistentFlags().String(CmdDBPassword, DefaultDBPassword, "Postgres password")
+	cmd.PersistentFlags().Int(CmdDBPoolMin, DefaultDBPoolMin, "Postgres minimum number of connections in connection pool")
+	cmd.PersistentFlags().Int(CmdDBPoolMax, DefaultDBPoolMax, "Postgres maximum number of connections in connection pool")
 }
 
 func GetTimeoutContext() (context.Context, context.CancelFunc) {
@@ -58,7 +64,18 @@ func NewConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) 
 	if err != nil {
 		return nil, err
 	}
-	s := fmt.Sprintf("dbname=%s host=%s port=%s user=%s password=%s", dbname, host, port, user, pwd)
+	poolMin, err := cmd.Flags().GetInt(CmdDBPoolMin)
+	if err != nil {
+		return nil, err
+	}
+	poolMax, err := cmd.Flags().GetInt(CmdDBPoolMax)
+	if err != nil {
+		return nil, err
+	}
+	s := fmt.Sprintf(
+		"dbname=%s host=%s port=%s user=%s password=%s pool_min_conns=%d pool_max_conns=%d",
+		dbname, host, port, user, pwd, poolMin, poolMax,
+	)
 	maxRetry := 5
 	for i := 0; i < maxRetry; i++ {
 		ctx, cancel := GetTimeoutContext()
