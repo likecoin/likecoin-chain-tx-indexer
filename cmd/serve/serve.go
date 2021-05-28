@@ -2,6 +2,7 @@ package serve
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
@@ -41,8 +42,13 @@ var Command = &cobra.Command{
 			lcdEndpoint = lcdEndpoint[:len(lcdEndpoint)-1]
 		}
 		ctx := poller.CosmosCallContext{
-			Codec:       app.MakeCodec(),
-			Client:      &http.Client{},
+			Codec: app.MakeCodec(),
+			Client: &http.Client{
+				Transport: &http.Transport{
+					MaxIdleConnsPerHost: 20,
+				},
+				Timeout: 10 * time.Second,
+			},
 			LcdEndpoint: lcdEndpoint,
 		}
 
