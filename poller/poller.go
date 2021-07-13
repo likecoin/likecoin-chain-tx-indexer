@@ -136,10 +136,11 @@ func Run(pool *pgxpool.Pool, ctx *CosmosCallContext) {
 	}
 	toSleep := sleepInitial
 	for {
-		lastHeight, err = poll(pool, ctx, lastHeight)
+		returnedHeight, err := poll(pool, ctx, lastHeight)
 		if err == nil {
 			// reset sleep time to normal value
 			toSleep = sleepInitial
+			lastHeight = returnedHeight
 		} else {
 			logger.L.Errorw("cannot poll block", "error", err)
 			// exponential back-off with max cap
