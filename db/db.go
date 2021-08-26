@@ -76,16 +76,17 @@ func NewConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) 
 		"dbname=%s host=%s port=%s user=%s password=%s pool_min_conns=%d pool_max_conns=%d",
 		dbname, host, port, user, pwd, poolMin, poolMax,
 	)
-	maxRetry := 5
-	for i := 0; i < maxRetry; i++ {
+	retryIntervals := []int{1, 1, 2, 5, 10, 15, 30, 30}
+	maxRetry := len(retryIntervals)
+	for i, retryInterval := range retryIntervals {
 		ctx, cancel := GetTimeoutContext()
 		defer cancel()
 		pool, err := pgxpool.Connect(ctx, s)
 		if err == nil || i == maxRetry-1 {
 			return pool, err
 		}
-		logger.L.Errorw("Initialize connection pool failed, retrying", "error", err, "remaining_retry", 4-i)
-		time.Sleep(time.Duration(1<<i) * time.Second)
+		logger.L.Errorw("Initialize connection pool failed, retrying", "error", err, "remaining_retry", maxRetry-i-1)
+		time.Sleep(time.Duration(retryInterval) * time.Second)
 	}
 	return nil, err
 }
