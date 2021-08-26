@@ -14,7 +14,7 @@ You need a Postgres server as the storage database of indexed transactions.
 
 In the following commands, you can specify the Postgres connection by providing `postgres-db`, `postgres-host`, `postgres-port`, `postgres-user`, `postgres-pwd` parameters.
 
-You may refer to `docker-compose.yml` and `docker-compose.import.yml` provided for Docker setup.
+You may refer to `docker-compose.yml` provided for Docker setup.
 
 ### import
 
