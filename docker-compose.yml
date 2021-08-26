@@ -26,3 +26,19 @@ services:
         "--postgres-pwd", "password",
         "--lcd-endpoint", "http://192.168.1.186:1317",
         "--listen-addr", ":8997"]
+  import-tx:
+    profiles: ["scripts"]
+    image: likechain/tx-indexer
+    depends_on:
+     - db
+    # Note that no 'restart: always' here
+    volumes:
+     - /somewhere/likecoin-chain/.liked:/liked
+    command: [
+        "tx-indexer", "import",
+        "--postgres-db", "postgres",
+        "--postgres-host", "db",
+        "--postgres-port", "5432",
+        "--postgres-user", "postgres",
+        "--postgres-pwd", "password",
+        "--liked-path", "/liked"]

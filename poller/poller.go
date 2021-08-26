@@ -10,8 +10,9 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/tendermint/go-amino"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	coreTypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/libs/bytes"
+
+	tmTypes "github.com/tendermint/tendermint/types"
 )
 
 const batchSize = 1000
@@ -42,7 +43,18 @@ type CosmosCallContext struct {
 	LcdEndpoint string
 }
 
-func GetBlock(ctx *CosmosCallContext, height int64) (*coreTypes.ResultBlock, error) {
+type BlockResult struct {
+	Block struct {
+		Header struct {
+			Height int64 `json:"height"`
+		} `json:"header"`
+		Data struct {
+			Txs tmTypes.Txs `json:"txs"`
+		} `json:"data"`
+	} `json:"block"`
+}
+
+func GetBlock(ctx *CosmosCallContext, height int64) (*BlockResult, error) {
 	heightStr := "latest"
 	if height > 0 {
 		heightStr = fmt.Sprintf("%d", height)
@@ -52,7 +64,7 @@ func GetBlock(ctx *CosmosCallContext, height int64) (*coreTypes.ResultBlock, err
 	if err != nil {
 		return nil, err
 	}
-	resultBlock := coreTypes.ResultBlock{}
+	resultBlock := BlockResult{}
 	err = ctx.Codec.UnmarshalJSON(body, &resultBlock)
 	if err != nil {
 		return nil, err
@@ -102,14 +114,14 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 		// TODO: retry
 		return 0, fmt.Errorf("cannot get latest block from lcd: %w", err)
 	}
-	maxHeight := blockResult.Block.Height
+	maxHeight := blockResult.Block.Header.Height
 	for height := lastHeight + 1; height <= maxHeight; height++ {
 		blockResult, err := GetBlock(ctx, height)
 		if err != nil {
 			return 0, fmt.Errorf("cannot get block from lcd, error = %w, height = %d", err, height)
 		}
 		for txIndex, tx := range blockResult.Block.Data.Txs {
-			txHash := cmn.HexBytes(tx.Hash())
+			txHash := bytes.HexBytes(tx.Hash())
 			logger.L.Infow("Getting transaction", "txhash", txHash, "height", height, "index", txIndex)
 			url := fmt.Sprintf("%s/txs/%s", ctx.LcdEndpoint, txHash.String())
 			txResJSON, err := getResponse(ctx.Client, url)

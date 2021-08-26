@@ -5,10 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/state/txindex/kv"
 	"github.com/tendermint/tendermint/store"
 	dbm "github.com/tendermint/tm-db"
@@ -17,7 +16,6 @@ import (
 const batchSize = 10000
 
 func Run(pool *pgxpool.Pool, likedPath string) {
-	cdc = app.MakeCodec()
 	likedDataDir := fmt.Sprintf("%s/data", likedPath)
 	blockDB, err := dbm.NewGoLevelDB("blockstore", likedDataDir)
 	if err != nil {
@@ -52,7 +50,7 @@ func Run(pool *pgxpool.Pool, likedPath string) {
 		block := blockStore.LoadBlock(height)
 		txs := block.Data.Txs
 		for txIndex, tx := range txs {
-			txHash := cmn.HexBytes(tx.Hash())
+			txHash := bytes.HexBytes(tx.Hash())
 			txResult, err := txIndexer.Get(txHash)
 			var txRes sdk.TxResponse
 			if err != nil || txResult == nil {
@@ -64,7 +62,8 @@ func Run(pool *pgxpool.Pool, likedPath string) {
 					logger.L.Panicw("Cannot parse transaction", "txhash", txHash, "tx_raw", txResult.Tx, "error", err)
 				}
 			}
-			txJSON, err := cdc.MarshalJSON(txRes)
+			logger.L.Debugw("before Marshal JSON", "tx", txRes.Tx)
+			txJSON, err := encodingConfig.Amino.MarshalJSON(txRes)
 			if err != nil {
 				logger.L.Panicw("Cannot marshal tx response to JSON", "txhash", txHash, "tx_response", txRes, "error", err)
 			}

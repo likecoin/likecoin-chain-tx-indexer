@@ -41,8 +41,9 @@ var Command = &cobra.Command{
 		if lcdEndpoint[len(lcdEndpoint)-1] == '/' {
 			lcdEndpoint = lcdEndpoint[:len(lcdEndpoint)-1]
 		}
+
 		ctx := poller.CosmosCallContext{
-			Codec: app.MakeCodec(),
+			Codec: app.MakeEncodingConfig().Amino.Amino,
 			Client: &http.Client{
 				Transport: &http.Transport{
 					MaxIdleConnsPerHost: 20,
