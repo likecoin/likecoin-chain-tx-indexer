@@ -10,15 +10,19 @@ import (
 
 const CmdLogLevel = "log-level"
 const CmdLogFormat = "log-format"
+const CmdLogOutputs = "log-outputs"
 
 const DefaultLogLevel = "info"
 const DefaultLogFormat = "console"
 
+var DefaultLogOutputs = []string{"stderr"}
+
 var L *zap.SugaredLogger
 
 func ConfigCmd(cmd *cobra.Command) {
-	cmd.PersistentFlags().String(CmdLogLevel, DefaultLogLevel, "logging level")
+	cmd.PersistentFlags().String(CmdLogLevel, DefaultLogLevel, "logging level (debug | info | warn | error | dpanic | panic | fatal)")
 	cmd.PersistentFlags().String(CmdLogFormat, DefaultLogFormat, "logging format (json | console)")
+	cmd.PersistentFlags().StringArray(CmdLogOutputs, DefaultLogOutputs, "logging outputs (stdout | stderr | /somewhere/to/some/file)")
 }
 
 func SetupLoggerFromCmdArgs(cmd *cobra.Command) {
@@ -30,6 +34,10 @@ func SetupLoggerFromCmdArgs(cmd *cobra.Command) {
 	if err != nil {
 		panic(err)
 	}
+	cmdOutputs, err := cmd.Flags().GetStringArray(CmdLogOutputs)
+	if err != nil {
+		panic(err)
+	}
 	var level zapcore.Level
 	err = level.UnmarshalText([]byte(cmdLevel))
 	if err != nil {
@@ -38,6 +46,8 @@ func SetupLoggerFromCmdArgs(cmd *cobra.Command) {
 	}
 	cfg := zap.NewProductionConfig()
 	cfg.Level = zap.NewAtomicLevelAt(level)
+	cfg.OutputPaths = cmdOutputs
+	cfg.ErrorOutputPaths = cmdOutputs
 	cfg.Encoding = cmdFormat
 	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 	cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
