@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"hash/crc64"
 	"time"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/util"
 	"github.com/spf13/cobra"
 )
 
@@ -172,34 +172,6 @@ func NewBatch(conn *pgxpool.Conn, limit int) Batch {
 	}
 }
 
-type TxResult struct {
-	TxHash string `json:"txhash"`
-	Logs   []struct {
-		Events []struct {
-			Type       string `json:"type"`
-			Attributes []struct {
-				Key   string `json:"key"`
-				Value string `json:"value"`
-			} `json:"attributes"`
-		} `json:"events"`
-	} `json:"logs"`
-}
-
-func createEventHashes(txRes TxResult) []int64 {
-	partitionTable := crc64.MakeTable(crc64.ISO)
-	eventHashes := []int64{}
-	for _, log := range txRes.Logs {
-		for _, event := range log.Events {
-			for _, attr := range event.Attributes {
-				s := fmt.Sprintf("%s.%s=\"%s\"", event.Type, attr.Key, attr.Value)
-				hash := int64(crc64.Checksum([]byte(s), partitionTable))
-				eventHashes = append(eventHashes, hash)
-			}
-		}
-	}
-	return eventHashes
-}
-
 func (batch *Batch) InsertTx(txJSON []byte, height int64, txIndex int) error {
 	if batch.Batch.Len() >= batch.limit && batch.prevHeight > 0 && height != batch.prevHeight {
 		err := batch.Flush()
@@ -207,12 +179,15 @@ func (batch *Batch) InsertTx(txJSON []byte, height int64, txIndex int) error {
 			return err
 		}
 	}
-	txRes := TxResult{}
+	txRes := util.TxResult{}
 	err := json.Unmarshal(txJSON, &txRes)
 	if err != nil {
 		return err
 	}
-	eventHashes := createEventHashes(txRes)
+	eventHashes := []int64{}
+	for _, log := range txRes.Logs {
+		eventHashes = append(eventHashes, util.GetEventHashes(log.Events)...)
+	}
 	logger.L.Infow("Processing transaction", "txhash", txRes.TxHash, "height", height, "index", txIndex)
 	batch.Batch.Queue("INSERT INTO txs (height, tx_index, tx, event_hashes) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, txIndex, txJSON, eventHashes)
 	batch.prevHeight = height

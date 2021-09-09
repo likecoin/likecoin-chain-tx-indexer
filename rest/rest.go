@@ -2,7 +2,6 @@ package rest
 
 import (
 	"fmt"
-	"hash/crc64"
 	"net/http/httputil"
 	"net/url"
 	"strconv"
@@ -12,28 +11,21 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/util"
 )
 
-type Event struct {
-	Type      string
-	Attribute Attribute
-}
-
-type Attribute struct {
-	Key   string
-	Value string
-}
-
-func getEvents(query url.Values) (events []Event) {
+func getEvents(query url.Values) (events []util.Event) {
 	for k, vs := range query {
 		if strings.Contains(k, ".") {
 			arr := strings.SplitN(k, ".", 2)
 			for _, v := range vs {
-				events = append(events, Event{
+				events = append(events, util.Event{
 					Type: arr[0],
-					Attribute: Attribute{
-						Key:   arr[1],
-						Value: v,
+					Attributes: []util.Attribute{
+						{
+							Key:   arr[1],
+							Value: v,
+						},
 					},
 				})
 			}
@@ -42,22 +34,14 @@ func getEvents(query url.Values) (events []Event) {
 	return events
 }
 
-func getEventHashes(event Event) []int64 {
-	partitionTable := crc64.MakeTable(crc64.ISO)
-	s := fmt.Sprintf("%s.%s=\"%s\"", event.Type, event.Attribute.Key, event.Attribute.Value)
-	hash := int64(crc64.Checksum([]byte(s), partitionTable))
-	hashes := []int64{hash}
-	return hashes
-}
-
-func queryCount(conn *pgxpool.Conn, event Event) (int64, error) {
+func queryCount(conn *pgxpool.Conn, events []util.Event) (int64, error) {
 	sql := `
-SELECT count(id) FROM txs
-WHERE event_hashes @> $1
-`
+		SELECT count(id) FROM txs
+		WHERE event_hashes @> $1
+	`
 	ctx, cancel := db.GetTimeoutContext()
 	defer cancel()
-	eventHashes := getEventHashes(event)
+	eventHashes := util.GetEventHashes(events)
 	row := conn.QueryRow(ctx, sql, eventHashes)
 	var count int64
 	err := row.Scan(&count)
@@ -67,16 +51,16 @@ WHERE event_hashes @> $1
 	return count, nil
 }
 
-func queryTxs(conn *pgxpool.Conn, event Event, limit int64, page int64) ([]interface{}, error) {
+func queryTxs(conn *pgxpool.Conn, events []util.Event, limit int64, page int64) ([]interface{}, error) {
 	offset := limit * (page - 1)
 	sql := `
-	SELECT tx FROM txs
-	WHERE event_hashes @> $1
-	ORDER BY height, tx_index
-	LIMIT $2
-	OFFSET $3
+		SELECT tx FROM txs
+		WHERE event_hashes @> $1
+		ORDER BY height, tx_index
+		LIMIT $2
+		OFFSET $3
 	`
-	eventHashes := getEventHashes(event)
+	eventHashes := util.GetEventHashes(events)
 	ctx, cancel := db.GetTimeoutContext()
 	defer cancel()
 	rows, err := conn.Query(ctx, sql, eventHashes, limit, offset)
@@ -134,26 +118,21 @@ func handleTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(400, "event needed")
 		return
 	}
-	if len(events) > 1 {
-		c.AbortWithStatusJSON(400, "only 1 event supported")
-		return
-	}
-	event := events[0]
 	conn, err := db.AcquireFromPool(pool)
 	if err != nil {
 		logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
 	}
 	defer conn.Release()
-	totalCount, err := queryCount(conn, event)
+	totalCount, err := queryCount(conn, events)
 	if err != nil {
-		logger.L.Errorw("Cannot get total tx count from database", "event", event, "error", err)
+		logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)
 		c.AbortWithStatusJSON(500, err)
 		return
 	}
 	totalPages := (totalCount-1)/limit + 1
-	txs, err := queryTxs(conn, event, limit, page)
+	txs, err := queryTxs(conn, events, limit, page)
 	if err != nil {
-		logger.L.Errorw("Cannot get txs from database", "event", event, "limit", limit, "page", page, "error", err)
+		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", page, "error", err)
 		c.AbortWithStatusJSON(500, err)
 		return
 	}

@@ -72,19 +72,6 @@ func GetBlock(ctx *CosmosCallContext, height int64) (*BlockResult, error) {
 	return &resultBlock, nil
 }
 
-type TxResult struct {
-	Height int64 `json:"height"`
-	Logs   []struct {
-		Events []struct {
-			Type       string `json:"type"`
-			Attributes []struct {
-				Key   string `json:"key"`
-				Value string `json:"value"`
-			} `json:"attributes"`
-		} `json:"events"`
-	} `json:"logs"`
-}
-
 func getHeight(pool *pgxpool.Pool) (int64, error) {
 	conn, err := db.AcquireFromPool(pool)
 	if err != nil {
