@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"hash/crc64"
 	"time"
 
 	"github.com/jackc/pgx/v4"
@@ -100,31 +101,34 @@ func AcquireFromPool(pool *pgxpool.Pool) (*pgxpool.Conn, error) {
 func InitDB(conn *pgxpool.Conn) error {
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	_, err := conn.Exec(ctx, "CREATE TABLE IF NOT EXISTS txs (id BIGSERIAL PRIMARY KEY, height BIGINT, tx_index INT, tx JSONB, UNIQUE (height, tx_index))")
+	_, err := conn.Exec(ctx, `
+	CREATE TABLE IF NOT EXISTS txs (
+		id BIGSERIAL PRIMARY KEY,
+		height BIGINT,
+		tx_index INT,
+		tx JSONB,
+		event_hashes BIGINT ARRAY,
+		UNIQUE (height, tx_index)
+	)
+	`)
 	if err != nil {
 		return err
 	}
 	ctx, cancel = GetTimeoutContext()
 	defer cancel()
-	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_txs ON txs USING hash ((tx->>'txhash'))")
+	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_txs_txhash ON txs USING hash ((tx->>'txhash'))")
 	if err != nil {
 		return err
 	}
 	ctx, cancel = GetTimeoutContext()
 	defer cancel()
-	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_txs ON txs (height, tx_index)")
+	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_txs_height_tx_index ON txs (height, tx_index)")
 	if err != nil {
 		return err
 	}
 	ctx, cancel = GetTimeoutContext()
 	defer cancel()
-	_, err = conn.Exec(ctx, "CREATE TABLE IF NOT EXISTS tx_events (type TEXT, key TEXT, value TEXT, height BIGINT, tx_index INT, UNIQUE(type, key, value, height, tx_index))")
-	if err != nil {
-		return err
-	}
-	ctx, cancel = GetTimeoutContext()
-	defer cancel()
-	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_tx_events ON tx_events (type, key, value, height, tx_index)")
+	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_tx_event_hashes ON txs USING gin (event_hashes)")
 	if err != nil {
 		return err
 	}
@@ -181,6 +185,21 @@ type TxResult struct {
 	} `json:"logs"`
 }
 
+func createEventHashes(txRes TxResult) []int64 {
+	partitionTable := crc64.MakeTable(crc64.ISO)
+	eventHashes := []int64{}
+	for _, log := range txRes.Logs {
+		for _, event := range log.Events {
+			for _, attr := range event.Attributes {
+				s := fmt.Sprintf("%s.%s=\"%s\"", event.Type, attr.Key, attr.Value)
+				hash := int64(crc64.Checksum([]byte(s), partitionTable))
+				eventHashes = append(eventHashes, hash)
+			}
+		}
+	}
+	return eventHashes
+}
+
 func (batch *Batch) InsertTx(txJSON []byte, height int64, txIndex int) error {
 	if batch.Batch.Len() >= batch.limit && batch.prevHeight > 0 && height != batch.prevHeight {
 		err := batch.Flush()
@@ -193,18 +212,9 @@ func (batch *Batch) InsertTx(txJSON []byte, height int64, txIndex int) error {
 	if err != nil {
 		return err
 	}
+	eventHashes := createEventHashes(txRes)
 	logger.L.Infow("Processing transaction", "txhash", txRes.TxHash, "height", height, "index", txIndex)
-	batch.Batch.Queue("INSERT INTO txs (height, tx_index, tx) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING", height, txIndex, txJSON)
-	for _, log := range txRes.Logs {
-		for _, event := range log.Events {
-			for _, attr := range event.Attributes {
-				batch.Batch.Queue(
-					"INSERT INTO tx_events (type, key, value, height, tx_index) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING",
-					event.Type, attr.Key, attr.Value, height, txIndex,
-				)
-			}
-		}
-	}
+	batch.Batch.Queue("INSERT INTO txs (height, tx_index, tx, event_hashes) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, txIndex, txJSON, eventHashes)
 	batch.prevHeight = height
 	logger.L.Debugw("Processed height", "height", height, "batch_size", batch.Batch.Len())
 	return nil

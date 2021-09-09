@@ -2,6 +2,7 @@ package rest
 
 import (
 	"fmt"
+	"hash/crc64"
 	"net/http/httputil"
 	"net/url"
 	"strconv"
@@ -35,14 +36,23 @@ func getAttributes(query url.Values) (attrs []Attribute) {
 	return attrs
 }
 
+func getEventHashes(attr Attribute) []int64 {
+	partitionTable := crc64.MakeTable(crc64.ISO)
+	s := fmt.Sprintf("%s.%s=\"%s\"", attr.Type, attr.Key, attr.Value)
+	hash := int64(crc64.Checksum([]byte(s), partitionTable))
+	hashes := []int64{hash}
+	return hashes
+}
+
 func queryCount(conn *pgxpool.Conn, attr Attribute) (int64, error) {
 	sql := `
-SELECT count(DISTINCT (height, tx_index)) FROM tx_events
-WHERE type = $1 AND key = $2 AND value = $3
+SELECT count(id) FROM txs
+WHERE event_hashes @> $1
 `
 	ctx, cancel := db.GetTimeoutContext()
 	defer cancel()
-	row := conn.QueryRow(ctx, sql, attr.Type, attr.Key, attr.Value)
+	eventHashes := getEventHashes(attr)
+	row := conn.QueryRow(ctx, sql, eventHashes)
 	var count int64
 	err := row.Scan(&count)
 	if err != nil {
@@ -54,18 +64,16 @@ WHERE type = $1 AND key = $2 AND value = $3
 func queryTxs(conn *pgxpool.Conn, attr Attribute, limit int64, page int64) ([]interface{}, error) {
 	offset := limit * (page - 1)
 	sql := `
-SELECT txs.tx FROM (
-	SELECT DISTINCT height, tx_index FROM tx_events
-	WHERE type = $1 AND key = $2 AND value = $3
+	SELECT tx FROM txs
+	WHERE event_hashes @> $1
 	ORDER BY height, tx_index
-	LIMIT $4
-	OFFSET $5
-) as e
-JOIN txs ON txs.height = e.height AND txs.tx_index = e.tx_index
-`
+	LIMIT $2
+	OFFSET $3
+	`
+	eventHashes := getEventHashes(attr)
 	ctx, cancel := db.GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, attr.Type, attr.Key, attr.Value, limit, offset)
+	rows, err := conn.Query(ctx, sql, eventHashes, limit, offset)
 	if err != nil {
 		return nil, err
 	}
