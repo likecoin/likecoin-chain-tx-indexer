@@ -14,6 +14,15 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/util"
 )
 
+func trimQuotes(s string) string {
+	if len(s) >= 2 {
+		if c := s[len(s)-1]; s[0] == c && (c == '"' || c == '\'') {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
+}
+
 func getEvents(query url.Values) (events []util.Event) {
 	for k, vs := range query {
 		if strings.Contains(k, ".") {
@@ -24,7 +33,7 @@ func getEvents(query url.Values) (events []util.Event) {
 					Attributes: []util.Attribute{
 						{
 							Key:   arr[1],
-							Value: v,
+							Value: trimQuotes(v),
 						},
 					},
 				})
