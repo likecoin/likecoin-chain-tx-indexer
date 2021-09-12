@@ -60,15 +60,19 @@ func queryCount(conn *pgxpool.Conn, events []util.Event) (int64, error) {
 	return count, nil
 }
 
-func queryTxs(conn *pgxpool.Conn, events []util.Event, limit int64, page int64) ([]interface{}, error) {
+func queryTxs(conn *pgxpool.Conn, events []util.Event, limit int64, page int64, orderByDesc bool) ([]interface{}, error) {
 	offset := limit * (page - 1)
-	sql := `
+	order := "ASC"
+	if orderByDesc {
+		order = "DESC"
+	}
+	sql := fmt.Sprintf(`
 		SELECT tx FROM txs
 		WHERE event_hashes @> $1
-		ORDER BY height, tx_index
+		ORDER BY height %s, tx_index %s
 		LIMIT $2
 		OFFSET $3
-	`
+	`, order, order)
 	eventHashes := util.GetEventHashes(events)
 	ctx, cancel := db.GetTimeoutContext()
 	defer cancel()
@@ -88,7 +92,7 @@ func queryTxs(conn *pgxpool.Conn, events []util.Event, limit int64, page int64) 
 	return res, nil
 }
 
-type Response struct {
+type AminoResponse struct {
 	TotalCount string        `json:"total_count"`
 	Count      string        `json:"count"`
 	Page       string        `json:"page_number"`
@@ -97,7 +101,17 @@ type Response struct {
 	Txs        []interface{} `json:"txs"`
 }
 
-func handleTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
+type Pagination struct {
+	NextKey string `json:"next_key"`
+	Total   string `json:"total"`
+}
+type StargateResponse struct {
+	Txs         []interface{} `json:"txs"`
+	TxResponses []interface{} `json:"tx_responses"`
+	Pagination  Pagination    `json:"pagination"`
+}
+
+func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
 	var page int64
 	var limit int64
@@ -139,19 +153,106 @@ func handleTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 	totalPages := (totalCount-1)/limit + 1
-	txs, err := queryTxs(conn, events, limit, page)
+	txs, err := queryTxs(conn, events, limit, page, false)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", page, "error", err)
 		c.AbortWithStatusJSON(500, err)
 		return
 	}
-	c.JSON(200, Response{
+	c.JSON(200, AminoResponse{
 		TotalCount: fmt.Sprintf("%d", totalCount),
 		Count:      fmt.Sprintf("%d", len(txs)),
 		Page:       fmt.Sprintf("%d", page),
 		PageTotal:  fmt.Sprintf("%d", totalPages),
 		Limit:      fmt.Sprintf("%d", limit),
 		Txs:        txs,
+	})
+}
+
+func getEventMap(eventArray []string) (map[string][]string, error) {
+	m := make(map[string][]string)
+	for _, v := range eventArray {
+		if strings.Contains(v, "=") {
+			arr := strings.SplitN(v, "=", 2)
+			m[arr[0]] = []string{arr[1]}
+		} else {
+			return nil, fmt.Errorf("query event missing equal sign: %s", v)
+		}
+	}
+	return m, nil
+}
+
+func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
+	q := c.Request.URL.Query()
+	var offset int64
+	var limit int64
+	var err error
+	orderByDesc := false
+	offsetStr := q.Get("pagination.offset")
+	if offsetStr == "" {
+		offset = 1
+	} else {
+		offset, err = strconv.ParseInt(offsetStr, 10, 64)
+		if err != nil || offset < 1 {
+			c.AbortWithStatus(400)
+			return
+		}
+	}
+	limitStr := q.Get("pagination.limit")
+	if limitStr == "" {
+		limit = 1
+	} else {
+		limit, err = strconv.ParseInt(limitStr, 10, 64)
+		if err != nil || limit < 1 || limit > 100 {
+			c.AbortWithStatus(400)
+			return
+		}
+	}
+	orderByStr := strings.ToUpper(q.Get("order_by"))
+	switch orderByStr {
+	case "", "ORDER_BY_UNSPECIFIED", "ORDER_BY_ASC":
+		break
+	case "ORDER_BY_DESC":
+		orderByDesc = true
+	default:
+		c.AbortWithStatusJSON(400, "Available values for order_by: ORDER_BY_UNSPECIFIED, ORDER_BY_ASC, ORDER_BY_DESC")
+		return
+	}
+	eventArray := c.QueryArray("events")
+	if len(eventArray) == 0 {
+		c.AbortWithStatusJSON(400, "event needed")
+		return
+	}
+	eventMap, err := getEventMap(eventArray)
+	if err != nil {
+		c.AbortWithStatusJSON(400, err.Error())
+		return
+	}
+	events := getEvents(eventMap)
+
+	conn, err := db.AcquireFromPool(pool)
+	if err != nil {
+		logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
+	}
+	defer conn.Release()
+	totalCount, err := queryCount(conn, events)
+	if err != nil {
+		logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)
+		c.AbortWithStatusJSON(500, err)
+		return
+	}
+	txs, err := queryTxs(conn, events, limit, offset, orderByDesc)
+	if err != nil {
+		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", offset, "error", err)
+		c.AbortWithStatusJSON(500, err)
+		return
+	}
+	c.JSON(200, StargateResponse{
+		Txs: txs,
+		Pagination: Pagination{
+			NextKey: "null",
+			Total:   fmt.Sprintf("%d", totalCount),
+		},
 	})
 }
 
@@ -174,7 +275,11 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 			return
 		}
 		if endpoint == "/txs" {
-			handleTxsSearch(c, pool)
+			handleAminoTxsSearch(c, pool)
+			return
+		}
+		if endpoint == "/cosmos/tx/v1beta1/txs" {
+			handleStargateTxsSearch(c, pool)
 			return
 		}
 		proxyHandler(c)
