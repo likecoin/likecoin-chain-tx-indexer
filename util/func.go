@@ -3,11 +3,13 @@ package util
 import (
 	"fmt"
 	"hash/crc64"
+
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 var partitionTable = crc64.MakeTable(crc64.ISO)
 
-func GetEventHashes(events []Event) []int64 {
+func GetEventHashes(events types.StringEvents) []int64 {
 	eventHashes := []int64{}
 	for _, event := range events {
 		for _, attr := range event.Attributes {

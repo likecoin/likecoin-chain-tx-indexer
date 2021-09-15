@@ -2,12 +2,13 @@ package db
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/util"
 	"github.com/spf13/cobra"
@@ -172,24 +173,24 @@ func NewBatch(conn *pgxpool.Conn, limit int) Batch {
 	}
 }
 
-func (batch *Batch) InsertTx(txJSON []byte, height int64, txIndex int) error {
+func (batch *Batch) InsertTx(txRes types.TxResponse, height int64, txIndex int) error {
 	if batch.Batch.Len() >= batch.limit && batch.prevHeight > 0 && height != batch.prevHeight {
 		err := batch.Flush()
 		if err != nil {
 			return err
 		}
 	}
-	txRes := util.TxResult{}
-	err := json.Unmarshal(txJSON, &txRes)
-	if err != nil {
-		return err
-	}
 	eventHashes := []int64{}
 	for _, log := range txRes.Logs {
 		eventHashes = append(eventHashes, util.GetEventHashes(log.Events)...)
 	}
+	var encodingConfig = app.MakeEncodingConfig()
+	txResJSON, err := encodingConfig.Marshaler.MarshalJSON(&txRes) // TODO fix "error": "unable to resolve type URL "
+	if err != nil {
+		return err
+	}
 	logger.L.Infow("Processing transaction", "txhash", txRes.TxHash, "height", height, "index", txIndex)
-	batch.Batch.Queue("INSERT INTO txs (height, tx_index, tx, event_hashes) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, txIndex, txJSON, eventHashes)
+	batch.Batch.Queue("INSERT INTO txs (height, tx_index, tx, event_hashes) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, txIndex, txResJSON, eventHashes)
 	batch.prevHeight = height
 	logger.L.Debugw("Processed height", "height", height, "batch_size", batch.Batch.Len())
 	return nil

@@ -1,11 +1,13 @@
 package poller
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
+	txTypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
@@ -59,7 +61,7 @@ func GetBlock(ctx *CosmosCallContext, height int64) (*BlockResult, error) {
 	if height > 0 {
 		heightStr = fmt.Sprintf("%d", height)
 	}
-	url := fmt.Sprintf("%s/blocks/%s", ctx.LcdEndpoint, heightStr)
+	url := fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/%s", ctx.LcdEndpoint, heightStr)
 	body, err := getResponse(ctx.Client, url)
 	if err != nil {
 		return nil, err
@@ -110,12 +112,18 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 		for txIndex, tx := range blockResult.Block.Data.Txs {
 			txHash := bytes.HexBytes(tx.Hash())
 			logger.L.Infow("Getting transaction", "txhash", txHash, "height", height, "index", txIndex)
-			url := fmt.Sprintf("%s/txs/%s", ctx.LcdEndpoint, txHash.String())
+			url := fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", ctx.LcdEndpoint, txHash.String())
 			txResJSON, err := getResponse(ctx.Client, url)
 			if err != nil {
 				return 0, fmt.Errorf("cannot get tx response from lcd, error = %w, txhash = %s, height = %d, index = %d", err, txHash.String(), height, txIndex)
 			}
-			err = batch.InsertTx(txResJSON, height, txIndex)
+			txRes := txTypes.GetTxResponse{}
+			fmt.Println(string(txResJSON))
+			err = json.Unmarshal(txResJSON, &txRes)
+			if err != nil {
+				logger.L.Panicw("Cannot unmarshal tx response to JSON", "txhash", txHash, "tx_response", txResJSON, "error", err)
+			}
+			err = batch.InsertTx(*txRes.TxResponse, height, txIndex)
 			if err != nil {
 				return 0, fmt.Errorf("cannot insert transaction, error = %w, txhash = %s, height = %d, index = %d, tx_json = %s", err, txHash.String(), height, txIndex, string(txResJSON))
 			}
