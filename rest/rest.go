@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
@@ -23,14 +24,14 @@ func trimQuotes(s string) string {
 	return s
 }
 
-func getEvents(query url.Values) (events []util.Event) {
+func getEvents(query url.Values) (events types.StringEvents) {
 	for k, vs := range query {
 		if strings.Contains(k, ".") {
 			arr := strings.SplitN(k, ".", 2)
 			for _, v := range vs {
-				events = append(events, util.Event{
+				events = append(events, types.StringEvent{
 					Type: arr[0],
-					Attributes: []util.Attribute{
+					Attributes: []types.Attribute{
 						{
 							Key:   arr[1],
 							Value: trimQuotes(v),
@@ -43,7 +44,7 @@ func getEvents(query url.Values) (events []util.Event) {
 	return events
 }
 
-func queryCount(conn *pgxpool.Conn, events []util.Event) (int64, error) {
+func queryCount(conn *pgxpool.Conn, events types.StringEvents) (int64, error) {
 	sql := `
 		SELECT count(id) FROM txs
 		WHERE event_hashes @> $1
@@ -60,7 +61,7 @@ func queryCount(conn *pgxpool.Conn, events []util.Event) (int64, error) {
 	return count, nil
 }
 
-func queryTxs(conn *pgxpool.Conn, events []util.Event, limit int64, page int64, orderByDesc bool) ([]interface{}, error) {
+func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit int64, page int64, orderByDesc bool) ([]interface{}, error) {
 	offset := limit * (page - 1)
 	order := "ASC"
 	if orderByDesc {

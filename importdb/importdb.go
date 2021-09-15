@@ -63,13 +63,9 @@ func Run(pool *pgxpool.Pool, likedPath string) {
 				}
 			}
 			logger.L.Debugw("before Marshal JSON", "tx", txRes.Tx)
-			txJSON, err := encodingConfig.Amino.MarshalJSON(txRes)
+			err = batch.InsertTx(txRes, height, txIndex)
 			if err != nil {
-				logger.L.Panicw("Cannot marshal tx response to JSON", "txhash", txHash, "tx_response", txRes, "error", err)
-			}
-			err = batch.InsertTx(txJSON, height, txIndex)
-			if err != nil {
-				logger.L.Panicw("Cannot insert transcation", "txhash", txHash, "tx_response", txRes, "tx_json", txJSON, "error", err)
+				logger.L.Panicw("Cannot insert transcation", "txhash", txHash, "tx_response", txRes, "error", err)
 			}
 		}
 	}
