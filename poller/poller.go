@@ -1,7 +1,6 @@
 package poller
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -9,6 +8,7 @@ import (
 
 	txTypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/tendermint/go-amino"
@@ -22,6 +22,8 @@ const batchSize = 1000
 // TODO: move into config
 const sleepInitial = 5 * time.Second
 const sleepMax = 600 * time.Second
+
+var encodingConfig = app.MakeEncodingConfig()
 
 func getResponse(client *http.Client, url string) ([]byte, error) {
 	resp, err := client.Get(url)
@@ -118,8 +120,7 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 				return 0, fmt.Errorf("cannot get tx response from lcd, error = %w, txhash = %s, height = %d, index = %d", err, txHash.String(), height, txIndex)
 			}
 			txRes := txTypes.GetTxResponse{}
-			fmt.Println(string(txResJSON))
-			err = json.Unmarshal(txResJSON, &txRes)
+			err = encodingConfig.Marshaler.UnmarshalJSON(txResJSON, &txRes)
 			if err != nil {
 				logger.L.Panicw("Cannot unmarshal tx response to JSON", "txhash", txHash, "tx_response", txResJSON, "error", err)
 			}

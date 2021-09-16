@@ -30,6 +30,8 @@ const DefaultDBPassword = "password"
 const DefaultDBPoolMin = 4
 const DefaultDBPoolMax = 32
 
+var encodingConfig = app.MakeEncodingConfig()
+
 func ConfigCmd(cmd *cobra.Command) {
 	cmd.PersistentFlags().String(CmdDBName, DefaultDBName, "Postgres database name")
 	cmd.PersistentFlags().String(CmdDBHost, DefaultDBHost, "Postgres host address")
@@ -184,7 +186,6 @@ func (batch *Batch) InsertTx(txRes types.TxResponse, height int64, txIndex int) 
 	for _, log := range txRes.Logs {
 		eventHashes = append(eventHashes, util.GetEventHashes(log.Events)...)
 	}
-	var encodingConfig = app.MakeEncodingConfig()
 	txResJSON, err := encodingConfig.Marshaler.MarshalJSON(&txRes) // TODO fix "error": "unable to resolve type URL "
 	if err != nil {
 		return err
