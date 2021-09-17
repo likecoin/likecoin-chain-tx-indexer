@@ -50,7 +50,7 @@ func getEvents(query url.Values) (events types.StringEvents) {
 	return events
 }
 
-func queryCount(conn *pgxpool.Conn, events types.StringEvents) (int64, error) {
+func queryCount(conn *pgxpool.Conn, events types.StringEvents) (uint64, error) {
 	sql := `
 		SELECT count(id) FROM txs
 		WHERE event_hashes @> $1
@@ -59,7 +59,7 @@ func queryCount(conn *pgxpool.Conn, events types.StringEvents) (int64, error) {
 	defer cancel()
 	eventHashes := util.GetEventHashes(events)
 	row := conn.QueryRow(ctx, sql, eventHashes)
-	var count int64
+	var count uint64
 	err := row.Scan(&count)
 	if err != nil {
 		return 0, err
@@ -67,7 +67,7 @@ func queryCount(conn *pgxpool.Conn, events types.StringEvents) (int64, error) {
 	return count, nil
 }
 
-func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit int64, page int64, orderByDesc bool) ([]*types.TxResponse, error) {
+func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, page uint64, orderByDesc bool) ([]*types.TxResponse, error) {
 	offset := limit * (page - 1)
 	order := "ASC"
 	if orderByDesc {
@@ -90,21 +90,15 @@ func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit int64, page i
 	defer rows.Close()
 	res := make([]*types.TxResponse, 0, limit)
 	for rows.Next() {
-		txRow, err := rows.Values()
+		var jsonb pgtype.JSONB
+		err := rows.Scan(&jsonb)
 		if err != nil {
 			return nil, err
 		}
-		txJson, ok := txRow[0].(*pgtype.JSONB)
-		if !ok {
-			return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txRow[0])
-		}
-		if txJson.Status != pgtype.Present {
-			return nil, fmt.Errorf("cannot unmarshal JSON to TxResponse: %+v", txJson.Status)
-		}
 		var txRes types.TxResponse
-		err = encodingConfig.Marshaler.UnmarshalJSON(txJson.Bytes, &txRes)
+		err = encodingConfig.Marshaler.UnmarshalJSON(jsonb.Bytes, &txRes)
 		if err != nil {
-			return nil, fmt.Errorf("cannot unmarshal JSON to TxResponse: %+v", txJson)
+			return nil, fmt.Errorf("cannot unmarshal JSON to TxResponse: %+v", jsonb.Bytes)
 		}
 		res = append(res, &txRes)
 	}
@@ -122,14 +116,14 @@ type AminoResponse struct {
 
 func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
-	var page int64
-	var limit int64
+	var page uint64
+	var limit uint64
 	var err error
 	pageStr := q.Get("page")
 	if pageStr == "" {
 		page = 1
 	} else {
-		page, err = strconv.ParseInt(pageStr, 10, 64)
+		page, err = strconv.ParseUint(pageStr, 10, 64)
 		if err != nil || page < 1 {
 			c.AbortWithStatus(400)
 			return
@@ -139,7 +133,7 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	if limitStr == "" {
 		limit = 1
 	} else {
-		limit, err = strconv.ParseInt(limitStr, 10, 64)
+		limit, err = strconv.ParseUint(limitStr, 10, 64)
 		if err != nil || limit < 1 || limit > 100 {
 			c.AbortWithStatus(400)
 			return
@@ -168,14 +162,23 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(500, err)
 		return
 	}
-	c.JSON(200, AminoResponse{
-		TotalCount: fmt.Sprintf("%d", totalCount),
-		Count:      fmt.Sprintf("%d", len(txs)),
-		Page:       fmt.Sprintf("%d", page),
-		PageTotal:  fmt.Sprintf("%d", totalPages),
-		Limit:      fmt.Sprintf("%d", limit),
+
+	res := types.SearchTxsResult{
+		TotalCount: totalCount,
+		Count:      uint64(len(txs)),
+		PageNumber: page,
+		PageTotal:  totalPages,
+		Limit:      limit,
 		Txs:        txs,
-	})
+	}
+	resJson, err := encodingConfig.Marshaler.MarshalJSON(&res)
+	if err != nil {
+		logger.L.Errorw("Cannot marshal SearchTxsResult to JSON", "events", events, "error", err)
+		c.AbortWithStatusJSON(500, err)
+	}
+	c.Writer.Header().Set("Content-Type", "application/json")
+	c.Writer.WriteHeader(200)
+	c.Writer.Write(resJson)
 }
 
 func getEventMap(eventArray []string) (map[string][]string, error) {
@@ -193,15 +196,15 @@ func getEventMap(eventArray []string) (map[string][]string, error) {
 
 func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
-	var offset int64
-	var limit int64
+	var offset uint64
+	var limit uint64
 	var err error
 	orderByDesc := false
 	offsetStr := q.Get("pagination.offset")
 	if offsetStr == "" {
 		offset = 1
 	} else {
-		offset, err = strconv.ParseInt(offsetStr, 10, 64)
+		offset, err = strconv.ParseUint(offsetStr, 10, 64)
 		if err != nil || offset < 1 {
 			c.AbortWithStatus(400)
 			return
@@ -211,7 +214,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	if limitStr == "" {
 		limit = 1
 	} else {
-		limit, err = strconv.ParseInt(limitStr, 10, 64)
+		limit, err = strconv.ParseUint(limitStr, 10, 64)
 		if err != nil || limit < 1 || limit > 100 {
 			c.AbortWithStatus(400)
 			return
@@ -270,7 +273,11 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		res.Txs = append(res.Txs, &tx)
 	}
 
-	resJson, _ := encodingConfig.Marshaler.MarshalJSON(&res)
+	resJson, err := encodingConfig.Marshaler.MarshalJSON(&res)
+	if err != nil {
+		logger.L.Errorw("Cannot marshal GetTxsEventResponse to JSON", "events", events, "error", err)
+		c.AbortWithStatusJSON(500, err)
+	}
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.Writer.WriteHeader(200)
 	c.Writer.Write(resJson)
