@@ -7,9 +7,12 @@ import (
 	"strconv"
 	"strings"
 
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -106,12 +109,26 @@ func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, page 
 }
 
 type AminoResponse struct {
-	TotalCount string        `json:"total_count"`
-	Count      string        `json:"count"`
-	Page       string        `json:"page_number"`
-	PageTotal  string        `json:"page_total"`
-	Limit      string        `json:"limit"`
-	Txs        []interface{} `json:"txs"`
+	TotalCount string            `json:"total_count"`
+	Count      string            `json:"count"`
+	Page       string            `json:"page_number"`
+	PageTotal  string            `json:"page_total"`
+	Limit      string            `json:"limit"`
+	Txs        []*legacytx.StdTx `json:"txs"`
+}
+
+func convertToStdTx(txBytes []byte) (legacytx.StdTx, error) {
+	txI, err := encodingConfig.TxConfig.TxDecoder()(txBytes)
+	if err != nil {
+		return legacytx.StdTx{}, err
+	}
+
+	tx, ok := txI.(signing.Tx)
+	if !ok {
+		return legacytx.StdTx{}, fmt.Errorf("%+v is not backwards compatible with %T", tx, legacytx.StdTx{})
+	}
+
+	return clienttx.ConvertTxToStdTx(encodingConfig.Amino, tx)
 }
 
 func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
@@ -162,23 +179,25 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(500, err)
 		return
 	}
+	var stdTxs []*legacytx.StdTx
+	for _, tx := range txs {
+		stdTx, err := convertToStdTx(tx.Tx.Value)
+		if err != nil {
+			logger.L.Errorw("Cannot convert tx to StdTx", "events", events, "limit", limit, "page", page, "error", err)
+			c.AbortWithStatusJSON(500, err)
+			return
+		}
+		stdTxs = append(stdTxs, &stdTx)
+	}
 
-	res := types.SearchTxsResult{
-		TotalCount: totalCount,
-		Count:      uint64(len(txs)),
-		PageNumber: page,
-		PageTotal:  totalPages,
-		Limit:      limit,
-		Txs:        txs,
-	}
-	resJson, err := encodingConfig.Marshaler.MarshalJSON(&res)
-	if err != nil {
-		logger.L.Errorw("Cannot marshal SearchTxsResult to JSON", "events", events, "error", err)
-		c.AbortWithStatusJSON(500, err)
-	}
-	c.Writer.Header().Set("Content-Type", "application/json")
-	c.Writer.WriteHeader(200)
-	c.Writer.Write(resJson)
+	c.JSON(200, AminoResponse{
+		TotalCount: fmt.Sprintf("%d", totalCount),
+		Count:      fmt.Sprintf("%d", len(txs)),
+		Page:       fmt.Sprintf("%d", page),
+		PageTotal:  fmt.Sprintf("%d", totalPages),
+		Limit:      fmt.Sprintf("%d", limit),
+		Txs:        stdTxs,
+	})
 }
 
 func getEventMap(eventArray []string) (map[string][]string, error) {
