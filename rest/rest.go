@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http/httputil"
 	"net/url"
@@ -8,12 +9,17 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/util"
 )
+
+var encodingConfig = app.MakeEncodingConfig()
 
 func trimQuotes(s string) string {
 	if len(s) >= 2 {
@@ -100,16 +106,6 @@ type AminoResponse struct {
 	PageTotal  string        `json:"page_total"`
 	Limit      string        `json:"limit"`
 	Txs        []interface{} `json:"txs"`
-}
-
-type Pagination struct {
-	NextKey string `json:"next_key"`
-	Total   string `json:"total"`
-}
-type StargateResponse struct {
-	Txs         []interface{} `json:"txs"`
-	TxResponses []interface{} `json:"tx_responses"`
-	Pagination  Pagination    `json:"pagination"`
 }
 
 func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
@@ -242,19 +238,42 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(500, err)
 		return
 	}
-	txs, err := queryTxs(conn, events, limit, offset, orderByDesc)
+	txResInterfaces, err := queryTxs(conn, events, limit, offset, orderByDesc)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", offset, "error", err)
 		c.AbortWithStatusJSON(500, err)
 		return
 	}
-	c.JSON(200, StargateResponse{
-		Txs: txs,
-		Pagination: Pagination{
-			NextKey: "null",
-			Total:   fmt.Sprintf("%d", totalCount),
+
+	res := tx.GetTxsEventResponse{
+		Pagination: &query.PageResponse{
+			Total: uint64(totalCount),
 		},
-	})
+	}
+
+	for _, txResInterface := range txResInterfaces {
+		txResJson, err := json.Marshal(txResInterface)
+		if err != nil {
+			logger.L.Errorw("Cannot marshal tx response to JSON", "txResponse", txResInterface)
+			c.AbortWithStatusJSON(500, err)
+		}
+		txRes := types.TxResponse{}
+		err = encodingConfig.Marshaler.UnmarshalJSON(txResJson, &txRes)
+		if err != nil {
+			logger.L.Errorw("Cannot unmarshal JSON to TxResponse", "json", txResJson)
+			c.AbortWithStatusJSON(500, err)
+		}
+		res.TxResponses = append(res.TxResponses, &txRes)
+
+		tx := tx.Tx{}
+		tx.Unmarshal(txRes.Tx.Value)
+		res.Txs = append(res.Txs, &tx)
+	}
+
+	resJson, _ := encodingConfig.Marshaler.MarshalJSON(&res)
+	c.Writer.Header().Set("Content-Type", "application/json")
+	c.Writer.WriteHeader(200)
+	c.Writer.Write(resJson)
 }
 
 func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
