@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http/httputil"
 	"net/url"
@@ -12,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
@@ -67,7 +67,7 @@ func queryCount(conn *pgxpool.Conn, events types.StringEvents) (int64, error) {
 	return count, nil
 }
 
-func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit int64, page int64, orderByDesc bool) ([]interface{}, error) {
+func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit int64, page int64, orderByDesc bool) ([]*types.TxResponse, error) {
 	offset := limit * (page - 1)
 	order := "ASC"
 	if orderByDesc {
@@ -88,13 +88,25 @@ func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit int64, page i
 		return nil, err
 	}
 	defer rows.Close()
-	res := make([]interface{}, 0, limit)
+	res := make([]*types.TxResponse, 0, limit)
 	for rows.Next() {
 		txRow, err := rows.Values()
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, txRow[0])
+		txJson, ok := txRow[0].(*pgtype.JSONB)
+		if !ok {
+			return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txRow[0])
+		}
+		if txJson.Status != pgtype.Present {
+			return nil, fmt.Errorf("cannot unmarshal JSON to TxResponse: %+v", txJson.Status)
+		}
+		var txRes types.TxResponse
+		err = encodingConfig.Marshaler.UnmarshalJSON(txJson.Bytes, &txRes)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal JSON to TxResponse: %+v", txJson)
+		}
+		res = append(res, &txRes)
 	}
 	return res, nil
 }
@@ -238,7 +250,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(500, err)
 		return
 	}
-	txResInterfaces, err := queryTxs(conn, events, limit, offset, orderByDesc)
+	txResponses, err := queryTxs(conn, events, limit, offset, orderByDesc)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", offset, "error", err)
 		c.AbortWithStatusJSON(500, err)
@@ -246,27 +258,15 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	}
 
 	res := tx.GetTxsEventResponse{
+		TxResponses: txResponses,
 		Pagination: &query.PageResponse{
 			Total: uint64(totalCount),
 		},
 	}
 
-	for _, txResInterface := range txResInterfaces {
-		txResJson, err := json.Marshal(txResInterface)
-		if err != nil {
-			logger.L.Errorw("Cannot marshal tx response to JSON", "txResponse", txResInterface)
-			c.AbortWithStatusJSON(500, err)
-		}
-		txRes := types.TxResponse{}
-		err = encodingConfig.Marshaler.UnmarshalJSON(txResJson, &txRes)
-		if err != nil {
-			logger.L.Errorw("Cannot unmarshal JSON to TxResponse", "json", txResJson)
-			c.AbortWithStatusJSON(500, err)
-		}
-		res.TxResponses = append(res.TxResponses, &txRes)
-
-		tx := tx.Tx{}
-		tx.Unmarshal(txRes.Tx.Value)
+	for _, txResponse := range txResponses {
+		var tx tx.Tx
+		tx.Unmarshal(txResponse.Tx.Value)
 		res.Txs = append(res.Txs, &tx)
 	}
 
