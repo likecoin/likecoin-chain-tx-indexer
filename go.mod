@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/cosmos/cosmos-sdk v0.42.7
 	github.com/gin-gonic/gin v1.7.4
-	github.com/jackc/pgtype v1.8.1 // indirect
+	github.com/jackc/pgtype v1.8.1
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/likecoin/likechain v0.0.0-20210714072515-32056fc4759d
 	github.com/spf13/cobra v1.1.3
