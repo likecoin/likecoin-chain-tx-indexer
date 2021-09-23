@@ -179,25 +179,18 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(500, err)
 		return
 	}
-	var stdTxs []*legacytx.StdTx
-	for _, tx := range txs {
-		stdTx, err := convertToStdTx(tx.Tx.Value)
-		if err != nil {
-			logger.L.Errorw("Cannot convert tx to StdTx", "events", events, "limit", limit, "page", page, "error", err)
-			c.AbortWithStatusJSON(500, err)
-			return
-		}
-		stdTxs = append(stdTxs, &stdTx)
-	}
 
-	c.JSON(200, AminoResponse{
-		TotalCount: fmt.Sprintf("%d", totalCount),
-		Count:      fmt.Sprintf("%d", len(txs)),
-		Page:       fmt.Sprintf("%d", page),
-		PageTotal:  fmt.Sprintf("%d", totalPages),
-		Limit:      fmt.Sprintf("%d", limit),
-		Txs:        stdTxs,
-	})
+	searchTxsResult := types.NewSearchTxsResult(totalCount, uint64(len(txs)), totalPages, limit, txs)
+
+	json, err := encodingConfig.Marshaler.MarshalJSON(searchTxsResult)
+	if err != nil {
+		logger.L.Errorw("Cannot convert searchTxsResult to JSON", "events", events, "limit", limit, "page", page, "error", err)
+		c.AbortWithStatusJSON(500, err)
+		return
+	}
+	c.Writer.Header().Set("Content-Type", "application/json")
+	c.Writer.WriteHeader(200)
+	c.Writer.Write(json)
 }
 
 func getEventMap(eventArray []string) (map[string][]string, error) {
