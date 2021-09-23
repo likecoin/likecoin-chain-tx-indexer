@@ -109,15 +109,6 @@ func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, page 
 	return res, nil
 }
 
-type AminoResponse struct {
-	TotalCount string            `json:"total_count"`
-	Count      string            `json:"count"`
-	Page       string            `json:"page_number"`
-	PageTotal  string            `json:"page_total"`
-	Limit      string            `json:"limit"`
-	Txs        []*legacytx.StdTx `json:"txs"`
-}
-
 func convertToStdTx(txBytes []byte) (legacytx.StdTx, error) {
 	txI, err := encodingConfig.TxConfig.TxDecoder()(txBytes)
 	if err != nil {
