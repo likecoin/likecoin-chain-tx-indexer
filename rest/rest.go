@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -131,6 +132,18 @@ func convertToStdTx(txBytes []byte) (legacytx.StdTx, error) {
 	return clienttx.ConvertTxToStdTx(encodingConfig.Amino, tx)
 }
 
+func packStdTxResponse(txRes *types.TxResponse) error {
+	txBytes := txRes.Tx.Value
+	stdTx, err := convertToStdTx(txBytes)
+	if err != nil {
+		return err
+	}
+
+	// Pack the amino stdTx into the TxResponse's Any.
+	txRes.Tx = codectypes.UnsafePackAny(stdTx)
+	return nil
+}
+
 func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
 	var page uint64
@@ -182,7 +195,11 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 
 	searchTxsResult := types.NewSearchTxsResult(totalCount, uint64(len(txs)), totalPages, limit, txs)
 
-	json, err := encodingConfig.Marshaler.MarshalJSON(searchTxsResult)
+	for _, txRes := range searchTxsResult.Txs {
+		packStdTxResponse(txRes)
+	}
+
+	json, err := encodingConfig.Amino.MarshalJSON(searchTxsResult)
 	if err != nil {
 		logger.L.Errorw("Cannot convert searchTxsResult to JSON", "events", events, "limit", limit, "page", page, "error", err)
 		c.AbortWithStatusJSON(500, err)
