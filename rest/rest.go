@@ -25,6 +25,45 @@ import (
 
 var encodingConfig = app.MakeEncodingConfig()
 
+func getPositiveUint(query url.Values, key string) (uint64, error) {
+	var value uint64
+	var err error
+	valueStr := query.Get(key)
+	if valueStr == "" {
+		value = 1
+	} else {
+		value, err = strconv.ParseUint(valueStr, 10, 64)
+		if err != nil || value < 1 {
+			return 0, fmt.Errorf("invalid %s", key)
+		}
+	}
+	return value, nil
+}
+
+func getOffset(query url.Values, key string) (uint64, error) {
+	return getPositiveUint(query, key)
+}
+
+func getLimit(query url.Values, key string) (uint64, error) {
+	limit, err := getPositiveUint(query, key)
+	if limit > 100 {
+		return 0, fmt.Errorf("%s should not greater than 100", key)
+	}
+	return limit, err
+}
+
+func isOrderByDesc(query url.Values) (bool, error) {
+	orderByStr := strings.ToUpper(query.Get("order_by"))
+	switch orderByStr {
+	case "", "ORDER_BY_UNSPECIFIED", "ORDER_BY_ASC":
+		return false, nil
+	case "ORDER_BY_DESC":
+		return true, nil
+	default:
+		return false, fmt.Errorf("available values for order_by: ORDER_BY_UNSPECIFIED, ORDER_BY_ASC, ORDER_BY_DESC")
+	}
+}
+
 func trimQuotes(s string) string {
 	if len(s) >= 2 {
 		if c := s[len(s)-1]; s[0] == c && (c == '"' || c == '\'') {
@@ -137,28 +176,15 @@ func packStdTxResponse(txRes *types.TxResponse) error {
 
 func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
-	var page uint64
-	var limit uint64
-	var err error
-	pageStr := q.Get("page")
-	if pageStr == "" {
-		page = 1
-	} else {
-		page, err = strconv.ParseUint(pageStr, 10, 64)
-		if err != nil || page < 1 {
-			c.AbortWithStatus(400)
-			return
-		}
+	page, err := getOffset(q, "page")
+	if err != nil {
+		c.AbortWithStatusJSON(400, err)
+		return
 	}
-	limitStr := q.Get("limit")
-	if limitStr == "" {
-		limit = 1
-	} else {
-		limit, err = strconv.ParseUint(limitStr, 10, 64)
-		if err != nil || limit < 1 || limit > 100 {
-			c.AbortWithStatus(400)
-			return
-		}
+	limit, err := getLimit(q, "limit")
+	if err != nil {
+		c.AbortWithStatusJSON(400, err)
+		return
 	}
 	events := getEvents(q)
 	if len(events) == 0 {
@@ -200,8 +226,8 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	c.Writer.Write(json)
 }
 
-func getEventMap(eventArray []string) (map[string][]string, error) {
-	m := make(map[string][]string)
+func getEventMap(eventArray []string) (url.Values, error) {
+	m := make(url.Values)
 	for _, v := range eventArray {
 		if strings.Contains(v, "=") {
 			arr := strings.SplitN(v, "=", 2)
@@ -215,38 +241,20 @@ func getEventMap(eventArray []string) (map[string][]string, error) {
 
 func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
-	var offset uint64
-	var limit uint64
-	var err error
-	orderByDesc := false
-	offsetStr := q.Get("pagination.offset")
-	if offsetStr == "" {
-		offset = 1
-	} else {
-		offset, err = strconv.ParseUint(offsetStr, 10, 64)
-		if err != nil || offset < 1 {
-			c.AbortWithStatus(400)
-			return
-		}
+
+	offset, err := getOffset(q, "pagination.offset")
+	if err != nil {
+		c.AbortWithStatusJSON(400, err)
+		return
 	}
-	limitStr := q.Get("pagination.limit")
-	if limitStr == "" {
-		limit = 1
-	} else {
-		limit, err = strconv.ParseUint(limitStr, 10, 64)
-		if err != nil || limit < 1 || limit > 100 {
-			c.AbortWithStatus(400)
-			return
-		}
+	limit, err := getLimit(q, "pagination.limit")
+	if err != nil {
+		c.AbortWithStatusJSON(400, err)
+		return
 	}
-	orderByStr := strings.ToUpper(q.Get("order_by"))
-	switch orderByStr {
-	case "", "ORDER_BY_UNSPECIFIED", "ORDER_BY_ASC":
-		break
-	case "ORDER_BY_DESC":
-		orderByDesc = true
-	default:
-		c.AbortWithStatusJSON(400, "Available values for order_by: ORDER_BY_UNSPECIFIED, ORDER_BY_ASC, ORDER_BY_DESC")
+	orderByDesc, err := isOrderByDesc(q)
+	if err != nil {
+		c.AbortWithStatusJSON(400, err)
 		return
 	}
 	eventArray := c.QueryArray("events")
@@ -256,7 +264,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	}
 	eventMap, err := getEventMap(eventArray)
 	if err != nil {
-		c.AbortWithStatusJSON(400, err.Error())
+		c.AbortWithStatusJSON(400, err)
 		return
 	}
 	events := getEvents(eventMap)
