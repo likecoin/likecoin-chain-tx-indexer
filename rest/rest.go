@@ -176,7 +176,6 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(500, err)
 		return
 	}
-	totalPages := (totalCount-1)/limit + 1
 	txs, err := queryTxs(conn, events, limit, page, false)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", page, "error", err)
@@ -184,7 +183,7 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 
-	searchTxsResult := types.NewSearchTxsResult(totalCount, uint64(len(txs)), totalPages, limit, txs)
+	searchTxsResult := types.NewSearchTxsResult(totalCount, uint64(len(txs)), page, limit, txs)
 
 	for _, txRes := range searchTxsResult.Txs {
 		packStdTxResponse(txRes)
