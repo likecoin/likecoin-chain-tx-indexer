@@ -64,16 +64,34 @@ func isOrderByDesc(query url.Values) (bool, error) {
 	}
 }
 
-func trimQuotes(s string) string {
+func trimSingleQuotes(s string) (string, error) {
 	if len(s) >= 2 {
-		if c := s[len(s)-1]; s[0] == c && (c == '"' || c == '\'') {
-			return s[1 : len(s)-1]
+		if c := s[len(s)-1]; s[0] == c && c == '\'' {
+			return s[1 : len(s)-1], nil
 		}
+		return "", fmt.Errorf("expect query event value missing single quotes: %s", s)
 	}
-	return s
+	return "", fmt.Errorf("invalid query event value: %s", s)
 }
 
-func getEvents(query url.Values) (events types.StringEvents) {
+func getEventMap(eventArray []string) (url.Values, error) {
+	m := make(url.Values)
+	for _, v := range eventArray {
+		if strings.Contains(v, "=") {
+			arr := strings.SplitN(v, "=", 2)
+			value, err := trimSingleQuotes(arr[1])
+			if err != nil {
+				return nil, err
+			}
+			m[arr[0]] = []string{value}
+		} else {
+			return nil, fmt.Errorf("query event missing equal sign: %s", v)
+		}
+	}
+	return m, nil
+}
+
+func getEvents(query url.Values) (events types.StringEvents, err error) {
 	for k, vs := range query {
 		if strings.Contains(k, ".") {
 			arr := strings.SplitN(k, ".", 2)
@@ -83,14 +101,17 @@ func getEvents(query url.Values) (events types.StringEvents) {
 					Attributes: []types.Attribute{
 						{
 							Key:   arr[1],
-							Value: trimQuotes(v),
+							Value: v,
 						},
 					},
 				})
 			}
 		}
 	}
-	return events
+	if len(events) == 0 {
+		return nil, fmt.Errorf("events needed")
+	}
+	return events, nil
 }
 
 func queryCount(conn *pgxpool.Conn, events types.StringEvents) (uint64, error) {
@@ -186,9 +207,9 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	events := getEvents(q)
-	if len(events) == 0 {
-		c.AbortWithStatusJSON(400, "event needed")
+	events, err := getEvents(q)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
 	conn, err := db.AcquireFromPool(pool)
@@ -226,19 +247,6 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	c.Writer.Write(json)
 }
 
-func getEventMap(eventArray []string) (url.Values, error) {
-	m := make(url.Values)
-	for _, v := range eventArray {
-		if strings.Contains(v, "=") {
-			arr := strings.SplitN(v, "=", 2)
-			m[arr[0]] = []string{arr[1]}
-		} else {
-			return nil, fmt.Errorf("query event missing equal sign: %s", v)
-		}
-	}
-	return m, nil
-}
-
 func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
 
@@ -258,16 +266,16 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 	eventArray := c.QueryArray("events")
-	if len(eventArray) == 0 {
-		c.AbortWithStatusJSON(400, "event needed")
-		return
-	}
 	eventMap, err := getEventMap(eventArray)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	events := getEvents(eventMap)
+	events, err := getEvents(eventMap)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
+	}
 
 	conn, err := db.AcquireFromPool(pool)
 	if err != nil {
