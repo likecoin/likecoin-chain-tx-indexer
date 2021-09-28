@@ -178,12 +178,12 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
 	page, err := getOffset(q, "page")
 	if err != nil {
-		c.AbortWithStatusJSON(400, err)
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
 	limit, err := getLimit(q, "limit")
 	if err != nil {
-		c.AbortWithStatusJSON(400, err)
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
 	events := getEvents(q)
@@ -199,13 +199,13 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	totalCount, err := queryCount(conn, events)
 	if err != nil {
 		logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)
-		c.AbortWithStatusJSON(500, err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 	txs, err := queryTxs(conn, events, limit, page, false)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", page, "error", err)
-		c.AbortWithStatusJSON(500, err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -218,7 +218,7 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	json, err := encodingConfig.Amino.MarshalJSON(searchTxsResult)
 	if err != nil {
 		logger.L.Errorw("Cannot convert searchTxsResult to JSON", "events", events, "limit", limit, "page", page, "error", err)
-		c.AbortWithStatusJSON(500, err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 	c.Writer.Header().Set("Content-Type", "application/json")
@@ -244,17 +244,17 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 
 	offset, err := getOffset(q, "pagination.offset")
 	if err != nil {
-		c.AbortWithStatusJSON(400, err)
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
 	limit, err := getLimit(q, "pagination.limit")
 	if err != nil {
-		c.AbortWithStatusJSON(400, err)
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
 	orderByDesc, err := isOrderByDesc(q)
 	if err != nil {
-		c.AbortWithStatusJSON(400, err)
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
 	eventArray := c.QueryArray("events")
@@ -264,7 +264,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	}
 	eventMap, err := getEventMap(eventArray)
 	if err != nil {
-		c.AbortWithStatusJSON(400, err)
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
 	events := getEvents(eventMap)
@@ -277,13 +277,13 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	totalCount, err := queryCount(conn, events)
 	if err != nil {
 		logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)
-		c.AbortWithStatusJSON(500, err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 	txResponses, err := queryTxs(conn, events, limit, offset, orderByDesc)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", offset, "error", err)
-		c.AbortWithStatusJSON(500, err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -303,7 +303,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	resJson, err := encodingConfig.Marshaler.MarshalJSON(&res)
 	if err != nil {
 		logger.L.Errorw("Cannot marshal GetTxsEventResponse to JSON", "events", events, "error", err)
-		c.AbortWithStatusJSON(500, err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 	}
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.Writer.WriteHeader(200)
