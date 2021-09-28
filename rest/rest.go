@@ -25,29 +25,31 @@ import (
 
 var encodingConfig = app.MakeEncodingConfig()
 
-func getPositiveUint(query url.Values, key string) (uint64, error) {
-	var value uint64
-	var err error
+func getUint(query url.Values, key string) (uint64, error) {
 	valueStr := query.Get(key)
 	if valueStr == "" {
-		value = 1
+		return 0, nil
 	} else {
-		value, err = strconv.ParseUint(valueStr, 10, 64)
-		if err != nil || value < 1 {
-			return 0, fmt.Errorf("invalid %s", key)
-		}
+		return strconv.ParseUint(valueStr, 10, 64)
 	}
-	return value, nil
 }
 
-func getOffset(query url.Values, key string) (uint64, error) {
-	return getPositiveUint(query, key)
+func getPage(query url.Values) (uint64, error) {
+	page, err := getUint(query, "page")
+	if page == 0 {
+		return 0, fmt.Errorf("page must greater than 0")
+	}
+	return page, err
+}
+
+func getOffset(query url.Values) (uint64, error) {
+	return getUint(query, "pagination.offset")
 }
 
 func getLimit(query url.Values, key string) (uint64, error) {
-	limit, err := getPositiveUint(query, key)
+	limit, err := getUint(query, key)
 	if limit > 100 {
-		return 0, fmt.Errorf("%s should not greater than 100", key)
+		limit = 100
 	}
 	return limit, err
 }
@@ -131,8 +133,7 @@ func queryCount(conn *pgxpool.Conn, events types.StringEvents) (uint64, error) {
 	return count, nil
 }
 
-func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, page uint64, orderByDesc bool) ([]*types.TxResponse, error) {
-	offset := limit * (page - 1)
+func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, orderByDesc bool) ([]*types.TxResponse, error) {
 	order := "ASC"
 	if orderByDesc {
 		order = "DESC"
@@ -197,7 +198,7 @@ func packStdTxResponse(txRes *types.TxResponse) error {
 
 func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
-	page, err := getOffset(q, "page")
+	page, err := getPage(q)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
@@ -223,7 +224,13 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	txs, err := queryTxs(conn, events, limit, page, false)
+	maxPage := (totalCount-1)/limit + 1
+	if page > maxPage {
+		c.AbortWithStatusJSON(400, gin.H{"error": fmt.Sprintf("page should be within [1, %d] range, given %d", maxPage, page)})
+		return
+	}
+	offset := limit * (page - 1)
+	txs, err := queryTxs(conn, events, limit, offset, false)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", page, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
@@ -250,7 +257,7 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
 
-	offset, err := getOffset(q, "pagination.offset")
+	offset, err := getOffset(q)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
@@ -290,7 +297,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	}
 	txResponses, err := queryTxs(conn, events, limit, offset, orderByDesc)
 	if err != nil {
-		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", offset, "error", err)
+		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "offset", offset, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
