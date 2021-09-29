@@ -121,7 +121,7 @@ func getEvents(query url.Values) (events types.StringEvents, err error) {
 
 func queryCount(conn *pgxpool.Conn, events types.StringEvents) (uint64, error) {
 	sql := `
-		SELECT count(id) FROM txs
+		SELECT count(*) FROM txs
 		WHERE event_hashes @> $1
 	`
 	ctx, cancel := db.GetTimeoutContext()
@@ -144,10 +144,10 @@ func queryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offse
 	sql := fmt.Sprintf(`
 		SELECT tx FROM txs
 		WHERE event_hashes @> $1
-		ORDER BY height %s, tx_index %s
+		ORDER BY id %s
 		LIMIT $2
 		OFFSET $3
-	`, order, order)
+	`, order)
 	eventHashes := util.GetEventHashes(events)
 	ctx, cancel := db.GetTimeoutContext()
 	defer cancel()
