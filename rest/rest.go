@@ -37,7 +37,7 @@ func getUint(query url.Values, key string) (uint64, error) {
 func getPage(query url.Values) (uint64, error) {
 	page, err := getUint(query, "page")
 	if page == 0 {
-		return 0, fmt.Errorf("page must greater than 0")
+		page = 1
 	}
 	return page, err
 }
@@ -48,6 +48,9 @@ func getOffset(query url.Values) (uint64, error) {
 
 func getLimit(query url.Values, key string) (uint64, error) {
 	limit, err := getUint(query, key)
+	if limit == 0 {
+		limit = 1
+	}
 	if limit > 100 {
 		limit = 100
 	}
@@ -225,6 +228,9 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 	maxPage := (totalCount-1)/limit + 1
+	if maxPage == 0 {
+		maxPage = 1
+	}
 	if page > maxPage {
 		c.AbortWithStatusJSON(400, gin.H{"error": fmt.Sprintf("page should be within [1, %d] range, given %d", maxPage, page)})
 		return
