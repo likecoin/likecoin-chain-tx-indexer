@@ -186,7 +186,7 @@ func (batch *Batch) InsertTx(txRes types.TxResponse, height int64, txIndex int) 
 	for _, log := range txRes.Logs {
 		eventHashes = append(eventHashes, util.GetEventHashes(log.Events)...)
 	}
-	txResJSON, err := encodingConfig.Marshaler.MarshalJSON(&txRes) // TODO fix "error": "unable to resolve type URL "
+	txResJSON, err := encodingConfig.Marshaler.MarshalJSON(&txRes)
 	if err != nil {
 		return err
 	}
