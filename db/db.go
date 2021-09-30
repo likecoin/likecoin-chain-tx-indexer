@@ -3,14 +3,15 @@ package db
 import (
 	"context"
 	"fmt"
+	"hash/crc64"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
-	"github.com/likecoin/likecoin-chain-tx-indexer/util"
 	"github.com/spf13/cobra"
 )
 
@@ -31,6 +32,7 @@ const DefaultDBPoolMin = 4
 const DefaultDBPoolMax = 32
 
 var encodingConfig = app.MakeEncodingConfig()
+var partitionTable = crc64.MakeTable(crc64.ISO)
 
 func ConfigCmd(cmd *cobra.Command) {
 	cmd.PersistentFlags().String(CmdDBName, DefaultDBName, "Postgres database name")
@@ -159,6 +161,72 @@ func GetLatestHeight(conn *pgxpool.Conn) (int64, error) {
 	return height, nil
 }
 
+func getEventHashes(events types.StringEvents) []int64 {
+	eventHashes := []int64{}
+	for _, event := range events {
+		for _, attr := range event.Attributes {
+			s := fmt.Sprintf("%s.%s=\"%s\"", event.Type, attr.Key, attr.Value)
+			hash := int64(crc64.Checksum([]byte(s), partitionTable))
+			eventHashes = append(eventHashes, hash)
+		}
+	}
+	return eventHashes
+}
+
+func QueryCount(conn *pgxpool.Conn, events types.StringEvents) (uint64, error) {
+	sql := `
+		SELECT count(*) FROM txs
+		WHERE event_hashes @> $1
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	eventHashes := getEventHashes(events)
+	row := conn.QueryRow(ctx, sql, eventHashes)
+	var count uint64
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, orderByDesc bool) ([]*types.TxResponse, error) {
+	order := "ASC"
+	if orderByDesc {
+		order = "DESC"
+	}
+	sql := fmt.Sprintf(`
+		SELECT tx FROM txs
+		WHERE event_hashes @> $1
+		ORDER BY id %s
+		LIMIT $2
+		OFFSET $3
+	`, order)
+	eventHashes := getEventHashes(events)
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	rows, err := conn.Query(ctx, sql, eventHashes, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	res := make([]*types.TxResponse, 0, limit)
+	for rows.Next() {
+		var jsonb pgtype.JSONB
+		err := rows.Scan(&jsonb)
+		if err != nil {
+			return nil, err
+		}
+		var txRes types.TxResponse
+		err = encodingConfig.Marshaler.UnmarshalJSON(jsonb.Bytes, &txRes)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal JSON to TxResponse: %+v", jsonb.Bytes)
+		}
+		res = append(res, &txRes)
+	}
+	return res, nil
+}
+
 type Batch struct {
 	Conn       *pgxpool.Conn
 	Batch      pgx.Batch
@@ -184,7 +252,7 @@ func (batch *Batch) InsertTx(txRes types.TxResponse, height int64, txIndex int) 
 	}
 	eventHashes := []int64{}
 	for _, log := range txRes.Logs {
-		eventHashes = append(eventHashes, util.GetEventHashes(log.Events)...)
+		eventHashes = append(eventHashes, getEventHashes(log.Events)...)
 	}
 	txResJSON, err := encodingConfig.Marshaler.MarshalJSON(&txRes)
 	if err != nil {
