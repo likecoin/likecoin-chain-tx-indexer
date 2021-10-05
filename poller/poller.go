@@ -122,7 +122,7 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 			txRes := txTypes.GetTxResponse{}
 			err = encodingConfig.Marshaler.UnmarshalJSON(txResJSON, &txRes)
 			if err != nil {
-				logger.L.Panicw("Cannot unmarshal tx response to JSON", "txhash", txHash, "tx_response", txResJSON, "error", err)
+				return 0, fmt.Errorf("cannot unmarshal tx response to JSON, error = %w, txhash = %s, tx_response = %v", err, txHash, txResJSON)
 			}
 			err = batch.InsertTx(*txRes.TxResponse, height, txIndex)
 			if err != nil {

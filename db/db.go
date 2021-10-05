@@ -215,7 +215,7 @@ func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offse
 		var jsonb pgtype.JSONB
 		err := rows.Scan(&jsonb)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("cannot scan rows to JSON: %+v", rows)
 		}
 		var txRes types.TxResponse
 		err = encodingConfig.Marshaler.UnmarshalJSON(jsonb.Bytes, &txRes)
