@@ -31,6 +31,11 @@ const DefaultDBPassword = "password"
 const DefaultDBPoolMin = 4
 const DefaultDBPoolMax = 32
 
+const (
+	ORDER_ASC  = "ASC"
+	ORDER_DESC = "DESC"
+)
+
 var encodingConfig = app.MakeEncodingConfig()
 var partitionTable = crc64.MakeTable(crc64.ISO)
 
@@ -190,11 +195,7 @@ func QueryCount(conn *pgxpool.Conn, events types.StringEvents) (uint64, error) {
 	return count, nil
 }
 
-func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, orderByDesc bool) ([]*types.TxResponse, error) {
-	order := "ASC"
-	if orderByDesc {
-		order = "DESC"
-	}
+func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, order string) ([]*types.TxResponse, error) {
 	sql := fmt.Sprintf(`
 		SELECT tx FROM txs
 		WHERE event_hashes @> $1

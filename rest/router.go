@@ -27,11 +27,11 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 			c.AbortWithStatus(500)
 			return
 		}
-		if endpoint == "/txs" {
+		switch endpoint {
+		case "/txs":
 			handleAminoTxsSearch(c, pool)
 			return
-		}
-		if endpoint == "/cosmos/tx/v1beta1/txs" {
+		case "/cosmos/tx/v1beta1/txs":
 			handleStargateTxsSearch(c, pool)
 			return
 		}
