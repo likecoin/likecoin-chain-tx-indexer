@@ -17,26 +17,26 @@ func getOffset(query url.Values) (uint64, error) {
 	return getUint(query, "pagination.offset")
 }
 
-func isOrderByDesc(query url.Values) (bool, error) {
+func getQueryOrder(query url.Values) (string, error) {
 	orderByStr := strings.ToUpper(query.Get("order_by"))
 	switch orderByStr {
 	case "", "ORDER_BY_UNSPECIFIED", "ORDER_BY_ASC":
-		return false, nil
+		return db.ORDER_ASC, nil
 	case "ORDER_BY_DESC":
-		return true, nil
+		return db.ORDER_DESC, nil
 	default:
-		return false, fmt.Errorf("available values for order_by: ORDER_BY_UNSPECIFIED, ORDER_BY_ASC, ORDER_BY_DESC")
+		return "", fmt.Errorf("available values for order_by: ORDER_BY_UNSPECIFIED, ORDER_BY_ASC, ORDER_BY_DESC")
 	}
 }
 
 func trimSingleQuotes(s string) (string, error) {
-	if len(s) >= 2 {
-		if c := s[len(s)-1]; s[0] == c && c == '\'' {
-			return s[1 : len(s)-1], nil
-		}
+	if len(s) < 2 {
+		return "", fmt.Errorf("invalid query event value: %s", s)
+	}
+	if s[0] != '\'' || s[len(s)-1] != '\'' {
 		return "", fmt.Errorf("expect query event value missing single quotes: %s", s)
 	}
-	return "", fmt.Errorf("invalid query event value: %s", s)
+	return s[1 : len(s)-1], nil
 }
 
 func getEventMap(eventArray []string) (url.Values, error) {
@@ -45,11 +45,11 @@ func getEventMap(eventArray []string) (url.Values, error) {
 		if !strings.Contains(v, "=") {
 			return nil, fmt.Errorf("query event missing equal sign: %s", v)
 		}
-			arr := strings.SplitN(v, "=", 2)
-			value, err := trimSingleQuotes(arr[1])
-			if err != nil {
-				return nil, err
-			}
+		arr := strings.SplitN(v, "=", 2)
+		value, err := trimSingleQuotes(arr[1])
+		if err != nil {
+			return nil, err
+		}
 		key := arr[0]
 		if m[key] != nil {
 			return nil, fmt.Errorf("event appears more than once: %s", key)
@@ -73,7 +73,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 	offsetInTimesOfLimit := offset / limit * limit // Cosmos' bug? 29 / 10 * 10 = 20
-	orderByDesc, err := isOrderByDesc(q)
+	order, err := getQueryOrder(q)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
@@ -102,7 +102,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	txResponses, err := db.QueryTxs(conn, events, limit, offsetInTimesOfLimit, orderByDesc)
+	txResponses, err := db.QueryTxs(conn, events, limit, offsetInTimesOfLimit, order)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "offset", offset, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})

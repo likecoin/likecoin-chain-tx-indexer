@@ -88,7 +88,7 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 	offset := limit * (page - 1)
-	txs, err := db.QueryTxs(conn, events, limit, offset, false)
+	txs, err := db.QueryTxs(conn, events, limit, offset, db.ORDER_ASC)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", page, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
