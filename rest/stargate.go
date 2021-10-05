@@ -42,16 +42,19 @@ func trimSingleQuotes(s string) (string, error) {
 func getEventMap(eventArray []string) (url.Values, error) {
 	m := make(url.Values)
 	for _, v := range eventArray {
-		if strings.Contains(v, "=") {
+		if !strings.Contains(v, "=") {
+			return nil, fmt.Errorf("query event missing equal sign: %s", v)
+		}
 			arr := strings.SplitN(v, "=", 2)
 			value, err := trimSingleQuotes(arr[1])
 			if err != nil {
 				return nil, err
 			}
-			m[arr[0]] = []string{value}
-		} else {
-			return nil, fmt.Errorf("query event missing equal sign: %s", v)
+		key := arr[0]
+		if m[key] != nil {
+			return nil, fmt.Errorf("event appears more than once: %s", key)
 		}
+		m[key] = []string{value}
 	}
 	return m, nil
 }
@@ -89,7 +92,8 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 
 	conn, err := db.AcquireFromPool(pool)
 	if err != nil {
-		logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
 	}
 	defer conn.Release()
 	totalCount, err := db.QueryCount(conn, events)

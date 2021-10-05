@@ -23,7 +23,7 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 	router.GET("/*endpoint", func(c *gin.Context) {
 		endpoint, ok := c.Params.Get("endpoint")
 		if !ok {
-			// ??? Gin bug?
+			logger.L.Errorw("Gin router cannot get endpoint")
 			c.AbortWithStatus(500)
 			return
 		}

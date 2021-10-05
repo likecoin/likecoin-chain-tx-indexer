@@ -68,7 +68,9 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	}
 	conn, err := db.AcquireFromPool(pool)
 	if err != nil {
-		logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
+		logger.L.Errorw("Cannot acquire connection from database connection pool", "error", err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
 	}
 	defer conn.Release()
 	totalCount, err := db.QueryCount(conn, events)
