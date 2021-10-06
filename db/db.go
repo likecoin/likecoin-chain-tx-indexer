@@ -117,7 +117,7 @@ func InitDB(conn *pgxpool.Conn) error {
 		height BIGINT,
 		tx_index INT,
 		tx JSONB,
-		event_hashes BIGINT ARRAY,
+		events VARCHAR ARRAY,
 		UNIQUE (height, tx_index)
 	)
 	`)
@@ -138,7 +138,7 @@ func InitDB(conn *pgxpool.Conn) error {
 	}
 	ctx, cancel = GetTimeoutContext()
 	defer cancel()
-	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_tx_event_hashes ON txs USING gin (event_hashes)")
+	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_tx_events ON txs USING gin (events)")
 	if err != nil {
 		return err
 	}
@@ -166,27 +166,26 @@ func GetLatestHeight(conn *pgxpool.Conn) (int64, error) {
 	return height, nil
 }
 
-func getEventHashes(events types.StringEvents) []int64 {
-	eventHashes := []int64{}
+func getEventStrings(events types.StringEvents) []string {
+	eventStrings := []string{}
 	for _, event := range events {
 		for _, attr := range event.Attributes {
 			s := fmt.Sprintf("%s.%s=\"%s\"", event.Type, attr.Key, attr.Value)
-			hash := int64(crc64.Checksum([]byte(s), partitionTable))
-			eventHashes = append(eventHashes, hash)
+			eventStrings = append(eventStrings, s)
 		}
 	}
-	return eventHashes
+	return eventStrings
 }
 
 func QueryCount(conn *pgxpool.Conn, events types.StringEvents) (uint64, error) {
 	sql := `
 		SELECT count(*) FROM txs
-		WHERE event_hashes @> $1
+		WHERE events @> $1
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	eventHashes := getEventHashes(events)
-	row := conn.QueryRow(ctx, sql, eventHashes)
+	eventStrings := getEventStrings(events)
+	row := conn.QueryRow(ctx, sql, eventStrings)
 	var count uint64
 	err := row.Scan(&count)
 	if err != nil {
@@ -198,15 +197,15 @@ func QueryCount(conn *pgxpool.Conn, events types.StringEvents) (uint64, error) {
 func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, order string) ([]*types.TxResponse, error) {
 	sql := fmt.Sprintf(`
 		SELECT tx FROM txs
-		WHERE event_hashes @> $1
+		WHERE events @> $1
 		ORDER BY id %s
 		LIMIT $2
 		OFFSET $3
 	`, order)
-	eventHashes := getEventHashes(events)
+	eventStrings := getEventStrings(events)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, eventHashes, limit, offset)
+	rows, err := conn.Query(ctx, sql, eventStrings, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -251,16 +250,16 @@ func (batch *Batch) InsertTx(txRes types.TxResponse, height int64, txIndex int) 
 			return err
 		}
 	}
-	eventHashes := []int64{}
+	eventStrings := []string{}
 	for _, log := range txRes.Logs {
-		eventHashes = append(eventHashes, getEventHashes(log.Events)...)
+		eventStrings = append(eventStrings, getEventStrings(log.Events)...)
 	}
 	txResJSON, err := encodingConfig.Marshaler.MarshalJSON(&txRes)
 	if err != nil {
 		return err
 	}
 	logger.L.Infow("Processing transaction", "txhash", txRes.TxHash, "height", height, "index", txIndex)
-	batch.Batch.Queue("INSERT INTO txs (height, tx_index, tx, event_hashes) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, txIndex, txResJSON, eventHashes)
+	batch.Batch.Queue("INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, txIndex, txResJSON, eventStrings)
 	batch.prevHeight = height
 	logger.L.Debugw("Processed height", "height", height, "batch_size", batch.Batch.Len())
 	return nil
