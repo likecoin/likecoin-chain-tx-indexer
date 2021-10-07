@@ -30,9 +30,9 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 		switch endpoint {
 		case "/txs":
 			handleAminoTxsSearch(c, pool)
-			return
 		case "/cosmos/tx/v1beta1/txs":
 			handleStargateTxsSearch(c, pool)
+		default:
 			return
 		}
 		proxyHandler(c)
