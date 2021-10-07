@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"hash/crc64"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +36,6 @@ const (
 )
 
 var encodingConfig = app.MakeEncodingConfig()
-var partitionTable = crc64.MakeTable(crc64.ISO)
 
 func ConfigCmd(cmd *cobra.Command) {
 	cmd.PersistentFlags().String(CmdDBName, DefaultDBName, "Postgres database name")
