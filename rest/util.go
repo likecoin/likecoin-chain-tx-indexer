@@ -23,13 +23,16 @@ func getUint(query url.Values, key string) (uint64, error) {
 
 func getLimit(query url.Values, key string) (uint64, error) {
 	limit, err := getUint(query, key)
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse %v to unsigned int: %w", key, err)
+	}
 	if limit == 0 {
 		limit = 1
 	}
 	if limit > 100 {
 		limit = 100
 	}
-	return limit, err
+	return limit, nil
 }
 
 func getEvents(query url.Values) (events types.StringEvents, err error) {
