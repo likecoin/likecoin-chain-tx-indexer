@@ -17,10 +17,13 @@ import (
 
 func getPage(query url.Values) (uint64, error) {
 	page, err := getUint(query, "page")
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse page to unsigned int: %w", err)
+	}
 	if page == 0 {
 		page = 1
 	}
-	return page, err
+	return page, nil
 }
 
 func convertToStdTx(txBytes []byte) (legacytx.StdTx, error) {

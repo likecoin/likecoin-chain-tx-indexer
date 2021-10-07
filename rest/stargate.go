@@ -14,7 +14,11 @@ import (
 )
 
 func getOffset(query url.Values) (uint64, error) {
-	return getUint(query, "pagination.offset")
+	offset, err := getUint(query, "pagination.offset")
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse pagination.offset to unsigned int: %w", err)
+	}
+	return offset, nil
 }
 
 func getQueryOrder(query url.Values) (string, error) {
