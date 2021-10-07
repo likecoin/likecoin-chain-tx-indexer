@@ -33,9 +33,8 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 		case "/cosmos/tx/v1beta1/txs":
 			handleStargateTxsSearch(c, pool)
 		default:
-			return
+			proxyHandler(c)
 		}
-		proxyHandler(c)
 	})
 	router.POST("/*endpoint", proxyHandler)
 	router.Run(listenAddr)
