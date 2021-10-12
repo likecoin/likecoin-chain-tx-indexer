@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -27,12 +28,12 @@ func getResponse(client *http.Client, url string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("non-200 code returned: %d", resp.StatusCode)
-	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return body, fmt.Errorf("non-200 code returned: %d", resp.StatusCode)
 	}
 	return body, nil
 }
@@ -126,7 +127,11 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 			url := fmt.Sprintf("%s/txs/%s", ctx.LcdEndpoint, txHash.String())
 			txResJSON, err := getResponse(ctx.Client, url)
 			if err != nil {
-				return 0, fmt.Errorf("cannot get tx response from lcd, error = %w, txhash = %s, height = %d, index = %d", err, txHash.String(), height, txIndex)
+				res := strings.Contains(string(txResJSON), "cannot be displayed via legacy REST endpoints")
+				if !res {
+					return 0, fmt.Errorf("cannot get tx response from lcd, error = %w, txhash = %s, height = %d, index = %d", err, txHash.String(), height, txIndex)
+				}
+				txResJSON = []byte(fmt.Sprintf("{\"txhash\":\"%s\",\"logs\":[]}", txHash.String()))
 			}
 			err = batch.InsertTx(txResJSON, height, txIndex)
 			if err != nil {
