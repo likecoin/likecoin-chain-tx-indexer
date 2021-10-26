@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -36,6 +37,17 @@ const (
 )
 
 var encodingConfig = app.MakeEncodingConfig()
+
+func serializeTx(txRes *types.TxResponse) ([]byte, error) {
+	txResJSON, err := encodingConfig.Marshaler.MarshalJSON(txRes)
+	if err != nil {
+		return nil, err
+	}
+	// "\u0000" is not processible by Postgres
+	// Below is a hotfix, long term solution is to store binary or migrate to Tendermint Postgres indexing backend
+	sanitizedJSON := strings.ReplaceAll(string(txResJSON), "\\u0000", "")
+	return []byte(sanitizedJSON), nil
+}
 
 func ConfigCmd(cmd *cobra.Command) {
 	cmd.PersistentFlags().String(CmdDBName, DefaultDBName, "Postgres database name")
@@ -257,7 +269,7 @@ func (batch *Batch) InsertTx(txRes types.TxResponse, height int64, txIndex int) 
 	for _, log := range txRes.Logs {
 		eventStrings = append(eventStrings, getEventStrings(log.Events)...)
 	}
-	txResJSON, err := encodingConfig.Marshaler.MarshalJSON(&txRes)
+	txResJSON, err := serializeTx(&txRes)
 	if err != nil {
 		return err
 	}
