@@ -82,6 +82,13 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
+
+	shouldCountTotal, err := getBool(q, "pagination.count_total")
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
 	eventArray := c.QueryArray("events")
 	eventMap, err := getEventMap(eventArray)
 	if err != nil {
@@ -100,12 +107,17 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 	defer conn.Release()
-	totalCount, err := db.QueryCount(conn, events)
-	if err != nil {
-		logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
+
+	var totalCount uint64
+	if shouldCountTotal {
+		totalCount, err = db.QueryCount(conn, events)
+		if err != nil {
+			logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)
+			c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+			return
+		}
 	}
+
 	txResponses, err := db.QueryTxs(conn, events, limit, offsetInTimesOfLimit, order)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "offset", offset, "error", err)
@@ -113,11 +125,15 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 
+	var pagination *query.PageResponse
+	if shouldCountTotal {
+		pagination = &query.PageResponse{
+			Total: totalCount,
+		}
+	}
 	res := tx.GetTxsEventResponse{
 		TxResponses: txResponses,
-		Pagination: &query.PageResponse{
-			Total: uint64(totalCount),
-		},
+		Pagination:  pagination,
 	}
 
 	for _, txResponse := range txResponses {

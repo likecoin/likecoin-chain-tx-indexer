@@ -12,6 +12,15 @@ import (
 
 var encodingConfig = app.MakeEncodingConfig()
 
+func getBool(query url.Values, key string) (bool, error) {
+	valueStr := query.Get(key)
+	if len(valueStr) == 0 || valueStr == "0" || valueStr == "false" {
+		return false, nil
+	} else {
+		return true, nil
+	}
+}
+
 func getUint(query url.Values, key string) (uint64, error) {
 	valueStr := query.Get(key)
 	if valueStr == "" {
