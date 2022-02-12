@@ -139,8 +139,11 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 
 func Run(pool *pgxpool.Pool, ctx *CosmosCallContext) {
 	lastHeight, err := getHeight(pool)
-	if err != nil {
+	for err != nil {
 		logger.L.Panicw("Cannot get height from database", "error", err)
+		time.Sleep(sleepInitial)
+		logger.L.Errorw("Retrying get height")
+		lastHeight, err = getHeight(pool)
 	}
 	toSleep := sleepInitial
 	for {
