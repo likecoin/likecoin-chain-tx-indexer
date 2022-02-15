@@ -110,7 +110,7 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 	if maxHeight-lastHeight > batchMaxHeightDiff {
 		maxHeight = lastHeight + batchMaxHeightDiff
 	}
-	logger.L.Infow("Querying blocks", "lastHeight", lastHeight, "maxHeight", maxHeight)
+	logger.L.Debugw("Querying blocks", "lastHeight", lastHeight, "maxHeight", maxHeight)
 	for height := lastHeight + 1; height <= maxHeight; height++ {
 		blockResult, err := GetBlock(ctx, height)
 		if err != nil {
@@ -144,6 +144,7 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 
 func Run(pool *pgxpool.Pool, ctx *CosmosCallContext) {
 	lastHeight, err := getHeight(pool)
+	logger.L.Infow("Init Height", "lastHeight", lastHeight)
 	if err != nil {
 		logger.L.Panicw("Cannot get height from database", "error", err)
 	}
