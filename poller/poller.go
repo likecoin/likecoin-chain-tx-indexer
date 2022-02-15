@@ -18,6 +18,7 @@ import (
 )
 
 const batchSize = 1000
+const batchMaxHeightDiff = 100000
 
 // TODO: move into config
 const sleepInitial = 5 * time.Second
@@ -106,6 +107,10 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 		return 0, fmt.Errorf("cannot get latest block from lcd: %w", err)
 	}
 	maxHeight := blockResult.Block.Header.Height
+	if maxHeight-lastHeight > batchMaxHeightDiff {
+		maxHeight = lastHeight + batchMaxHeightDiff
+	}
+	logger.L.Infow("Querying blocks", "lastHeight", lastHeight, "maxHeight", maxHeight)
 	for height := lastHeight + 1; height <= maxHeight; height++ {
 		blockResult, err := GetBlock(ctx, height)
 		if err != nil {
