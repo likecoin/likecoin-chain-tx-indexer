@@ -51,18 +51,20 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func request(req *http.Request) []byte {
+func request(req *http.Request) (*http.Response, string) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
 	res := w.Result()
 	body, _ := io.ReadAll(res.Body)
-	return body
+	return res, string(body)
 }
 
 func TestReq(t *testing.T) {
 	req := httptest.NewRequest("GET", "/test", nil)
 
-	result := request(req)
-	log.Printf("%s\n", result)
+	res, body := request(req)
+	if res.StatusCode != 200 {
+		t.Fatal(body)
+	}
 }

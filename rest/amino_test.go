@@ -7,6 +7,8 @@ import (
 
 func TestAmino(t *testing.T) {
 	req := httptest.NewRequest("GET", "/txs?message.module=iscn", nil)
-	result := string(request(req))
-	t.Log(result)
+	res, body := request(req)
+	if res.StatusCode != 200 {
+		t.Fatal(body)
+	}
 }
