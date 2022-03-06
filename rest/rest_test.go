@@ -36,27 +36,30 @@ func TestMain(m *testing.M) {
 	db.InitDB(conn)
 	router = gin.Default()
 
-	router.GET("/test", func(c *gin.Context) {
-		c.String(200, "Yes, it's working")
+	router.GET("/test", func(ctx *gin.Context) {
+		ctx.String(200, "Yes, it's working")
 	})
-	router.GET("/txs", func(c *gin.Context) {
-		handleAminoTxsSearch(c, pool)
+	router.GET("/txs", func(ctx *gin.Context) {
+		handleAminoTxsSearch(ctx, pool)
+	})
+	router.GET("/cosmos/tx/v1beta1/txs", func(ctx *gin.Context) {
+		handleStargateTxsSearch(ctx, pool)
 	})
 	m.Run()
 }
 
-func request(req *http.Request) string {
+func request(req *http.Request) []byte {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
 	res := w.Result()
 	body, _ := io.ReadAll(res.Body)
-	return string(body)
+	return body
 }
 
 func TestReq(t *testing.T) {
 	req := httptest.NewRequest("GET", "/test", nil)
 
 	result := request(req)
-	log.Println(result)
+	log.Printf("%s\n", result)
 }
