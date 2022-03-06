@@ -93,6 +93,10 @@ func NewConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) 
 	if err != nil {
 		return nil, err
 	}
+	return NewConnPool(dbname, host, port, user, pwd, poolMin, poolMax)
+}
+
+func NewConnPool(dbname string, host string, port string, user string, pwd string, poolMin int, poolMax int) (pool *pgxpool.Pool, err error) {
 	s := fmt.Sprintf(
 		"dbname=%s host=%s port=%s user=%s password=%s pool_min_conns=%d pool_max_conns=%d",
 		dbname, host, port, user, pwd, poolMin, poolMax,
