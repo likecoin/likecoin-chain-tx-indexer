@@ -9,11 +9,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"go.uber.org/zap/zapcore"
 )
 
 var router *gin.Engine
 
 func TestMain(m *testing.M) {
+	logger.SetupLogger(zapcore.DebugLevel, []string{"stdout"}, "console")
 	pool, err := db.NewConnPool(
 		"mydb",
 		"localhost",
