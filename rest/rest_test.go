@@ -3,6 +3,7 @@ package rest
 import (
 	"io"
 	"log"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -44,13 +45,18 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestReq(t *testing.T) {
-	req := httptest.NewRequest("GET", "/test", nil)
+func request(req *http.Request) string {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
 	res := w.Result()
 	body, _ := io.ReadAll(res.Body)
+	return string(body)
+}
 
-	log.Println(string(body))
+func TestReq(t *testing.T) {
+	req := httptest.NewRequest("GET", "/test", nil)
+
+	result := request(req)
+	log.Println(result)
 }
