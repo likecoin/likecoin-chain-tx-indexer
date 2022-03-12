@@ -229,6 +229,31 @@ func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offse
 		return nil, err
 	}
 	defer rows.Close()
+	return parseRows(rows, limit)
+}
+
+func QueryTxsWithKeyword(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, order string, keyword string) ([]*types.TxResponse, error) {
+	sql := fmt.Sprintf(`
+		SELECT tx FROM txs
+		WHERE events @> $1
+		AND jsonb_to_tsvector('english', tx #> '{"tx", "body", "messages", 0, "record", "contentMetadata"}' , '["string"]') 
+		@@ to_tsquery('English', $4)
+		ORDER BY id %s
+		LIMIT $2
+		OFFSET $3
+	`, order)
+	eventStrings := getEventStrings(events)
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	rows, err := conn.Query(ctx, sql, eventStrings, limit, offset, keyword)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return parseRows(rows, limit)
+}
+
+func parseRows(rows pgx.Rows, limit uint64) ([]*types.TxResponse, error) {
 	res := make([]*types.TxResponse, 0, limit)
 	for rows.Next() {
 		var jsonb pgtype.JSONB

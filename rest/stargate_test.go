@@ -1,11 +1,18 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
+
+type Response struct {
+	Pagination   interface{}
+	Txs          []interface{}
+	Tx_responses []interface{}
+}
 
 func TestStargate(t *testing.T) {
 	req := httptest.NewRequest(
@@ -15,10 +22,18 @@ func TestStargate(t *testing.T) {
 	if res.StatusCode != 200 {
 		t.Fatal(body)
 	}
-	t.Log(body)
+	var result Response
+	err := json.Unmarshal([]byte(body), &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Txs) == 0 {
+		t.Fatal("No response:", result)
+	}
+	t.Log(result)
 }
 
-func TestQueryWithTerm(t *testing.T) {
+func TestQueryWithKeyword(t *testing.T) {
 	term := "LikeCoin"
 	req := httptest.NewRequest(
 		"GET",

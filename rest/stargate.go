@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/gin-gonic/gin"
@@ -118,7 +119,13 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		}
 	}
 
-	txResponses, err := db.QueryTxs(conn, events, limit, offsetInTimesOfLimit, order)
+	var txResponses []*types.TxResponse
+	if keyword := q.Get("q"); keyword != "" {
+		txResponses, err = db.QueryTxsWithKeyword(conn, events, limit, offsetInTimesOfLimit, order, keyword)
+	} else {
+		txResponses, err = db.QueryTxs(conn, events, limit, offsetInTimesOfLimit, order)
+	}
+
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "offset", offset, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
