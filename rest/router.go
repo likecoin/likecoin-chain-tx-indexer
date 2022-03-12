@@ -9,6 +9,8 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
+const STARGATE_ENDPOINT = "/cosmos/tx/v1beta1/txs"
+
 func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 	lcdURL, err := url.Parse(lcdEndpoint)
 	if err != nil {
@@ -30,7 +32,7 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 		switch endpoint {
 		case "/txs":
 			handleAminoTxsSearch(c, pool)
-		case "/cosmos/tx/v1beta1/txs":
+		case STARGATE_ENDPOINT:
 			handleStargateTxsSearch(c, pool)
 		default:
 			proxyHandler(c)

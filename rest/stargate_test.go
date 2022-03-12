@@ -17,7 +17,7 @@ type Response struct {
 func TestStargate(t *testing.T) {
 	req := httptest.NewRequest(
 		"GET",
-		"/cosmos/tx/v1beta1/txs?pagination.limit=3&events=iscn_record.iscn_id='iscn://likecoin-chain/dLbKMa8EVO9RF4UmoWKk2ocUq7IsxMcnQL1_Ps5Vg80/1'", nil)
+		STARGATE_ENDPOINT+"?events=iscn_record.iscn_id='iscn://likecoin-chain/dLbKMa8EVO9RF4UmoWKk2ocUq7IsxMcnQL1_Ps5Vg80/1'", nil)
 	res, body := request(req)
 	if res.StatusCode != 200 {
 		t.Fatal(body)
@@ -30,14 +30,13 @@ func TestStargate(t *testing.T) {
 	if len(result.Txs) == 0 {
 		t.Fatal("No response:", result)
 	}
-	t.Log(result)
 }
 
 func TestQueryWithKeyword(t *testing.T) {
 	term := "LikeCoin"
 	req := httptest.NewRequest(
 		"GET",
-		fmt.Sprintf("/cosmos/tx/v1beta1/txs?q=%s&pagination.limit=1&events=message.module='iscn'", term),
+		fmt.Sprintf("%s?q=%s&pagination.limit=1&events=message.module='iscn'", STARGATE_ENDPOINT, term),
 		nil,
 	)
 	res, body := request(req)
@@ -47,5 +46,4 @@ func TestQueryWithKeyword(t *testing.T) {
 	if !strings.Contains(body, term) {
 		t.Fatal("Response doesn't contains the search term", body)
 	}
-	t.Log(body)
 }
