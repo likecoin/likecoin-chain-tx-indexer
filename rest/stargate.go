@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -43,24 +44,33 @@ func trimSingleQuotes(s string) (string, error) {
 	return s[1 : len(s)-1], nil
 }
 
-func getEventMap(eventArray []string) (url.Values, error) {
+func getEventMapAndHeight(eventArray []string) (url.Values, uint64, error) {
+	var height = uint64(0)
+	var err error
 	m := make(url.Values)
 	for _, v := range eventArray {
 		if !strings.Contains(v, "=") {
-			return nil, fmt.Errorf("query event missing equal sign: %s", v)
+			return nil, 0, fmt.Errorf("query event missing equal sign: %s", v)
 		}
 		arr := strings.SplitN(v, "=", 2)
-		value, err := trimSingleQuotes(arr[1])
-		if err != nil {
-			return nil, err
+		if arr[0] == "tx.height" {
+			height, err = strconv.ParseUint(arr[1], 10, 64)
+			if err != nil {
+				return nil, 0, err
+			}
+		} else {
+			value, err := trimSingleQuotes(arr[1])
+			if err != nil {
+				return nil, 0, err
+			}
+			key := arr[0]
+			if m[key] != nil {
+				return nil, 0, fmt.Errorf("event appears more than once: %s", key)
+			}
+			m[key] = []string{value}
 		}
-		key := arr[0]
-		if m[key] != nil {
-			return nil, fmt.Errorf("event appears more than once: %s", key)
-		}
-		m[key] = []string{value}
 	}
-	return m, nil
+	return m, height, nil
 }
 
 func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
@@ -90,7 +100,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	}
 
 	eventArray := c.QueryArray("events")
-	eventMap, err := getEventMap(eventArray)
+	eventMap, height, err := getEventMapAndHeight(eventArray)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
@@ -98,6 +108,10 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	events, err := getEvents(eventMap)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	if height == 0 && len(events) == 0 {
+		c.AbortWithStatusJSON(400, gin.H{"error": "events needed"})
 		return
 	}
 
@@ -110,7 +124,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 
 	var totalCount uint64
 	if shouldCountTotal {
-		totalCount, err = db.QueryCount(conn, events)
+		totalCount, err = db.QueryCount(conn, events, height)
 		if err != nil {
 			logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)
 			c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
@@ -118,7 +132,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		}
 	}
 
-	txResponses, err := db.QueryTxs(conn, events, limit, offsetInTimesOfLimit, order)
+	txResponses, err := db.QueryTxs(conn, events, height, limit, offsetInTimesOfLimit, order)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "offset", offset, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
