@@ -70,7 +70,7 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	if height == 0 && len(events) == 0 {
+	if len(events) == 0 {
 		c.AbortWithStatusJSON(400, gin.H{"error": "events needed"})
 		return
 	}
