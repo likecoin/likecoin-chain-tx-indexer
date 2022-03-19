@@ -10,7 +10,7 @@ import (
 )
 
 const STARGATE_ENDPOINT = "/cosmos/tx/v1beta1/txs"
-const ISCN_ENDPOINT = "/cosmos/tx/v1beta1/iscn"
+const ISCN_ENDPOINT = "/iscn"
 
 func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 	lcdURL, err := url.Parse(lcdEndpoint)
