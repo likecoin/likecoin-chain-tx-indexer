@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -290,14 +289,17 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents) ([]*iscn.IscnRecor
 	return parseISCNRecords(rows)
 }
 
-func parseISCNRecords(rows pgx.Rows) ([]*iscn.IscnRecord, error) {
-	res := make([]*iscn.IscnRecord, 0)
-	for rows.Next() {
+func parseISCNRecords(rows pgx.Rows) (res []*iscn.IscnRecord, err error) {
+	res = make([]*iscn.IscnRecord, 0)
+	for rows.Next() && err == nil {
 		var jsonb pgtype.JSONB
 		rows.Scan(&jsonb)
-		log.Println(string(jsonb.Bytes))
+		// log.Println(string(jsonb.Bytes))
+		var record iscn.IscnRecord
+		err = encodingConfig.Marshaler.UnmarshalJSON(jsonb.Bytes, &record)
+		res = append(res, &record)
 	}
-	return res, nil
+	return
 }
 
 type Batch struct {

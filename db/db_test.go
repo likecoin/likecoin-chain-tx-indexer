@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestQueryISCN(t *testing.T) {
+func TestQueryISCNByID(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
 		log.Fatalln(err)
@@ -56,5 +56,38 @@ func TestQueryISCN(t *testing.T) {
 			},
 		},
 	}
-	QueryISCN(conn, events)
+	records, err := QueryISCN(conn, events)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(records) != 1 {
+		t.Error("records' length should be 1", records)
+	}
+}
+
+func TestQueryISCNByOwner(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer conn.Release()
+
+	events := types.StringEvents{
+		types.StringEvent{
+			Type: "iscn_record",
+			Attributes: []types.Attribute{
+				{
+					Key:   "owner",
+					Value: "cosmos1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmcwdt79j",
+				},
+			},
+		},
+	}
+	records, err := QueryISCN(conn, events)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(records) == 0 {
+		t.Error("records' length should not be 0", records)
+	}
 }
