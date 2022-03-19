@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -259,6 +260,33 @@ func parseRows(rows pgx.Rows, limit uint64) ([]*types.TxResponse, error) {
 			return nil, fmt.Errorf("cannot unmarshal JSON to TxResponse: %+v", jsonb.Bytes)
 		}
 		res = append(res, &txRes)
+	}
+	return res, nil
+}
+
+func QueryISCN(conn *pgxpool.Conn, events types.StringEvents) ([]*iscn.IscnRecord, error) {
+	eventStrings := getEventStrings(events)
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	sql := `
+		SELECT tx #> '{"tx", "body", "messages", 0, "record"}'
+		FROM txs
+		WHERE events @> $1
+	`
+	rows, err := conn.Query(ctx, sql, eventStrings)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return parseISCNRecords(rows)
+}
+
+func parseISCNRecords(rows pgx.Rows) ([]*iscn.IscnRecord, error) {
+	res := make([]*iscn.IscnRecord, 0)
+	for rows.Next() {
+		var jsonb pgtype.JSONB
+		rows.Scan(&jsonb)
+		log.Println(string(jsonb.Bytes))
 	}
 	return res, nil
 }
