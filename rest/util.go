@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likechain/app"
 )
 
@@ -65,4 +67,8 @@ func getEvents(query url.Values) (events types.StringEvents, err error) {
 		return nil, fmt.Errorf("events needed")
 	}
 	return events, nil
+}
+
+func getDB(c *gin.Context) *pgxpool.Pool {
+	return c.MustGet("pool").(*pgxpool.Pool)
 }

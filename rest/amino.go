@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
@@ -52,7 +51,8 @@ func packStdTxResponse(txRes *types.TxResponse) error {
 	return nil
 }
 
-func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
+func handleAminoTxsSearch(c *gin.Context) {
+	pool := getDB(c)
 	q := c.Request.URL.Query()
 	page, err := getPage(q)
 	if err != nil {

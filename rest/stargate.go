@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
@@ -64,7 +63,8 @@ func getEventMap(eventArray []string) (url.Values, error) {
 	return m, nil
 }
 
-func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
+func handleStargateTxsSearch(c *gin.Context) {
+	pool := getDB(c)
 	q := c.Request.URL.Query()
 
 	offset, err := getOffset(q)

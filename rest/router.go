@@ -10,6 +10,7 @@ import (
 )
 
 const STARGATE_ENDPOINT = "/cosmos/tx/v1beta1/txs"
+const ISCN_ENDPOINT = "/cosmos/tx/v1beta1/iscn"
 
 func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 	lcdURL, err := url.Parse(lcdEndpoint)
@@ -21,23 +22,26 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
 
-	router := gin.New()
-	router.GET("/*endpoint", func(c *gin.Context) {
-		endpoint, ok := c.Params.Get("endpoint")
-		if !ok {
-			logger.L.Errorw("Gin router cannot get endpoint")
-			c.AbortWithStatus(500)
-			return
-		}
-		switch endpoint {
-		case "/txs":
-			handleAminoTxsSearch(c, pool)
-		case STARGATE_ENDPOINT:
-			handleStargateTxsSearch(c, pool)
-		default:
-			proxyHandler(c)
-		}
-	})
-	router.POST("/*endpoint", proxyHandler)
+	router := getRouter(pool)
+	router.NoRoute(proxyHandler)
 	router.Run(listenAddr)
+}
+
+func getRouter(pool *pgxpool.Pool) *gin.Engine {
+	router := gin.New()
+	router.Use(withDB(pool))
+	iscn := router.Group(ISCN_ENDPOINT)
+	{
+		iscn.GET("/id", handleISCNById)
+	}
+	router.GET("/txs", handleAminoTxsSearch)
+	router.GET(STARGATE_ENDPOINT, handleStargateTxsSearch)
+	return router
+}
+
+func withDB(pool *pgxpool.Pool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("pool", pool)
+		c.Next()
+	}
 }

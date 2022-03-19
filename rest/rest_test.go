@@ -37,17 +37,7 @@ func TestMain(m *testing.M) {
 	defer conn.Release()
 
 	db.InitDB(conn)
-	router = gin.Default()
-
-	router.GET("/test", func(ctx *gin.Context) {
-		ctx.String(200, "Yes, it's working")
-	})
-	router.GET("/txs", func(ctx *gin.Context) {
-		handleAminoTxsSearch(ctx, pool)
-	})
-	router.GET("/cosmos/tx/v1beta1/txs", func(ctx *gin.Context) {
-		handleStargateTxsSearch(ctx, pool)
-	})
+	router = getRouter(pool)
 	m.Run()
 }
 
@@ -58,13 +48,4 @@ func request(req *http.Request) (*http.Response, string) {
 	res := w.Result()
 	body, _ := io.ReadAll(res.Body)
 	return res, string(body)
-}
-
-func TestReq(t *testing.T) {
-	req := httptest.NewRequest("GET", "/test", nil)
-
-	res, body := request(req)
-	if res.StatusCode != 200 {
-		t.Fatal(body)
-	}
 }
