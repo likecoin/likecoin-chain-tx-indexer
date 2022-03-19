@@ -263,7 +263,7 @@ func parseRows(rows pgx.Rows, limit uint64) ([]*types.TxResponse, error) {
 	return res, nil
 }
 
-func QueryISCN(conn *pgxpool.Conn, events types.StringEvents) ([]*iscn.IscnRecord, error) {
+func QueryISCN(conn *pgxpool.Conn, events types.StringEvents) ([]iscn.IscnInput, error) {
 	eventStrings := getEventStrings(events)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
@@ -280,15 +280,12 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents) ([]*iscn.IscnRecor
 	return parseISCNRecords(rows)
 }
 
-func parseISCNRecords(rows pgx.Rows) (res []*iscn.IscnRecord, err error) {
-	res = make([]*iscn.IscnRecord, 0)
+func parseISCNRecords(rows pgx.Rows) (res []iscn.IscnInput, err error) {
+	res = make([]iscn.IscnInput, 0)
 	for rows.Next() && err == nil {
 		var jsonb pgtype.JSONB
 		rows.Scan(&jsonb)
-		// log.Println(string(jsonb.Bytes))
-		var record iscn.IscnRecord
-		err = encodingConfig.Marshaler.UnmarshalJSON(jsonb.Bytes, &record)
-		res = append(res, &record)
+		res = append(res, iscn.IscnInput(jsonb.Bytes))
 	}
 	return
 }
