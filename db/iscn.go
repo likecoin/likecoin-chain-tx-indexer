@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -11,6 +12,13 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	iscnTypes "github.com/likecoin/likechain/x/iscn/types"
 )
+
+type ISCNResponse struct {
+	iscnTypes.IscnRecord
+	Id              string `json:"@id"`
+	Type            string `json:"@type"`
+	RecordTimestamp string `json:"recordTimestamp"`
+}
 
 func QueryISCN(conn *pgxpool.Conn, events types.StringEvents) ([]iscnTypes.QueryResponseRecord, error) {
 	eventStrings := getEventStrings(events)
@@ -32,21 +40,34 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents) ([]iscnTypes.Query
 func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err error) {
 	res = make([]iscnTypes.QueryResponseRecord, 0)
 	for rows.Next() && err == nil {
-		var data pgtype.GenericBinary
+		var jsonb pgtype.JSONB
 		var eventsRows pgtype.VarcharArray
-		err = rows.Scan(&data, &eventsRows)
+		err = rows.Scan(&jsonb, &eventsRows)
 		if err != nil {
 			return
 		}
+
+		var iscn ISCNResponse
+		if err = json.Unmarshal(jsonb.Bytes, &iscn); err != nil {
+			return
+		}
+
 		var events types.StringEvents
 		events, err = parseEvents(eventsRows)
 		if err != nil {
 			log.Println(err)
 		}
 
+		iscn.Id = getEventsValue(events, "iscn_record", "iscn_id")
+
+		var data []byte
+		if data, err = json.Marshal(iscn); err != nil {
+			return
+		}
+
 		result := iscnTypes.QueryResponseRecord{
 			Ipld: getEventsValue(events, "iscn_record", "ipld"),
-			Data: iscnTypes.IscnInput(data.Bytes),
+			Data: iscnTypes.IscnInput(data),
 		}
 		res = append(res, result)
 	}
