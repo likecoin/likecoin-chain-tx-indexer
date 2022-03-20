@@ -172,6 +172,13 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 			return nil, err
 		}
 
+		iscn.Id = getEventsValue(events, "iscn_record", "iscn_id")
+
+		var data []byte
+		if data, err = json.Marshal(iscn); err != nil {
+			return
+		}
+
 		result := iscnTypes.QueryResponseRecord{
 			Ipld: getEventsValue(events, "iscn_record", "ipld"),
 			Data: iscnTypes.IscnInput(data),
