@@ -91,3 +91,18 @@ func TestISCNCombine(t *testing.T) {
 		}
 	}
 }
+
+func TestISCNByOwner(t *testing.T) {
+	owner := "cosmos1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmcwdt79j"
+	req := httptest.NewRequest(
+		"GET",
+		fmt.Sprintf("%s/owner?owner=%s", ISCN_ENDPOINT, owner),
+		nil,
+	)
+	res, body := request(req)
+	if res.StatusCode != 200 {
+		t.Fatal(body)
+	}
+
+	t.Log(body)
+}
