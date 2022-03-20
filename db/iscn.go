@@ -1,8 +1,9 @@
 package db
 
 import (
-	"io"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackc/pgtype"
@@ -42,10 +43,9 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 		if err != nil {
 			log.Println(err)
 		}
-		log.Println("events", events)
 
 		result := iscnTypes.QueryResponseRecord{
-			Ipld: "",
+			Ipld: getEventsValue(events, "iscn_record", "ipld"),
 			Data: iscnTypes.IscnInput(data.Bytes),
 		}
 		res = append(res, result)
@@ -53,16 +53,38 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 	return
 }
 
-func parseEvents(rows pgtype.VarcharArray) (res types.StringEvents, err error) {
-	res = make(types.StringEvents, 0)
-	for _, row := range rows.Elements {
-		var event types.StringEvent
-		log.Println(row.String)
-		err = event.XXX_Unmarshal([]byte(row.String))
-		if err != nil && err != io.ErrUnexpectedEOF {
-			panic(err)
+func parseEvents(query pgtype.VarcharArray) (events types.StringEvents, err error) {
+	for _, row := range query.Elements {
+		arr := strings.SplitN(row.String, "=", 2)
+		k, v := arr[0], strings.Trim(arr[1], "\"")
+		if strings.Contains(k, ".") {
+			arr := strings.SplitN(k, ".", 2)
+			events = append(events, types.StringEvent{
+				Type: arr[0],
+				Attributes: []types.Attribute{
+					{
+						Key:   arr[1],
+						Value: v,
+					},
+				},
+			})
 		}
-		res = append(res, event)
 	}
-	return
+	if len(events) == 0 {
+		return nil, fmt.Errorf("events needed")
+	}
+	return events, nil
+}
+
+func getEventsValue(events types.StringEvents, t string, key string) string {
+	for _, event := range events {
+		if event.Type == t {
+			for _, attr := range event.Attributes {
+				if attr.Key == key {
+					return attr.Value
+				}
+			}
+		}
+	}
+	return ""
 }
