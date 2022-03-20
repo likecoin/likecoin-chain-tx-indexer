@@ -11,7 +11,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likechain/app"
-	iscn "github.com/likecoin/likechain/x/iscn/types"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/spf13/cobra"
 )
@@ -270,33 +269,6 @@ func parseRows(rows pgx.Rows, limit uint64) ([]*types.TxResponse, error) {
 		res = append(res, &txRes)
 	}
 	return res, nil
-}
-
-func QueryISCN(conn *pgxpool.Conn, events types.StringEvents) ([]iscn.IscnInput, error) {
-	eventStrings := getEventStrings(events)
-	ctx, cancel := GetTimeoutContext()
-	defer cancel()
-	sql := `
-		SELECT tx #> '{"tx", "body", "messages", 0, "record"}'
-		FROM txs
-		WHERE events @> $1
-	`
-	rows, err := conn.Query(ctx, sql, eventStrings)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return parseISCNRecords(rows)
-}
-
-func parseISCNRecords(rows pgx.Rows) (res []iscn.IscnInput, err error) {
-	res = make([]iscn.IscnInput, 0)
-	for rows.Next() && err == nil {
-		var jsonb pgtype.JSONB
-		rows.Scan(&jsonb)
-		res = append(res, iscn.IscnInput(jsonb.Bytes))
-	}
-	return
 }
 
 type Batch struct {

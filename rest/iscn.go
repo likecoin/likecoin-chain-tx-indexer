@@ -41,16 +41,15 @@ func handleISCNById(c *gin.Context) {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	records := make([]iscnTypes.QueryResponseRecord, 0)
-	for _, v := range iscnInputs {
-		records = append(records, iscnTypes.QueryResponseRecord{
-			Data: v,
-		})
+	if len(iscnInputs) == 0 {
+		c.AbortWithStatusJSON(404, gin.H{"error": "Record not found"})
+		return
 	}
+
 	response := iscnTypes.QueryRecordsByIdResponse{
 		Owner:         "",
 		LatestVersion: 3,
-		Records:       records,
+		Records:       iscnInputs,
 	}
 	resJson, err := encodingConfig.Marshaler.MarshalJSON(&response)
 	log.Println(string(resJson))
