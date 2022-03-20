@@ -18,6 +18,7 @@ type ISCNResponse struct {
 	Id              string `json:"@id"`
 	Type            string `json:"@type"`
 	RecordTimestamp string `json:"recordTimestamp"`
+	Owner           string `json:"owner"`
 }
 
 func QueryISCN(conn *pgxpool.Conn, events types.StringEvents) ([]iscnTypes.QueryResponseRecord, error) {
@@ -40,6 +41,7 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents) ([]iscnTypes.Query
 func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err error) {
 	res = make([]iscnTypes.QueryResponseRecord, 0)
 	for rows.Next() && err == nil {
+		var iscn ISCNResponse
 		var jsonb pgtype.JSONB
 		var eventsRows pgtype.VarcharArray
 		err = rows.Scan(&jsonb, &eventsRows)
@@ -47,7 +49,6 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 			return
 		}
 
-		var iscn ISCNResponse
 		if err = json.Unmarshal(jsonb.Bytes, &iscn); err != nil {
 			return
 		}
@@ -59,6 +60,7 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 		}
 
 		iscn.Id = getEventsValue(events, "iscn_record", "iscn_id")
+		iscn.Owner = getEventsValue(events, "iscn_record", "owner")
 
 		var data []byte
 		if data, err = json.Marshal(iscn); err != nil {
