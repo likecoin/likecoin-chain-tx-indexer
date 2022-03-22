@@ -26,7 +26,7 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents) ([]iscnTypes.Query
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 	sql := `
-		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events
+		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 		FROM txs
 		WHERE events @> $1
 	`
@@ -44,7 +44,8 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 		var iscn ISCNResponse
 		var jsonb pgtype.JSONB
 		var eventsRows pgtype.VarcharArray
-		err = rows.Scan(&jsonb, &eventsRows)
+		var timestamp string
+		err = rows.Scan(&jsonb, &eventsRows, &timestamp)
 		if err != nil {
 			return
 		}
@@ -61,6 +62,8 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 
 		iscn.Id = getEventsValue(events, "iscn_record", "iscn_id")
 		iscn.Owner = getEventsValue(events, "iscn_record", "owner")
+		iscn.Type = "Record"
+		iscn.RecordTimestamp = strings.Trim(timestamp, "\"")
 
 		var data []byte
 		if data, err = json.Marshal(iscn); err != nil {

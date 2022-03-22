@@ -1,0 +1,157 @@
+{
+    "tx": {
+        "body": {
+            "memo": "",
+            "messages": [
+                {
+                    "@type": "/cosmos.bank.v1beta1.MsgSend",
+                    "amount": [
+                        {
+                            "denom": "nanolike",
+                            "amount": "9000000000"
+                        }
+                    ],
+                    "to_address": "cosmos19s0pedl3fgaej4wn4zcl67k6wukdsjnytrmkye",
+                    "from_address": "cosmos1w4hq98jtjg729ft4um63y7z4l9wdtgrlv9n5y0"
+                },
+                {
+                    "@type": "/cosmos.bank.v1beta1.MsgSend",
+                    "amount": [
+                        {
+                            "denom": "nanolike",
+                            "amount": "3000000000"
+                        }
+                    ],
+                    "to_address": "cosmos1j0asac4gvryeg6jtda60j8saqu3acemg8kgztj",
+                    "from_address": "cosmos1w4hq98jtjg729ft4um63y7z4l9wdtgrlv9n5y0"
+                }
+            ],
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+        },
+        "@type": "/cosmos.tx.v1beta1.Tx",
+        "auth_info": {
+            "fee": {
+                "payer": "",
+                "amount": [
+                    {
+                        "denom": "nanolike",
+                        "amount": "9000000"
+                    }
+                ],
+                "granter": "",
+                "gas_limit": "90000"
+            },
+            "signer_infos": [
+                {
+                    "sequence": "56113",
+                    "mode_info": {
+                        "single": {
+                            "mode": "SIGN_MODE_DIRECT"
+                        }
+                    },
+                    "public_key": {
+                        "key": "Ao6v0S5CPswEb9qqhtrgWo6asFYZtXKmxrBhISk5qfVe",
+                        "@type": "/cosmos.crypto.secp256k1.PubKey"
+                    }
+                }
+            ]
+        },
+        "signatures": [
+            "jHMtFktIjbSUHsTxQzcUh5z1ATbQjkeJmsosypA6LGN2H6Gi6uaDnQlzH0zP2K1uwhacND4qQRcGScbYSyUzeA=="
+        ]
+    },
+    "code": 0,
+    "data": "0A060A0473656E640A060A0473656E64",
+    "info": "",
+    "logs": [
+        {
+            "log": "",
+            "events": [
+                {
+                    "type": "message",
+                    "attributes": [
+                        {
+                            "key": "action",
+                            "value": "send"
+                        },
+                        {
+                            "key": "sender",
+                            "value": "cosmos1w4hq98jtjg729ft4um63y7z4l9wdtgrlv9n5y0"
+                        },
+                        {
+                            "key": "module",
+                            "value": "bank"
+                        }
+                    ]
+                },
+                {
+                    "type": "transfer",
+                    "attributes": [
+                        {
+                            "key": "recipient",
+                            "value": "cosmos19s0pedl3fgaej4wn4zcl67k6wukdsjnytrmkye"
+                        },
+                        {
+                            "key": "sender",
+                            "value": "cosmos1w4hq98jtjg729ft4um63y7z4l9wdtgrlv9n5y0"
+                        },
+                        {
+                            "key": "amount",
+                            "value": "9000000000nanolike"
+                        }
+                    ]
+                }
+            ],
+            "msg_index": 0
+        },
+        {
+            "log": "",
+            "events": [
+                {
+                    "type": "message",
+                    "attributes": [
+                        {
+                            "key": "action",
+                            "value": "send"
+                        },
+                        {
+                            "key": "sender",
+                            "value": "cosmos1w4hq98jtjg729ft4um63y7z4l9wdtgrlv9n5y0"
+                        },
+                        {
+                            "key": "module",
+                            "value": "bank"
+                        }
+                    ]
+                },
+                {
+                    "type": "transfer",
+                    "attributes": [
+                        {
+                            "key": "recipient",
+                            "value": "cosmos1j0asac4gvryeg6jtda60j8saqu3acemg8kgztj"
+                        },
+                        {
+                            "key": "sender",
+                            "value": "cosmos1w4hq98jtjg729ft4um63y7z4l9wdtgrlv9n5y0"
+                        },
+                        {
+                            "key": "amount",
+                            "value": "3000000000nanolike"
+                        }
+                    ]
+                }
+            ],
+            "msg_index": 1
+        }
+    ],
+    "height": "335",
+    "txhash": "3EF25F05FCF1AA059AAA94D76859DB6098DEC9E0DEDD0158FD06639044F99C14",
+    "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"send\"},{\"key\":\"sender\",\"value\":\"cosmos1w4hq98jtjg729ft4um63y7z4l9wdtgrlv9n5y0\"},{\"key\":\"module\",\"value\":\"bank\"}]},{\"type\":\"transfer\",\"attributes\":[{\"key\":\"recipient\",\"value\":\"cosmos19s0pedl3fgaej4wn4zcl67k6wukdsjnytrmkye\"},{\"key\":\"sender\",\"value\":\"cosmos1w4hq98jtjg729ft4um63y7z4l9wdtgrlv9n5y0\"},{\"key\":\"amount\",\"value\":\"9000000000nanolike\"}]}]},{\"msg_index\":1,\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"send\"},{\"key\":\"sender\",\"value\":\"cosmos1w4hq98jtjg729ft4um63y7z4l9wdtgrlv9n5y0\"},{\"key\":\"module\",\"value\":\"bank\"}]},{\"type\":\"transfer\",\"attributes\":[{\"key\":\"recipient\",\"value\":\"cosmos1j0asac4gvryeg6jtda60j8saqu3acemg8kgztj\"},{\"key\":\"sender\",\"value\":\"cosmos1w4hq98jtjg729ft4um63y7z4l9wdtgrlv9n5y0\"},{\"key\":\"amount\",\"value\":\"3000000000nanolike\"}]}]}]",
+    "gas_used": "77021",
+    "codespace": "",
+    "timestamp": "2021-08-18T14:13:48Z",
+    "gas_wanted": "90000"
+}
