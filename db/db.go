@@ -156,6 +156,15 @@ func InitDB(conn *pgxpool.Conn) error {
 	if err != nil {
 		return err
 	}
+	ctx = context.Background()
+	_, err = conn.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_content_metadata ON txs USING GIN(jsonb_to_tsvector('english', tx #> '{"tx", "body", "messages", 0, "record", "contentMetadata"}' , '["string"]'))`)
+	if err != nil {
+		return err
+	}
+	_, err = conn.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_record ON txs USING GIN((tx #> '{tx, body, messages, 0, record}') jsonb_path_ops)`)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
