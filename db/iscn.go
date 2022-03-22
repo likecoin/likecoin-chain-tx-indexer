@@ -174,6 +174,8 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 
 		iscn.Id = getEventsValue(events, "iscn_record", "iscn_id")
 		iscn.Owner = getEventsValue(events, "iscn_record", "owner")
+		iscn.Type = "Record"
+		iscn.RecordTimestamp = strings.Trim(timestamp, "\"")
 
 		var data []byte
 		if data, err = json.Marshal(iscn); err != nil {
