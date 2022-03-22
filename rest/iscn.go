@@ -143,7 +143,7 @@ func handleISCNByOwner(c *gin.Context) {
 	}
 	defer conn.Release()
 
-	iscnInputs, err := db.QueryISCN(conn, events)
+	iscnInputs, err := db.QueryISCNByEvents(conn, events)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

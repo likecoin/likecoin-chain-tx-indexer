@@ -55,3 +55,21 @@ func debugSQL(tx pgx.Tx, ctx context.Context, sql string, args ...interface{}) (
 	}
 	return err
 }
+
+func TestQueryISCNByRecord(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer conn.Release()
+
+	records, err := QueryISCNByRecord(conn, `{"contentFingerprints": ["ar://UbZGi5yn61Iu4o16jM3_cxNgBk61ZRmypr5FabgRKEM"]}`)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(records) != 1 {
+		t.Error("There should be 1 record", records)
+	}
+	t.Log(records)
+}
