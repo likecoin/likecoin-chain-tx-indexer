@@ -36,7 +36,7 @@ func handleISCNById(c *gin.Context) {
 	}
 	defer conn.Release()
 
-	iscnInputs, err := db.QueryISCN(conn, events)
+	iscnInputs, err := db.QueryISCNByEvents(conn, events)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
@@ -47,9 +47,7 @@ func handleISCNById(c *gin.Context) {
 	}
 
 	response := iscnTypes.QueryRecordsByIdResponse{
-		Owner:         "",
-		LatestVersion: 3,
-		Records:       iscnInputs,
+		Records: iscnInputs,
 	}
 	resJson, err := encodingConfig.Marshaler.MarshalJSON(&response)
 	log.Println(string(resJson))
@@ -90,7 +88,7 @@ func handleISCNByOwner(c *gin.Context) {
 	}
 	defer conn.Release()
 
-	iscnInputs, err := db.QueryISCN(conn, events)
+	iscnInputs, err := db.QueryISCNByEvents(conn, events)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

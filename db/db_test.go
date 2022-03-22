@@ -56,7 +56,7 @@ func TestQueryISCNByID(t *testing.T) {
 			},
 		},
 	}
-	records, err := QueryISCN(conn, events)
+	records, err := QueryISCNByEvents(conn, events)
 	if err != nil {
 		t.Error(err)
 	}
@@ -83,11 +83,29 @@ func TestQueryISCNByOwner(t *testing.T) {
 			},
 		},
 	}
-	records, err := QueryISCN(conn, events)
+	records, err := QueryISCNByEvents(conn, events)
 	if err != nil {
 		t.Error(err)
 	}
 	if len(records) == 0 {
 		t.Error("records' length should not be 0", records)
 	}
+}
+
+func TestQueryISCNByRecord(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer conn.Release()
+
+	records, err := QueryISCNByRecord(conn, `{"contentFingerprints": ["ar://UbZGi5yn61Iu4o16jM3_cxNgBk61ZRmypr5FabgRKEM"]}`)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(records) != 1 {
+		t.Error("There should be 1 record", records)
+	}
+	t.Log(records)
 }

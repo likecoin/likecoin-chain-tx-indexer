@@ -10,5 +10,5 @@ FOOTPRINT="hash://sha256/d2a92fe4b7c5b9654f8aa303bed0b727931ab44c7f29b2750580abc
 psql mydb <<SQL
 select tx
 from txs
-where tx #> '{tx, body, messages, 0, record, contentFingerprints}' @> '["$FOOTPRINT"]'
+where tx #> '{tx, body, messages, 0, record}' @> '{"contentFingerprints": ["$FOOTPRINT"]}'
 SQL
