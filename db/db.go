@@ -61,7 +61,7 @@ func ConfigCmd(cmd *cobra.Command) {
 
 func GetTimeoutContext() (context.Context, context.CancelFunc) {
 	// TODO: move into config
-	return context.WithTimeout(context.Background(), 30*time.Second)
+	return context.WithTimeout(context.Background(), 45*time.Second)
 }
 
 func NewConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) {
