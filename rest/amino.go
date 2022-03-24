@@ -54,6 +54,7 @@ func packStdTxResponse(txRes *types.TxResponse) error {
 
 func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 	q := c.Request.URL.Query()
+	height := uint64(0)
 	page, err := getPage(q)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
@@ -69,6 +70,10 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
+	if len(events) == 0 {
+		c.AbortWithStatusJSON(400, gin.H{"error": "events needed"})
+		return
+	}
 	conn, err := db.AcquireFromPool(pool)
 	if err != nil {
 		logger.L.Errorw("Cannot acquire connection from database connection pool", "error", err)
@@ -76,7 +81,7 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 	defer conn.Release()
-	totalCount, err := db.QueryCount(conn, events)
+	totalCount, err := db.QueryCount(conn, events, height)
 	if err != nil {
 		logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
@@ -91,7 +96,7 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 	offset := limit * (page - 1)
-	txs, err := db.QueryTxs(conn, events, limit, offset, db.ORDER_ASC)
+	txs, err := db.QueryTxs(conn, events, height, limit, offset, db.ORDER_ASC)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", page, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})

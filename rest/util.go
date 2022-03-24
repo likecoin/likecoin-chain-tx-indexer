@@ -61,8 +61,5 @@ func getEvents(query url.Values) (events types.StringEvents, err error) {
 			}
 		}
 	}
-	if len(events) == 0 {
-		return nil, fmt.Errorf("events needed")
-	}
 	return events, nil
 }
