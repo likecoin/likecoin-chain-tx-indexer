@@ -31,6 +31,33 @@ func TestCreateQuery(t *testing.T) {
 			},
 			output: `{"contentFingerprints":["fingerprints"]}`,
 		},
+		{
+			input: iscnRecordQuery{
+				Stakeholders: []stakeholder{
+					{
+						Entity: &entity{
+							Id: "John Perry Barlow",
+						},
+					},
+				},
+			},
+			output: `{"stakeholders":[{"entity":{"id":"John Perry Barlow"}}]}`,
+		},
+		{
+			input: iscnRecordQuery{
+				ContentMetadata: &contentMetadata{
+					Type: "Article",
+				},
+				Stakeholders: []stakeholder{
+					{
+						Entity: &entity{
+							Id: "John Perry Barlow",
+						},
+					},
+				},
+			},
+			output: `{"contentMetadata":{"@type":"Article"},"stakeholders":[{"entity":{"id":"John Perry Barlow"}}]}`,
+		},
 	}
 	for _, v := range tables {
 		body, err := marshallQuery(v.input)
