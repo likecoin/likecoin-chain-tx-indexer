@@ -34,6 +34,7 @@ func getRouter(pool *pgxpool.Pool) *gin.Engine {
 	{
 		iscn.GET("/id", handleISCNById)
 		iscn.GET("/owner", handleISCNByOwner)
+		iscn.GET("/fingerprint", handleISCNByFingerprint)
 	}
 	router.GET("/txs", handleAminoTxsSearch)
 	router.GET(STARGATE_ENDPOINT, handleStargateTxsSearch)
