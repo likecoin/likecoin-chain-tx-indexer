@@ -17,6 +17,7 @@ type ISCNRecordsResponse struct {
 
 func handleISCN(c *gin.Context) {
 	q := c.Request.URL.Query()
+	provided := false
 
 	events := make([]types.StringEvent, 0)
 	if owner := q.Get("owner"); owner != "" {
@@ -29,6 +30,7 @@ func handleISCN(c *gin.Context) {
 				},
 			},
 		})
+		provided = true
 	}
 	if iscnId := q.Get("iscn_id"); iscnId != "" {
 		events = append(events, types.StringEvent{
@@ -40,19 +42,24 @@ func handleISCN(c *gin.Context) {
 				},
 			},
 		})
-
+		provided = true
 	}
 	query := db.ISCNRecordQuery{}
-	if fingerprint := q.Get("fingerprints"); fingerprint != "" {
-		query.ContentFingerprints = []string{q.Get("fingerprints")}
-
+	if fingerprint := q.Get("fingerprint"); fingerprint != "" {
+		query.ContentFingerprints = []string{fingerprint}
+		provided = true
 	}
 	if keywords := q.Get("keywords"); keywords != "" {
 		query.ContentMetadata = &db.ContentMetadata{
 			Keywords: q.Get("keywords"),
 		}
+		provided = true
 	}
 	log.Println(query, events)
+	if !provided {
+		c.AbortWithStatusJSON(400, gin.H{"error": "No available filters provided"})
+		return
+	}
 
 	conn := getConn(c)
 
@@ -150,7 +157,6 @@ func respondRecords(c *gin.Context, iscnInputs []iscnTypes.QueryResponseRecord) 
 		Records: iscnInputs,
 	}
 	resJson, err := json.Marshal(&response)
-	log.Println(string(resJson))
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

@@ -29,11 +29,16 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQu
 	}
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
+	if _, err := conn.Exec(ctx, `SET enable_indexscan = off;`); err != nil {
+		return nil, err
+	}
 	sql := `
 		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 		FROM txs
 		WHERE events @> $1 
 		AND tx #> '{tx, body, messages, 0, record}' @> $2
+		ORDER BY id DESC
+		LIMIT 10;
 	`
 	rows, err := conn.Query(ctx, sql, eventStrings, string(queryString))
 	if err != nil {
@@ -51,6 +56,8 @@ func QueryISCNByEvents(conn *pgxpool.Conn, events types.StringEvents) ([]iscnTyp
 		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 		FROM txs
 		WHERE events @> $1
+		ORDER BY id DESC
+		LIMIT 10;
 	`
 	rows, err := conn.Query(ctx, sql, eventStrings)
 	if err != nil {
