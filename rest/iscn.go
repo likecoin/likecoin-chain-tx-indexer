@@ -121,7 +121,7 @@ func handleISCNByOwner(c *gin.Context) {
 	q := c.Request.URL.Query()
 	owner := q.Get("owner")
 	if owner == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "ISCN id not provided"})
+		c.AbortWithStatusJSON(400, gin.H{"error": "owner is not provided"})
 		return
 	}
 	log.Println(owner)
@@ -158,6 +158,49 @@ func handleISCNByOwner(c *gin.Context) {
 	}
 	resJson, err := encodingConfig.Marshaler.MarshalJSON(&response)
 	log.Println(string(resJson))
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Writer.Header().Set("Content-Type", "application/json")
+	c.Writer.WriteHeader(200)
+	c.Writer.Write(resJson)
+}
+
+func handleISCNByFingerprint(c *gin.Context) {
+	pool := getDB(c)
+	q := c.Request.URL.Query()
+	fingerprint := q.Get("fingerprint")
+	if fingerprint == "" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "block height not provided"})
+		return
+	}
+	// log.Println(fingerprint)
+	conn, err := db.AcquireFromPool(pool)
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	defer conn.Release()
+
+	query := fmt.Sprintf(`{"contentFingerprints": ["%s"]}`, fingerprint)
+
+	iscnInputs, err := db.QueryISCNByRecord(conn, query)
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	if len(iscnInputs) == 0 {
+		c.AbortWithStatusJSON(404, gin.H{"error": "Record not found"})
+		return
+	}
+
+	response := iscnTypes.QueryRecordsByOwnerResponse{
+		Records: iscnInputs,
+	}
+	resJson, err := encodingConfig.Marshaler.MarshalJSON(&response)
+	// log.Println(string(resJson))
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

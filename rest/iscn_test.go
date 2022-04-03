@@ -106,3 +106,26 @@ func TestISCNByOwner(t *testing.T) {
 
 	t.Log(body)
 }
+
+func TestISCNByFingerprints(t *testing.T) {
+	table := []struct {
+		fingerprint string
+		statusCode  int
+	}{
+		{"ipfs://QmPiX4izgDNyJJRnd8V5ei5ce58dsxErpNVre5jcMPBARG", 200},
+		{"hash://sha256/d2a92fe4b7c5b9654f8aa303bed0b727931ab44c7f29b2750580abca2cb6597d", 200},
+		{"hash://not-exists", 404},
+	}
+	for _, v := range table {
+		req := httptest.NewRequest(
+			"GET",
+			fmt.Sprintf("%s/fingerprint?fingerprint=%s",
+				ISCN_ENDPOINT, v.fingerprint),
+			nil,
+		)
+		res, body := request(req)
+		if res.StatusCode != v.statusCode {
+			t.Fatalf("expect %d, got %d\n%s", v.statusCode, res.StatusCode, body)
+		}
+	}
+}
