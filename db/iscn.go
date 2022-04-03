@@ -21,26 +21,56 @@ type ISCNResponse struct {
 	Owner           string `json:"owner"`
 }
 
-func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQuery) ([]iscnTypes.QueryResponseRecord, error) {
+func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQuery, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
 	eventStrings := getEventStrings(events)
 	queryString, err := query.Marshal()
 	if err != nil {
-		return []iscnTypes.QueryResponseRecord{}, err
+		return nil, err
 	}
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	if _, err := conn.Exec(ctx, `SET enable_indexscan = off;`); err != nil {
+
+	tx, err := conn.Begin(ctx)
+	if err != nil {
 		return nil, err
 	}
-	sql := `
+	defer tx.Rollback(ctx)
+
+	// For GIN work with pagination
+	if _, err := tx.Exec(ctx, `SET LOCAL enable_indexscan = off;`); err != nil {
+		return nil, err
+	}
+	sql := fmt.Sprintf(`
 		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 		FROM txs
 		WHERE events @> $1 
 		AND tx #> '{tx, body, messages, 0, record}' @> $2
-		ORDER BY id DESC
-		LIMIT 10;
-	`
-	rows, err := conn.Query(ctx, sql, eventStrings, string(queryString))
+		ORDER BY id %s
+		OFFSET $3
+		LIMIT $4;
+	`, pagination.Order)
+	rows, err := tx.Query(ctx, sql, eventStrings,
+		string(queryString), pagination.getOffset(), pagination.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return parseISCNRecords(rows)
+}
+
+func QueryISCNList(conn *pgxpool.Conn, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	sql := fmt.Sprintf(`
+		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
+		FROM txs
+		WHERE events @> '{"message.module=\"iscn\""}'
+		ORDER BY id %s
+		OFFSET $1
+		LIMIT $2;
+	`, pagination.Order)
+	rows, err := conn.Query(ctx, sql, pagination.getOffset(), pagination.Limit)
 	if err != nil {
 		return nil, err
 	}

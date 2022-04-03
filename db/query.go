@@ -26,3 +26,13 @@ type Entity struct {
 func (q ISCNRecordQuery) Marshal() ([]byte, error) {
 	return json.Marshal(q)
 }
+
+type Pagination struct {
+	Limit uint
+	Page  uint
+	Order Order
+}
+
+func (p Pagination) getOffset() uint {
+	return p.Limit * (p.Page)
+}

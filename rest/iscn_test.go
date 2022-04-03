@@ -91,7 +91,7 @@ func TestISCNCombine(t *testing.T) {
 		},
 		{
 			query:  "",
-			status: 400,
+			status: 200,
 		},
 	}
 	for _, v := range table {

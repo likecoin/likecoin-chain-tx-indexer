@@ -51,12 +51,18 @@ func TestISCNCombineQuery(t *testing.T) {
 
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
-		log.Fatalln(err)
+		t.Error(err)
 	}
 	defer conn.Release()
 
+	p := Pagination{
+		Limit: 5,
+		Page:  0,
+		Order: ORDER_DESC,
+	}
+
 	for _, v := range tables {
-		records, err := QueryISCN(conn, v.events, v.query)
+		records, err := QueryISCN(conn, v.events, v.query, p)
 		if err != nil {
 			t.Error(err)
 		}
@@ -78,6 +84,26 @@ func TestISCNCombineQuery(t *testing.T) {
 		}
 		t.Log(len(records))
 	}
+}
+
+func TestISCNList(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer conn.Release()
+
+	p := Pagination{
+		Limit: 10,
+		Order: ORDER_DESC,
+		Page:  0,
+	}
+
+	records, err := QueryISCNList(conn, p)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(len(records))
 }
 
 func TestQueryISCNByID(t *testing.T) {

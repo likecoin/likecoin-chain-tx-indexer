@@ -21,7 +21,7 @@ func getOffset(query url.Values) (uint64, error) {
 	return offset, nil
 }
 
-func getQueryOrder(query url.Values) (string, error) {
+func getQueryOrder(query url.Values) (db.Order, error) {
 	orderByStr := strings.ToUpper(query.Get("order_by"))
 	switch orderByStr {
 	case "", "ORDER_BY_UNSPECIFIED", "ORDER_BY_ASC":

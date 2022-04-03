@@ -31,9 +31,11 @@ const DefaultDBPassword = "password"
 const DefaultDBPoolMin = 4
 const DefaultDBPoolMax = 32
 
+type Order string
+
 const (
-	ORDER_ASC  = "ASC"
-	ORDER_DESC = "DESC"
+	ORDER_ASC  Order = "ASC"
+	ORDER_DESC Order = "DESC"
 )
 
 var encodingConfig = app.MakeEncodingConfig()
@@ -222,7 +224,7 @@ func QueryCount(conn *pgxpool.Conn, events types.StringEvents) (uint64, error) {
 	return count, nil
 }
 
-func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, order string) ([]*types.TxResponse, error) {
+func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, order Order) ([]*types.TxResponse, error) {
 	sql := fmt.Sprintf(`
 		SELECT tx FROM txs
 		WHERE events @> $1
@@ -241,7 +243,7 @@ func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offse
 	return parseRows(rows, limit)
 }
 
-func QueryTxsWithKeyword(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, order string, keyword string) ([]*types.TxResponse, error) {
+func QueryTxsWithKeyword(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, order Order, keyword string) ([]*types.TxResponse, error) {
 	sql := fmt.Sprintf(`
 		SELECT tx FROM txs
 		WHERE events @> $1

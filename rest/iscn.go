@@ -55,19 +55,26 @@ func handleISCN(c *gin.Context) {
 		}
 		provided = true
 	}
-	log.Println(query, events)
-	if !provided {
-		c.AbortWithStatusJSON(400, gin.H{"error": "No available filters provided"})
-		return
-	}
-
 	conn := getConn(c)
-
-	records, err := db.QueryISCN(conn, events, query)
+	p := db.Pagination{
+		Limit: 10,
+		Page:  0,
+		Order: db.ORDER_DESC,
+	}
+	log.Println(query, events, p)
+	var records []iscnTypes.QueryResponseRecord
+	var err error
+	if provided {
+		records, err = db.QueryISCN(conn, events, query, p)
+	} else {
+		records, err = db.QueryISCNList(conn, p)
+		log.Println("not provided")
+	}
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
+
 	respondRecords(c, records)
 }
 
