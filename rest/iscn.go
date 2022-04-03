@@ -174,7 +174,6 @@ func respondRecords(c *gin.Context, iscnInputs []iscnTypes.QueryResponseRecord) 
 		Records: iscnInputs,
 	}
 	resJson, err := json.Marshal(&response)
-	log.Println(string(resJson))
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

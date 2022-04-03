@@ -143,6 +143,14 @@ func TestISCNCombine(t *testing.T) {
 			query:  "owner=cosmos1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmcwdt79j",
 			status: 200,
 		},
+		{
+			query:  "fingerprint=hash://sha256/8e6984120afb8ac0f81080cf3e7a38042c472c4deb3e2588480df6e199741c89",
+			status: 200,
+		},
+		{
+			query:  "",
+			status: 400,
+		},
 	}
 	for _, v := range table {
 		req := httptest.NewRequest(
@@ -155,6 +163,5 @@ func TestISCNCombine(t *testing.T) {
 		if res.StatusCode != v.status {
 			t.Fatalf("expect %d, got %d\n%s\n%s", v.status, res.StatusCode, v.query, body)
 		}
-
 	}
 }
