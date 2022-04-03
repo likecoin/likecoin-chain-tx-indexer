@@ -64,7 +64,6 @@ func getEventMap(eventArray []string) (url.Values, error) {
 }
 
 func handleStargateTxsSearch(c *gin.Context) {
-	pool := getDB(c)
 	q := c.Request.URL.Query()
 
 	offset, err := getOffset(q)
@@ -102,12 +101,7 @@ func handleStargateTxsSearch(c *gin.Context) {
 		return
 	}
 
-	conn, err := db.AcquireFromPool(pool)
-	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	defer conn.Release()
+	conn := getConn(c)
 
 	var totalCount uint64
 	if shouldCountTotal {

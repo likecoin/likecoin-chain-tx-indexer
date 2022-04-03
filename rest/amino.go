@@ -52,7 +52,6 @@ func packStdTxResponse(txRes *types.TxResponse) error {
 }
 
 func handleAminoTxsSearch(c *gin.Context) {
-	pool := getDB(c)
 	q := c.Request.URL.Query()
 	page, err := getPage(q)
 	if err != nil {
@@ -69,13 +68,8 @@ func handleAminoTxsSearch(c *gin.Context) {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	conn, err := db.AcquireFromPool(pool)
-	if err != nil {
-		logger.L.Errorw("Cannot acquire connection from database connection pool", "error", err)
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	defer conn.Release()
+
+	conn := getConn(c)
 	totalCount, err := db.QueryCount(conn, events)
 	if err != nil {
 		logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
@@ -43,7 +44,13 @@ func getRouter(pool *pgxpool.Pool) *gin.Engine {
 
 func withDB(pool *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("pool", pool)
+		conn, err := db.AcquireFromPool(pool)
+		if err != nil {
+			c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.Set("conn", conn)
+		defer conn.Release()
 		c.Next()
 	}
 }

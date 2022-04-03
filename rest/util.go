@@ -69,6 +69,6 @@ func getEvents(query url.Values) (events types.StringEvents, err error) {
 	return events, nil
 }
 
-func getDB(c *gin.Context) *pgxpool.Pool {
-	return c.MustGet("pool").(*pgxpool.Pool)
+func getConn(c *gin.Context) *pgxpool.Conn {
+	return c.MustGet("conn").(*pgxpool.Conn)
 }
