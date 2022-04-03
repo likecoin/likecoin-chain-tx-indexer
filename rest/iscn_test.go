@@ -71,3 +71,32 @@ func TestISCNByFingerprints(t *testing.T) {
 		}
 	}
 }
+
+func TestISCNCombine(t *testing.T) {
+	table := []struct {
+		query  string
+		status int
+	}{
+		{
+			query:  "iscn_id=iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
+			status: 200,
+		},
+		{
+			query:  "owner=cosmos1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmcwdt79j",
+			status: 200,
+		},
+	}
+	for _, v := range table {
+		req := httptest.NewRequest(
+			"GET",
+			fmt.Sprintf("%s?%s",
+				ISCN_ENDPOINT, v.query),
+			nil,
+		)
+		res, body := request(req)
+		if res.StatusCode != v.status {
+			t.Fatalf("expect %d, got %d\n%s\n%s", v.status, res.StatusCode, v.query, body)
+		}
+
+	}
+}

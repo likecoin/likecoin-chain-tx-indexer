@@ -21,7 +21,7 @@ type ISCNResponse struct {
 	Owner           string `json:"owner"`
 }
 
-func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query iscnRecordQuery) ([]iscnTypes.QueryResponseRecord, error) {
+func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQuery) ([]iscnTypes.QueryResponseRecord, error) {
 	eventStrings := getEventStrings(events)
 	queryString, err := query.Marshal()
 	if err != nil {

@@ -15,6 +15,55 @@ type ISCNRecordsResponse struct {
 	Records []iscnTypes.QueryResponseRecord `json:"records"`
 }
 
+func handleISCN(c *gin.Context) {
+	q := c.Request.URL.Query()
+
+	events := make([]types.StringEvent, 0)
+	if owner := q.Get("owner"); owner != "" {
+		events = append(events, types.StringEvent{
+			Type: "iscn_record",
+			Attributes: []types.Attribute{
+				{
+					Key:   "owner",
+					Value: owner,
+				},
+			},
+		})
+	}
+	if iscnId := q.Get("iscn_id"); iscnId != "" {
+		events = append(events, types.StringEvent{
+			Type: "iscn_record",
+			Attributes: []types.Attribute{
+				{
+					Key:   "iscn_id",
+					Value: iscnId,
+				},
+			},
+		})
+
+	}
+	query := db.ISCNRecordQuery{}
+	if fingerprint := q.Get("fingerprints"); fingerprint != "" {
+		query.ContentFingerprints = []string{q.Get("fingerprints")}
+
+	}
+	if keywords := q.Get("keywords"); keywords != "" {
+		query.ContentMetadata = &db.ContentMetadata{
+			Keywords: q.Get("keywords"),
+		}
+	}
+	log.Println(query, events)
+
+	conn := getConn(c)
+
+	records, err := db.QueryISCN(conn, events, query)
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	respondRecords(c, records)
+}
+
 func handleISCNById(c *gin.Context) {
 	q := c.Request.URL.Query()
 	iscnId := q.Get("iscn_id")

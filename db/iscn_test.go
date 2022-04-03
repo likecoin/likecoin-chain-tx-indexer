@@ -9,13 +9,13 @@ import (
 
 func TestISCNCombineQuery(t *testing.T) {
 	tables := []struct {
-		query  iscnRecordQuery
+		query  ISCNRecordQuery
 		events types.StringEvents
 		length int
 	}{
 		{
-			query: iscnRecordQuery{
-				ContentMetadata: &contentMetadata{
+			query: ISCNRecordQuery{
+				ContentMetadata: &ContentMetadata{
 					Keywords: "Cyberspace,EFF",
 				},
 			},
@@ -36,10 +36,10 @@ func TestISCNCombineQuery(t *testing.T) {
 			length: 1,
 		},
 		{
-			query: iscnRecordQuery{
-				Stakeholders: []stakeholder{
+			query: ISCNRecordQuery{
+				Stakeholders: []Stakeholder{
 					{
-						Entity: &entity{
+						Entity: &Entity{
 							Name: "kin ko",
 						},
 					},

@@ -2,27 +2,27 @@ package db
 
 import "encoding/json"
 
-type iscnRecordQuery struct {
+type ISCNRecordQuery struct {
 	ContentFingerprints []string         `json:"contentFingerprints,omitempty"`
-	ContentMetadata     *contentMetadata `json:"contentMetadata,omitempty"`
-	Stakeholders        []stakeholder    `json:"stakeholders,omitempty"`
+	ContentMetadata     *ContentMetadata `json:"contentMetadata,omitempty"`
+	Stakeholders        []Stakeholder    `json:"stakeholders,omitempty"`
 }
 
-type contentMetadata struct {
+type ContentMetadata struct {
 	Name     string `json:"name,omitempty"`
 	Keywords string `json:"keywords,omitempty"`
 	Type     string `json:"@type,omitempty"`
 }
 
-type stakeholder struct {
-	Entity *entity `json:"entity,omitempty"`
+type Stakeholder struct {
+	Entity *Entity `json:"entity,omitempty"`
 }
 
-type entity struct {
+type Entity struct {
 	Id   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
 }
 
-func (q iscnRecordQuery) Marshal() ([]byte, error) {
+func (q ISCNRecordQuery) Marshal() ([]byte, error) {
 	return json.Marshal(q)
 }

@@ -33,6 +33,7 @@ func getRouter(pool *pgxpool.Pool) *gin.Engine {
 	router.Use(withDB(pool))
 	iscn := router.Group(ISCN_ENDPOINT)
 	{
+		iscn.GET("", handleISCN)
 		iscn.GET("/id", handleISCNById)
 		iscn.GET("/owner", handleISCNByOwner)
 		iscn.GET("/fingerprint", handleISCNByFingerprint)

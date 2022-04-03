@@ -4,27 +4,27 @@ import "testing"
 
 func TestCreateQuery(t *testing.T) {
 	tables := []struct {
-		input  iscnRecordQuery
+		input  ISCNRecordQuery
 		output string
 	}{
 		{
-			input: iscnRecordQuery{
-				ContentMetadata: &contentMetadata{
+			input: ISCNRecordQuery{
+				ContentMetadata: &ContentMetadata{
 					Keywords: "Cyberspace,EFF",
 				},
 			},
 			output: `{"contentMetadata":{"keywords":"Cyberspace,EFF"}}`,
 		},
 		{
-			input: iscnRecordQuery{
-				ContentMetadata: &contentMetadata{
+			input: ISCNRecordQuery{
+				ContentMetadata: &ContentMetadata{
 					Type: "Article",
 				},
 			},
 			output: `{"contentMetadata":{"@type":"Article"}}`,
 		},
 		{
-			input: iscnRecordQuery{
+			input: ISCNRecordQuery{
 				ContentFingerprints: []string{
 					"fingerprints",
 				},
@@ -32,10 +32,10 @@ func TestCreateQuery(t *testing.T) {
 			output: `{"contentFingerprints":["fingerprints"]}`,
 		},
 		{
-			input: iscnRecordQuery{
-				Stakeholders: []stakeholder{
+			input: ISCNRecordQuery{
+				Stakeholders: []Stakeholder{
 					{
-						Entity: &entity{
+						Entity: &Entity{
 							Id: "John Perry Barlow",
 						},
 					},
@@ -44,13 +44,13 @@ func TestCreateQuery(t *testing.T) {
 			output: `{"stakeholders":[{"entity":{"id":"John Perry Barlow"}}]}`,
 		},
 		{
-			input: iscnRecordQuery{
-				ContentMetadata: &contentMetadata{
+			input: ISCNRecordQuery{
+				ContentMetadata: &ContentMetadata{
 					Type: "Article",
 				},
-				Stakeholders: []stakeholder{
+				Stakeholders: []Stakeholder{
 					{
-						Entity: &entity{
+						Entity: &Entity{
 							Id: "John Perry Barlow",
 						},
 					},
