@@ -148,24 +148,7 @@ func handleISCNByOwner(c *gin.Context) {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	if len(iscnInputs) == 0 {
-		c.AbortWithStatusJSON(404, gin.H{"error": "Record not found"})
-		return
-	}
-
-	response := iscnTypes.QueryRecordsByOwnerResponse{
-		Records: iscnInputs,
-	}
-	resJson, err := encodingConfig.Marshaler.MarshalJSON(&response)
-	log.Println(string(resJson))
-	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.Writer.Header().Set("Content-Type", "application/json")
-	c.Writer.WriteHeader(200)
-	c.Writer.Write(resJson)
+	respondRecords(c, iscnInputs)
 }
 
 func handleISCNByFingerprint(c *gin.Context) {
@@ -191,16 +174,20 @@ func handleISCNByFingerprint(c *gin.Context) {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	respondRecords(c, iscnInputs)
+}
+
+func respondRecords(c *gin.Context, iscnInputs []iscnTypes.QueryResponseRecord) {
 	if len(iscnInputs) == 0 {
 		c.AbortWithStatusJSON(404, gin.H{"error": "Record not found"})
 		return
 	}
 
-	response := iscnTypes.QueryRecordsByOwnerResponse{
+	response := ISCNRecordsResponse{
 		Records: iscnInputs,
 	}
-	resJson, err := encodingConfig.Marshaler.MarshalJSON(&response)
-	// log.Println(string(resJson))
+	resJson, err := json.Marshal(&response)
+	log.Println(string(resJson))
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
