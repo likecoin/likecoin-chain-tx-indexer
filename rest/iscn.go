@@ -117,7 +117,6 @@ func respondRecords(c *gin.Context, iscnInputs []iscnTypes.QueryResponseRecord) 
 }
 
 func handleISCNByOwner(c *gin.Context) {
-	pool := getDB(c)
 	q := c.Request.URL.Query()
 	owner := q.Get("owner")
 	if owner == "" {
@@ -136,12 +135,7 @@ func handleISCNByOwner(c *gin.Context) {
 			},
 		},
 	}
-	conn, err := db.AcquireFromPool(pool)
-	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	defer conn.Release()
+	conn := getConn(c)
 
 	iscnInputs, err := db.QueryISCNByEvents(conn, events)
 	if err != nil {
@@ -152,20 +146,13 @@ func handleISCNByOwner(c *gin.Context) {
 }
 
 func handleISCNByFingerprint(c *gin.Context) {
-	pool := getDB(c)
 	q := c.Request.URL.Query()
 	fingerprint := q.Get("fingerprint")
 	if fingerprint == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "block height not provided"})
+		c.AbortWithStatusJSON(400, gin.H{"error": "fingerprint not provided"})
 		return
 	}
-	// log.Println(fingerprint)
-	conn, err := db.AcquireFromPool(pool)
-	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	defer conn.Release()
+	conn := getConn(c)
 
 	query := fmt.Sprintf(`{"contentFingerprints": ["%s"]}`, fingerprint)
 

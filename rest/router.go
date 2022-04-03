@@ -53,7 +53,13 @@ func withConn(pool *pgxpool.Pool) gin.HandlerFunc {
 
 func withPool(pool *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("pool", pool)
+		conn, err := db.AcquireFromPool(pool)
+		if err != nil {
+			c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.Set("conn", conn)
+		defer conn.Release()
 		c.Next()
 	}
 }
