@@ -60,7 +60,7 @@ func TestCreateQuery(t *testing.T) {
 		},
 	}
 	for _, v := range tables {
-		body, err := marshallQuery(v.input)
+		body, err := v.input.Marshal()
 		if err != nil {
 			t.Error(err)
 		}

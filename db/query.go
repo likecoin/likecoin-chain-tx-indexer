@@ -23,6 +23,6 @@ type entity struct {
 	Name string `json:"name,omitempty"`
 }
 
-func marshallQuery(query iscnRecordQuery) ([]byte, error) {
-	return json.Marshal(query)
+func (q iscnRecordQuery) Marshal() ([]byte, error) {
+	return json.Marshal(q)
 }

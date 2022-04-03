@@ -21,6 +21,28 @@ type ISCNResponse struct {
 	Owner           string `json:"owner"`
 }
 
+func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query iscnRecordQuery) ([]iscnTypes.QueryResponseRecord, error) {
+	eventStrings := getEventStrings(events)
+	queryString, err := query.Marshal()
+	if err != nil {
+		return []iscnTypes.QueryResponseRecord{}, err
+	}
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	sql := `
+		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
+		FROM txs
+		WHERE events @> $1 
+		AND tx #> '{tx, body, messages, 0, record}' @> $2
+	`
+	rows, err := conn.Query(ctx, sql, eventStrings, string(queryString))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return parseISCNRecords(rows)
+}
+
 func QueryISCNByEvents(conn *pgxpool.Conn, events types.StringEvents) ([]iscnTypes.QueryResponseRecord, error) {
 	eventStrings := getEventStrings(events)
 	ctx, cancel := GetTimeoutContext()
