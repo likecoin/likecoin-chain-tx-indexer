@@ -42,6 +42,7 @@ func packStdTxResponse(txRes *types.TxResponse) error {
 func handleAminoTxsSearch(c *gin.Context) {
 	q := c.Request.URL.Query()
 	page, err := getPage(q, "page")
+	height := uint64(0)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
@@ -58,7 +59,7 @@ func handleAminoTxsSearch(c *gin.Context) {
 	}
 
 	conn := getConn(c)
-	totalCount, err := db.QueryCount(conn, events)
+	totalCount, err := db.QueryCount(conn, events, height)
 	if err != nil {
 		logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
@@ -73,7 +74,7 @@ func handleAminoTxsSearch(c *gin.Context) {
 		return
 	}
 	offset := limit * (page - 1)
-	txs, err := db.QueryTxs(conn, events, limit, offset, db.ORDER_ASC)
+	txs, err := db.QueryTxs(conn, events, height, limit, offset, db.ORDER_ASC)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "page", page, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})

@@ -63,7 +63,7 @@ func ConfigCmd(cmd *cobra.Command) {
 
 func GetTimeoutContext() (context.Context, context.CancelFunc) {
 	// TODO: move into config
-	return context.WithTimeout(context.Background(), 30*time.Second)
+	return context.WithTimeout(context.Background(), 45*time.Second)
 }
 
 func NewConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) {
@@ -210,15 +210,16 @@ func getEventStrings(events types.StringEvents) []string {
 	return eventStrings
 }
 
-func QueryCount(conn *pgxpool.Conn, events types.StringEvents) (uint64, error) {
+func QueryCount(conn *pgxpool.Conn, events types.StringEvents, height uint64) (uint64, error) {
 	sql := `
 		SELECT count(*) FROM txs
 		WHERE events @> $1
+		AND ($2 = 0 or height = $2)
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 	eventStrings := getEventStrings(events)
-	row := conn.QueryRow(ctx, sql, eventStrings)
+	row := conn.QueryRow(ctx, sql, eventStrings, height)
 	var count uint64
 	err := row.Scan(&count)
 	if err != nil {
@@ -227,18 +228,19 @@ func QueryCount(conn *pgxpool.Conn, events types.StringEvents) (uint64, error) {
 	return count, nil
 }
 
-func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, order Order) ([]*types.TxResponse, error) {
+func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limit uint64, offset uint64, order Order) ([]*types.TxResponse, error) {
 	sql := fmt.Sprintf(`
 		SELECT tx FROM txs
 		WHERE events @> $1
+		AND ($2 = 0 or height = $2)
 		ORDER BY id %s
-		LIMIT $2
-		OFFSET $3
+		LIMIT $3
+		OFFSET $4
 	`, order)
 	eventStrings := getEventStrings(events)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, eventStrings, limit, offset)
+	rows, err := conn.Query(ctx, sql, eventStrings, height, limit, offset)
 	if err != nil {
 		return nil, err
 	}
