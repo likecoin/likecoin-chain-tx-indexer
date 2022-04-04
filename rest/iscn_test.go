@@ -100,6 +100,16 @@ func TestISCNCombine(t *testing.T) {
 			status: 200,
 			length: 15,
 		},
+		{
+			query:  "keywords=DAO&limit=5",
+			status: 200,
+			length: 1,
+		},
+		{
+			query:  "keywords=Cyberspace&keywords=EFF&limit=5",
+			status: 200,
+			length: 1,
+		},
 	}
 	for _, v := range table {
 		req := httptest.NewRequest(

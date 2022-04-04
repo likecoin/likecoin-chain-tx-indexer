@@ -50,19 +50,17 @@ func handleISCN(c *gin.Context) {
 		query.ContentFingerprints = []string{fingerprint}
 		provided = true
 	}
-	// if keywords := q.Get("keywords"); keywords != "" {
-	// 	query.ContentMetadata = &db.ContentMetadata{
-	// 		Keywords: q.Get("keywords"),
-	// 	}
-	// 	provided = true
-	// }
+	keywords := db.Keywords(q["keywords"])
+	if len(keywords) > 0 {
+		provided = true
+	}
 	p := getPagination(q)
 	log.Println(query, events, p)
 	conn := getConn(c)
 	var records []iscnTypes.QueryResponseRecord
 	var err error
 	if provided {
-		records, err = db.QueryISCN(conn, events, query, p)
+		records, err = db.QueryISCN(conn, events, query, keywords, p)
 	} else {
 		records, err = db.QueryISCNList(conn, p)
 	}
