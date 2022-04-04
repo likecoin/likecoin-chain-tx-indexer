@@ -31,13 +31,7 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 func getRouter(pool *pgxpool.Pool) *gin.Engine {
 	router := gin.New()
 	router.Use(withDB(pool))
-	iscn := router.Group(ISCN_ENDPOINT)
-	{
-		iscn.GET("", handleISCN)
-		iscn.GET("/id", handleISCNById)
-		iscn.GET("/owner", handleISCNByOwner)
-		iscn.GET("/fingerprint", handleISCNByFingerprint)
-	}
+	router.GET(ISCN_ENDPOINT, handleISCN)
 	router.GET("/txs", handleAminoTxsSearch)
 	router.GET(STARGATE_ENDPOINT, handleStargateTxsSearch)
 	return router

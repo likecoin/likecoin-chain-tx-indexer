@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/url"
 
@@ -85,82 +84,6 @@ func getPagination(q url.Values) db.Pagination {
 		p.Limit = limit
 	}
 	return p
-}
-
-func handleISCNById(c *gin.Context) {
-	q := c.Request.URL.Query()
-	iscnId := q.Get("iscn_id")
-	if iscnId == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "ISCN id not provided"})
-		return
-	}
-	events := types.StringEvents{
-		types.StringEvent{
-			Type: "iscn_record",
-			Attributes: []types.Attribute{
-				{
-					Key:   "iscn_id",
-					Value: iscnId,
-				},
-			},
-		},
-	}
-	conn := getConn(c)
-
-	iscnInputs, err := db.QueryISCNByEvents(conn, events)
-	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	respondRecords(c, iscnInputs)
-}
-
-func handleISCNByOwner(c *gin.Context) {
-	q := c.Request.URL.Query()
-	owner := q.Get("owner")
-	if owner == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "owner is not provided"})
-		return
-	}
-	log.Println(owner)
-	events := types.StringEvents{
-		types.StringEvent{
-			Type: "iscn_record",
-			Attributes: []types.Attribute{
-				{
-					Key:   "owner",
-					Value: owner,
-				},
-			},
-		},
-	}
-	conn := getConn(c)
-
-	iscnInputs, err := db.QueryISCNByEvents(conn, events)
-	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	respondRecords(c, iscnInputs)
-}
-
-func handleISCNByFingerprint(c *gin.Context) {
-	q := c.Request.URL.Query()
-	fingerprint := q.Get("fingerprint")
-	if fingerprint == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "fingerprint not provided"})
-		return
-	}
-	conn := getConn(c)
-
-	query := fmt.Sprintf(`{"contentFingerprints": ["%s"]}`, fingerprint)
-
-	iscnInputs, err := db.QueryISCNByRecord(conn, query)
-	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	respondRecords(c, iscnInputs)
 }
 
 func respondRecords(c *gin.Context, iscnInputs []iscnTypes.QueryResponseRecord) {
