@@ -10,10 +10,10 @@ func TestCreateQuery(t *testing.T) {
 		{
 			input: ISCNRecordQuery{
 				ContentMetadata: &ContentMetadata{
-					Keywords: "Cyberspace,EFF",
+					Name: "Cyberspace",
 				},
 			},
-			output: `{"contentMetadata":{"keywords":"Cyberspace,EFF"}}`,
+			output: `{"contentMetadata":{"name":"Cyberspace"}}`,
 		},
 		{
 			input: ISCNRecordQuery{
@@ -69,5 +69,26 @@ func TestCreateQuery(t *testing.T) {
 		}
 		t.Log(string(body))
 
+	}
+}
+
+func TestKeywordsMar(t *testing.T) {
+	table := []struct {
+		input  Keywords
+		output string
+	}{
+		{
+			input:  Keywords{"a", "b", "c"},
+			output: `{"a","b","c"}`,
+		},
+		{
+			input:  Keywords{},
+			output: `{}`,
+		},
+	}
+	for _, v := range table {
+		if out := v.input.Marshal(); out != v.output {
+			t.Errorf("Expect %s got %s", v.output, out)
+		}
 	}
 }

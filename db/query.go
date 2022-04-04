@@ -1,6 +1,9 @@
 package db
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 type ISCNRecordQuery struct {
 	ContentFingerprints []string         `json:"contentFingerprints,omitempty"`
@@ -9,9 +12,8 @@ type ISCNRecordQuery struct {
 }
 
 type ContentMetadata struct {
-	Name     string `json:"name,omitempty"`
-	Keywords string `json:"keywords,omitempty"`
-	Type     string `json:"@type,omitempty"`
+	Name string `json:"name,omitempty"`
+	Type string `json:"@type,omitempty"`
 }
 
 type Stakeholder struct {
@@ -35,4 +37,15 @@ type Pagination struct {
 
 func (p Pagination) getOffset() uint64 {
 	return p.Limit * (p.Page - 1)
+}
+
+type Keywords []string
+
+func (k Keywords) Marshal() string {
+	body, err := json.Marshal(k)
+	if err != nil {
+		return "{}"
+	}
+	tmp := strings.Replace(string(body), "[", "{", 1)
+	return strings.Replace(tmp, "]", "}", 1)
 }

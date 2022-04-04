@@ -14,14 +14,6 @@ func TestISCNCombineQuery(t *testing.T) {
 		length int
 	}{
 		{
-			query: ISCNRecordQuery{
-				ContentMetadata: &ContentMetadata{
-					Keywords: "Cyberspace,EFF",
-				},
-			},
-			length: 1,
-		},
-		{
 			events: []types.StringEvent{
 				{
 					Type: "iscn_record",
