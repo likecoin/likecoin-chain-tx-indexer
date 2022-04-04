@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/gin-gonic/gin"
@@ -55,20 +56,15 @@ func handleISCN(c *gin.Context) {
 		}
 		provided = true
 	}
-	conn := getConn(c)
-	p := db.Pagination{
-		Limit: 10,
-		Page:  0,
-		Order: db.ORDER_DESC,
-	}
+	p := getPagination(q)
 	log.Println(query, events, p)
+	conn := getConn(c)
 	var records []iscnTypes.QueryResponseRecord
 	var err error
 	if provided {
 		records, err = db.QueryISCN(conn, events, query, p)
 	} else {
 		records, err = db.QueryISCNList(conn, p)
-		log.Println("not provided")
 	}
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
@@ -76,6 +72,21 @@ func handleISCN(c *gin.Context) {
 	}
 
 	respondRecords(c, records)
+}
+
+func getPagination(q url.Values) db.Pagination {
+	p := db.Pagination{
+		Limit: 10,
+		Page:  0,
+		Order: db.ORDER_DESC,
+	}
+	if page, err := getPage(q, "page"); err == nil {
+		p.Page = page
+	}
+	if limit, err := getLimit(q, "limit"); err == nil {
+		p.Limit = limit
+	}
+	return p
 }
 
 func handleISCNById(c *gin.Context) {

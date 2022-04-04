@@ -2,7 +2,6 @@ package rest
 
 import (
 	"fmt"
-	"net/url"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -13,17 +12,6 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
-
-func getPage(query url.Values) (uint64, error) {
-	page, err := getUint(query, "page")
-	if err != nil {
-		return 0, fmt.Errorf("cannot parse page to unsigned int: %w", err)
-	}
-	if page == 0 {
-		page = 1
-	}
-	return page, nil
-}
 
 func convertToStdTx(txBytes []byte) (legacytx.StdTx, error) {
 	txI, err := encodingConfig.TxConfig.TxDecoder()(txBytes)
@@ -53,7 +41,7 @@ func packStdTxResponse(txRes *types.TxResponse) error {
 
 func handleAminoTxsSearch(c *gin.Context) {
 	q := c.Request.URL.Query()
-	page, err := getPage(q)
+	page, err := getPage(q, "page")
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return

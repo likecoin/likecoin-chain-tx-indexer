@@ -46,6 +46,17 @@ func getLimit(query url.Values, key string) (uint64, error) {
 	return limit, nil
 }
 
+func getPage(query url.Values, key string) (uint64, error) {
+	page, err := getUint(query, key)
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse page to unsigned int: %w", err)
+	}
+	if page == 0 {
+		page = 1
+	}
+	return page, nil
+}
+
 func getEvents(query url.Values) (events types.StringEvents, err error) {
 	for k, vs := range query {
 		if strings.Contains(k, ".") {

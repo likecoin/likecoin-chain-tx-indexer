@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http/httptest"
 	"testing"
@@ -76,6 +77,7 @@ func TestISCNCombine(t *testing.T) {
 	table := []struct {
 		query  string
 		status int
+		length int
 	}{
 		{
 			query:  "iscn_id=iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
@@ -93,6 +95,11 @@ func TestISCNCombine(t *testing.T) {
 			query:  "",
 			status: 200,
 		},
+		{
+			query:  "limit=15&page=2",
+			status: 200,
+			length: 15,
+		},
 	}
 	for _, v := range table {
 		req := httptest.NewRequest(
@@ -104,6 +111,13 @@ func TestISCNCombine(t *testing.T) {
 		res, body := request(req)
 		if res.StatusCode != v.status {
 			t.Fatalf("expect %d, got %d\n%s\n%s", v.status, res.StatusCode, v.query, body)
+		}
+		var records ISCNRecordsResponse
+		if err := json.Unmarshal([]byte(body), &records); err != nil {
+			t.Fatal(err)
+		}
+		if v.length != 0 && len(records.Records) != v.length {
+			t.Errorf("Length should be %d, got %d.\n%s\n", v.length, len(records.Records), v.query)
 		}
 	}
 }

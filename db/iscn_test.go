@@ -57,7 +57,7 @@ func TestISCNCombineQuery(t *testing.T) {
 
 	p := Pagination{
 		Limit: 5,
-		Page:  0,
+		Page:  1,
 		Order: ORDER_DESC,
 	}
 
@@ -96,7 +96,7 @@ func TestISCNList(t *testing.T) {
 	p := Pagination{
 		Limit: 10,
 		Order: ORDER_DESC,
-		Page:  0,
+		Page:  1,
 	}
 
 	records, err := QueryISCNList(conn, p)

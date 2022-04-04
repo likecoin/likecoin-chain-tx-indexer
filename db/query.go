@@ -28,11 +28,11 @@ func (q ISCNRecordQuery) Marshal() ([]byte, error) {
 }
 
 type Pagination struct {
-	Limit uint
-	Page  uint
+	Limit uint64
+	Page  uint64
 	Order Order
 }
 
-func (p Pagination) getOffset() uint {
-	return p.Limit * (p.Page)
+func (p Pagination) getOffset() uint64 {
+	return p.Limit * (p.Page - 1)
 }
