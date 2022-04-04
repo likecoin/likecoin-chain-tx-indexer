@@ -81,41 +81,6 @@ func QueryISCNList(conn *pgxpool.Conn, pagination Pagination) ([]iscnTypes.Query
 	return parseISCNRecords(rows)
 }
 
-func QueryISCNByEvents(conn *pgxpool.Conn, events types.StringEvents) ([]iscnTypes.QueryResponseRecord, error) {
-	eventStrings := getEventStrings(events)
-	ctx, cancel := GetTimeoutContext()
-	defer cancel()
-	sql := `
-		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
-		FROM txs
-		WHERE events @> $1
-		ORDER BY id DESC
-		LIMIT 10;
-	`
-	rows, err := conn.Query(ctx, sql, eventStrings)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return parseISCNRecords(rows)
-}
-
-func QueryISCNByRecord(conn *pgxpool.Conn, query string) ([]iscnTypes.QueryResponseRecord, error) {
-	ctx, cancel := GetTimeoutContext()
-	defer cancel()
-	sql := `
-		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
-		FROM txs
-		WHERE tx #> '{tx, body, messages, 0, record}' @> $1
-	`
-	rows, err := conn.Query(ctx, sql, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return parseISCNRecords(rows)
-}
-
 func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err error) {
 	res = make([]iscnTypes.QueryResponseRecord, 0)
 	for rows.Next() && err == nil {
