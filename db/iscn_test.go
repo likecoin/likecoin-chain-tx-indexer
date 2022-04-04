@@ -9,9 +9,10 @@ import (
 
 func TestISCNCombineQuery(t *testing.T) {
 	tables := []struct {
-		query  ISCNRecordQuery
-		events types.StringEvents
-		length int
+		query    ISCNRecordQuery
+		events   types.StringEvents
+		keywords Keywords
+		length   int
 	}{
 		{
 			events: []types.StringEvent{
@@ -39,6 +40,14 @@ func TestISCNCombineQuery(t *testing.T) {
 			},
 			length: 2,
 		},
+		{
+			keywords: Keywords{"DAO"},
+			length:   1,
+		},
+		{
+			keywords: Keywords{"Cyberspace", "EFF"},
+			length:   1,
+		},
 	}
 
 	conn, err := AcquireFromPool(pool)
@@ -54,7 +63,7 @@ func TestISCNCombineQuery(t *testing.T) {
 	}
 
 	for _, v := range tables {
-		records, err := QueryISCN(conn, v.events, v.query, p)
+		records, err := QueryISCN(conn, v.events, v.query, v.keywords, p)
 		if err != nil {
 			t.Error(err)
 		}

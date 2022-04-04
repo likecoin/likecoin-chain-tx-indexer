@@ -21,12 +21,13 @@ type ISCNResponse struct {
 	Owner           string `json:"owner"`
 }
 
-func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQuery, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQuery, keywords Keywords, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
 	eventStrings := getEventStrings(events)
 	queryString, err := query.Marshal()
 	if err != nil {
 		return nil, err
 	}
+	keywordString := keywords.Marshal()
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
@@ -40,17 +41,19 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQu
 	if _, err := tx.Exec(ctx, `SET LOCAL enable_indexscan = off;`); err != nil {
 		return nil, err
 	}
+	log.Println(keywordString)
 	sql := fmt.Sprintf(`
 		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 		FROM txs
 		WHERE events @> $1 
 		AND tx #> '{tx, body, messages, 0, record}' @> $2
+		AND string_to_array(tx #>> '{tx, body, messages, 0, record, contentMetadata, keywords}', ',') @> $3
 		ORDER BY id %s
-		OFFSET $3
-		LIMIT $4;
+		OFFSET $4
+		LIMIT $5;
 	`, pagination.Order)
-	rows, err := tx.Query(ctx, sql, eventStrings,
-		string(queryString), pagination.getOffset(), pagination.Limit)
+	rows, err := tx.Query(ctx, sql, eventStrings, string(queryString), keywordString,
+		pagination.getOffset(), pagination.Limit)
 	if err != nil {
 		return nil, err
 	}

@@ -42,6 +42,9 @@ func (p Pagination) getOffset() uint64 {
 type Keywords []string
 
 func (k Keywords) Marshal() string {
+	if k == nil {
+		return "{}"
+	}
 	body, err := json.Marshal(k)
 	if err != nil {
 		return "{}"
