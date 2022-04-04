@@ -167,6 +167,11 @@ func TestISCNCombine(t *testing.T) {
 			status: 200,
 			length: 1,
 		},
+		{
+			query:  "keywords=香港&owner=cosmos1ykkpc0dnetfsya88f5nrdd7p57kplaw8sva6pj&limit=5",
+			status: 200,
+			length: 5,
+		},
 	}
 	for _, v := range table {
 		req := httptest.NewRequest(
