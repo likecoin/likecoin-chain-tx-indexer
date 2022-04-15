@@ -96,13 +96,15 @@ func queryISCN(result chan queryResult, ctx context.Context, tx pgx.Tx, eventStr
 		WHERE events @> $1
 		AND ($2 = '{}' OR tx #> '{tx, body, messages, 0, record}' @> $2::jsonb)
 		AND string_to_array(tx #>> '{tx, body, messages, 0, record, contentMetadata, keywords}', ',') @> $3
+		AND ($6 = '' OR jsonb_to_tsvector('english', tx #> '{"tx", "body", "messages", 0, "record", "contentMetadata"}' , '["string"]') 
+			@@ to_tsquery('English', $6))
 		ORDER BY id %s
 		OFFSET $4
 		LIMIT $5;
 	`, pagination.Order)
 
 	rows, err := tx.Query(ctx, sql, eventStrings, string(queryString), keywordString,
-		pagination.getOffset(), pagination.Limit)
+		pagination.getOffset(), pagination.Limit, searchTerm)
 	if err != nil {
 		result <- queryResult{err: err}
 	}

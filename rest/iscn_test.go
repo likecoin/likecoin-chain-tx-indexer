@@ -172,6 +172,11 @@ func TestISCNCombine(t *testing.T) {
 			status: 200,
 			length: 5,
 		},
+		{
+			query:  "q=香港&limit=15",
+			status: 200,
+			length: 15,
+		},
 	}
 	for _, v := range table {
 		req := httptest.NewRequest(
