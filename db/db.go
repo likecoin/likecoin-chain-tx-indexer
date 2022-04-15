@@ -228,11 +228,13 @@ func QueryCount(conn *pgxpool.Conn, events types.StringEvents, height uint64) (u
 	return count, nil
 }
 
-func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limit uint64, offset uint64, order Order) ([]*types.TxResponse, error) {
+func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limit uint64, offset uint64, order Order, searchTerm string) ([]*types.TxResponse, error) {
 	sql := fmt.Sprintf(`
 		SELECT tx FROM txs
 		WHERE events @> $1
 		AND ($2 = 0 or height = $2)
+		AND ($5 = '' OR jsonb_to_tsvector('english', tx #> '{"tx", "body", "messages", 0, "record", "contentMetadata"}' , '["string"]') 
+			@@ to_tsquery('English', $5))
 		ORDER BY id %s
 		LIMIT $3
 		OFFSET $4
@@ -240,28 +242,7 @@ func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limi
 	eventStrings := getEventStrings(events)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, eventStrings, height, limit, offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return parseRows(rows, limit)
-}
-
-func QueryTxsWithKeyword(conn *pgxpool.Conn, events types.StringEvents, limit uint64, offset uint64, order Order, keyword string) ([]*types.TxResponse, error) {
-	sql := fmt.Sprintf(`
-		SELECT tx FROM txs
-		WHERE events @> $1
-		AND jsonb_to_tsvector('english', tx #> '{"tx", "body", "messages", 0, "record", "contentMetadata"}' , '["string"]') 
-		@@ to_tsquery('English', $4)
-		ORDER BY id %s
-		LIMIT $2
-		OFFSET $3
-	`, order)
-	eventStrings := getEventStrings(events)
-	ctx, cancel := GetTimeoutContext()
-	defer cancel()
-	rows, err := conn.Query(ctx, sql, eventStrings, limit, offset, keyword)
+	rows, err := conn.Query(ctx, sql, eventStrings, height, limit, offset, searchTerm)
 	if err != nil {
 		return nil, err
 	}

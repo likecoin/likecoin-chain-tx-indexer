@@ -128,11 +128,8 @@ func handleStargateTxsSearch(c *gin.Context) {
 	}
 
 	var txResponses []*types.TxResponse
-	if keyword := q.Get("q"); keyword != "" {
-		txResponses, err = db.QueryTxsWithKeyword(conn, events, limit, offsetInTimesOfLimit, order, keyword)
-	} else {
-		txResponses, err = db.QueryTxs(conn, events, height, limit, offsetInTimesOfLimit, order)
-	}
+	searchTerm := q.Get("q")
+	txResponses, err = db.QueryTxs(conn, events, height, limit, offsetInTimesOfLimit, order, searchTerm)
 
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "offset", offset, "error", err)
