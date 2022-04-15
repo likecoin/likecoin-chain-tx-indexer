@@ -128,8 +128,7 @@ func handleStargateTxsSearch(c *gin.Context) {
 	}
 
 	var txResponses []*types.TxResponse
-	searchTerm := q.Get("q")
-	txResponses, err = db.QueryTxs(conn, events, height, limit, offsetInTimesOfLimit, order, searchTerm)
+	txResponses, err = db.QueryTxs(conn, events, height, limit, offsetInTimesOfLimit, order)
 
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "offset", offset, "error", err)

@@ -21,7 +21,7 @@ type ISCNResponse struct {
 	Owner           string `json:"owner"`
 }
 
-func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQuery, keywords Keywords, pagination Pagination, searchTerm string) ([]iscnTypes.QueryResponseRecord, error) {
+func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQuery, keywords Keywords, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
 	eventStrings := getEventStrings(events)
 	queryString, err := query.Marshal()
 	if err != nil {
@@ -38,10 +38,8 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQu
 	defer tx.Rollback(ctx)
 
 	// For GIN work with pagination
-	if searchTerm == "" {
-		if _, err := tx.Exec(ctx, `SET LOCAL enable_indexscan = off;`); err != nil {
-			return nil, err
-		}
+	if _, err := tx.Exec(ctx, `SET LOCAL enable_indexscan = off;`); err != nil {
+		return nil, err
 	}
 	sql := fmt.Sprintf(`
 		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
@@ -49,14 +47,12 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQu
 		WHERE events @> $1
 		AND ($2 = '{}' OR tx #> '{tx, body, messages, 0, record}' @> $2::jsonb)
 		AND string_to_array(tx #>> '{tx, body, messages, 0, record, contentMetadata, keywords}', ',') @> $3
-		AND ($6 = '' OR jsonb_to_tsvector('english', tx #> '{"tx", "body", "messages", 0, "record", "contentMetadata"}' , '["string"]') 
-			@@ to_tsquery('English', $6))
 		ORDER BY id %s
 		OFFSET $4
 		LIMIT $5;
 	`, pagination.Order)
 	rows, err := tx.Query(ctx, sql, eventStrings, string(queryString), keywordString,
-		pagination.getOffset(), pagination.Limit, searchTerm)
+		pagination.getOffset(), pagination.Limit)
 	if err != nil {
 		return nil, err
 	}

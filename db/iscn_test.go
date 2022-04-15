@@ -2,7 +2,6 @@ package db
 
 import (
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -10,11 +9,10 @@ import (
 
 func TestISCNCombineQuery(t *testing.T) {
 	tables := []struct {
-		query      ISCNRecordQuery
-		events     types.StringEvents
-		keywords   Keywords
-		length     int
-		searchTerm string
+		query    ISCNRecordQuery
+		events   types.StringEvents
+		keywords Keywords
+		length   int
 	}{
 		{
 			events: []types.StringEvent{
@@ -50,14 +48,6 @@ func TestISCNCombineQuery(t *testing.T) {
 			keywords: Keywords{"Cyberspace", "EFF"},
 			length:   1,
 		},
-		{
-			searchTerm: "香港",
-			length:     2,
-		},
-		{
-			searchTerm: "Linux",
-			length:     2,
-		},
 	}
 
 	conn, err := AcquireFromPool(pool)
@@ -73,7 +63,7 @@ func TestISCNCombineQuery(t *testing.T) {
 	}
 
 	for _, v := range tables {
-		records, err := QueryISCN(conn, v.events, v.query, v.keywords, p, v.searchTerm)
+		records, err := QueryISCN(conn, v.events, v.query, v.keywords, p)
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -92,15 +82,6 @@ func TestISCNCombineQuery(t *testing.T) {
 		case 2:
 			if len(records) < 2 {
 				t.Error("records should be many", records)
-			}
-		}
-
-		if v.searchTerm != "" {
-			for _, record := range records {
-				if !strings.Contains(record.Data.String(), v.searchTerm) {
-					t.Errorf("records doesn't contain search term %s, %s\n", record.Data.String(), v.searchTerm)
-				}
-				t.Log(record.Data.String())
 			}
 		}
 		t.Log(len(records))

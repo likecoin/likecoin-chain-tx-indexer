@@ -159,10 +159,6 @@ func InitDB(conn *pgxpool.Conn) error {
 		return err
 	}
 	ctx = context.Background()
-	_, err = conn.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_content_metadata ON txs USING GIN(jsonb_to_tsvector('english', tx #> '{"tx", "body", "messages", 0, "record", "contentMetadata"}' , '["string"]'))`)
-	if err != nil {
-		return err
-	}
 	_, err = conn.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_record ON txs USING GIN((tx #> '{tx, body, messages, 0, record}') jsonb_path_ops)`)
 	if err != nil {
 		return err
@@ -228,13 +224,11 @@ func QueryCount(conn *pgxpool.Conn, events types.StringEvents, height uint64) (u
 	return count, nil
 }
 
-func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limit uint64, offset uint64, order Order, searchTerm string) ([]*types.TxResponse, error) {
+func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limit uint64, offset uint64, order Order) ([]*types.TxResponse, error) {
 	sql := fmt.Sprintf(`
 		SELECT tx FROM txs
 		WHERE events @> $1
-		AND ($2 = 0 or height = $2)
-		AND ($5 = '' OR jsonb_to_tsvector('english', tx #> '{"tx", "body", "messages", 0, "record", "contentMetadata"}' , '["string"]') 
-			@@ to_tsquery('English', $5))
+		AND ($2 = 0 OR height = $2)
 		ORDER BY id %s
 		LIMIT $3
 		OFFSET $4
@@ -242,7 +236,7 @@ func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limi
 	eventStrings := getEventStrings(events)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, eventStrings, height, limit, offset, searchTerm)
+	rows, err := conn.Query(ctx, sql, eventStrings, height, limit, offset)
 	if err != nil {
 		return nil, err
 	}

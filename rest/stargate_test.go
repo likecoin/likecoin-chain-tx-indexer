@@ -2,9 +2,7 @@ package rest
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
@@ -29,21 +27,5 @@ func TestStargate(t *testing.T) {
 	}
 	if len(result.Txs) == 0 {
 		t.Fatal("No response:", result)
-	}
-}
-
-func TestQueryWithKeyword(t *testing.T) {
-	term := "LikeCoin"
-	req := httptest.NewRequest(
-		"GET",
-		fmt.Sprintf("%s?q=%s&pagination.limit=1&events=message.module='iscn'", STARGATE_ENDPOINT, term),
-		nil,
-	)
-	res, body := request(req)
-	if res.StatusCode != 200 {
-		t.Fatal(body)
-	}
-	if !strings.Contains(body, term) {
-		t.Fatal("Response doesn't contains the search term", body)
 	}
 }

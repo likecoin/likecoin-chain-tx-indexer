@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/json"
-	"log"
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -54,14 +53,12 @@ func handleISCN(c *gin.Context) {
 		hasQuery = true
 	}
 	p := getPagination(q)
-	searchTerm := q.Get("q")
-	log.Println(searchTerm)
 
 	conn := getConn(c)
 	var records []iscnTypes.QueryResponseRecord
 	var err error
 	if hasQuery {
-		records, err = db.QueryISCN(conn, events, query, keywords, p, searchTerm)
+		records, err = db.QueryISCN(conn, events, query, keywords, p)
 	} else {
 		records, err = db.QueryISCNList(conn, p)
 	}
