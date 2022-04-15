@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -49,6 +50,6 @@ func (k Keywords) Marshal() string {
 	if err != nil {
 		return "{}"
 	}
-	tmp := strings.Replace(string(body), "[", "{", 1)
-	return strings.Replace(tmp, "]", "}", 1)
+	s := strings.Trim(string(body), "[]")
+	return fmt.Sprintf("{%s}", s)
 }

@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/json"
-	"log"
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +16,7 @@ type ISCNRecordsResponse struct {
 
 func handleISCN(c *gin.Context) {
 	q := c.Request.URL.Query()
-	provided := false
+	hasQuery := false
 
 	events := make([]types.StringEvent, 0)
 	if owner := q.Get("owner"); owner != "" {
@@ -30,7 +29,7 @@ func handleISCN(c *gin.Context) {
 				},
 			},
 		})
-		provided = true
+		hasQuery = true
 	}
 	if iscnId := q.Get("iscn_id"); iscnId != "" {
 		events = append(events, types.StringEvent{
@@ -42,23 +41,22 @@ func handleISCN(c *gin.Context) {
 				},
 			},
 		})
-		provided = true
+		hasQuery = true
 	}
 	query := db.ISCNRecordQuery{}
 	if fingerprint := q.Get("fingerprint"); fingerprint != "" {
 		query.ContentFingerprints = []string{fingerprint}
-		provided = true
+		hasQuery = true
 	}
 	keywords := db.Keywords(q["keywords"])
 	if len(keywords) > 0 {
-		provided = true
+		hasQuery = true
 	}
 	p := getPagination(q)
-	log.Println(query, events, p)
 	conn := getConn(c)
 	var records []iscnTypes.QueryResponseRecord
 	var err error
-	if provided {
+	if hasQuery {
 		records, err = db.QueryISCN(conn, events, query, keywords, p)
 	} else {
 		records, err = db.QueryISCNList(conn, p)
@@ -73,7 +71,7 @@ func handleISCN(c *gin.Context) {
 
 func getPagination(q url.Values) db.Pagination {
 	p := db.Pagination{
-		Limit: 10,
+		Limit: 1,
 		Page:  0,
 		Order: db.ORDER_DESC,
 	}

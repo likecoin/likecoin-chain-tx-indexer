@@ -3,7 +3,6 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -11,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	iscnTypes "github.com/likecoin/likechain/x/iscn/types"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
 type ISCNResponse struct {
@@ -41,7 +41,6 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQu
 	if _, err := tx.Exec(ctx, `SET LOCAL enable_indexscan = off;`); err != nil {
 		return nil, err
 	}
-	log.Println(keywordString)
 	sql := fmt.Sprintf(`
 		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 		FROM txs
@@ -94,13 +93,14 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 		}
 
 		if err = json.Unmarshal(jsonb.Bytes, &iscn); err != nil {
+			logger.L.Errorw("Failed to unmarshal ISCN body from sql response", "jsonb", jsonb, "error", err)
 			return
 		}
 
 		var events types.StringEvents
 		events, err = parseEvents(eventsRows)
 		if err != nil {
-			log.Println(err)
+			return nil, fmt.Errorf("failed to parse events: %w", err)
 		}
 
 		iscn.Id = getEventsValue(events, "iscn_record", "iscn_id")
@@ -110,7 +110,8 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 
 		var data []byte
 		if data, err = json.Marshal(iscn); err != nil {
-			return
+			logger.L.Errorw("Failed to marshal ISCN body to []byte", "iscn", iscn, "error", err)
+			return nil, err
 		}
 
 		result := iscnTypes.QueryResponseRecord{
