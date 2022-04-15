@@ -195,7 +195,8 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 
 		var data []byte
 		if data, err = json.Marshal(iscn); err != nil {
-			return
+			logger.L.Errorw("Failed to marshal ISCN body to []byte", "iscn", iscn, "error", err)
+			return nil, err
 		}
 
 		result := iscnTypes.QueryResponseRecord{
