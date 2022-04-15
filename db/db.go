@@ -228,7 +228,7 @@ func QueryCount(conn *pgxpool.Conn, events types.StringEvents, height uint64) (u
 	return count, nil
 }
 
-func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limit uint64, offset uint64, order Order, searchTerm string) ([]*types.TxResponse, error) {
+func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limit uint64, offset uint64, order Order) ([]*types.TxResponse, error) {
 	sql := fmt.Sprintf(`
 		SELECT tx FROM txs
 		WHERE events @> $1

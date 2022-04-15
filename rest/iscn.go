@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/json"
-	"log"
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/types"

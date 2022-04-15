@@ -8,11 +8,10 @@ import (
 
 func TestISCNCombineQuery(t *testing.T) {
 	tables := []struct {
-		query      ISCNRecordQuery
-		events     types.StringEvents
-		keywords   Keywords
-		length     int
-		searchTerm string
+		query    ISCNRecordQuery
+		events   types.StringEvents
+		keywords Keywords
+		length   int
 	}{
 		{
 			events: []types.StringEvent{
