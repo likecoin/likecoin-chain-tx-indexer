@@ -7,13 +7,27 @@ FOOTPRINT="ipfs://QmQTKptHHUJ8cQQfm42epks8Ty3wUPKYz8KhhvNT2z32tM"
 # psql mydb <<SQL
 # CREATE INDEX ON txs((tx #> '{"tx", "body", "messages", 0, "record", "contentFingerprints"}'));
 # SQL
+# create index if not exists idx_records on txs using GIN(())
 # 
 
 psql mydb <<SQL
 set enable_indexscan = off;
-select id, tx #> '{tx, body, messages, 0, record}' as record
-from txs
-where tx #> '{tx, body, messages, 0, record}' @> '{"stakeholders": [{"entity": {"@id": "$ID"}}]}'
+
+explain select id, record
+from (
+    select id, jsonb_array_elements(tx #> '{tx, body, messages}') as record
+    from txs
+) as records
+where record -> 'record' @> '{"stakeholders": [{"entity": {"@id": "$ID"}}]}'
+order by id desc
+limit 10;
+
+select id, record
+from (
+    select id, jsonb_array_elements(tx #> '{tx, body, messages}') as record
+    from txs
+) as records
+where record -> 'record' @> '{"stakeholders": [{"entity": {"@id": "$ID"}}]}'
 order by id desc
 limit 10;
 SQL
