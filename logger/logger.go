@@ -44,6 +44,10 @@ func SetupLoggerFromCmdArgs(cmd *cobra.Command) {
 		fmt.Println("Unable to decode log level, using default level INFO")
 		level = zapcore.InfoLevel
 	}
+	SetupLogger(level, cmdOutputs, cmdFormat)
+}
+
+func SetupLogger(level zapcore.Level, cmdOutputs []string, cmdFormat string) {
 	cfg := zap.NewProductionConfig()
 	cfg.Level = zap.NewAtomicLevelAt(level)
 	cfg.OutputPaths = cmdOutputs

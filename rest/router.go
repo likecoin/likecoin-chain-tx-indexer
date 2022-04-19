@@ -6,8 +6,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
+
+const STARGATE_ENDPOINT = "/cosmos/tx/v1beta1/txs"
+const ISCN_ENDPOINT = "/iscn/records"
 
 func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 	lcdURL, err := url.Parse(lcdEndpoint)
@@ -19,23 +23,29 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
 
+	router := getRouter(pool)
+	router.NoRoute(proxyHandler)
+	router.Run(listenAddr)
+}
+
+func getRouter(pool *pgxpool.Pool) *gin.Engine {
 	router := gin.New()
-	router.GET("/*endpoint", func(c *gin.Context) {
-		endpoint, ok := c.Params.Get("endpoint")
-		if !ok {
-			logger.L.Errorw("Gin router cannot get endpoint")
-			c.AbortWithStatus(500)
+	router.Use(withDB(pool))
+	router.GET(ISCN_ENDPOINT, handleISCN)
+	router.GET("/txs", handleAminoTxsSearch)
+	router.GET(STARGATE_ENDPOINT, handleStargateTxsSearch)
+	return router
+}
+
+func withDB(pool *pgxpool.Pool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		conn, err := db.AcquireFromPool(pool)
+		if err != nil {
+			c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 			return
 		}
-		switch endpoint {
-		case "/txs":
-			handleAminoTxsSearch(c, pool)
-		case "/cosmos/tx/v1beta1/txs":
-			handleStargateTxsSearch(c, pool)
-		default:
-			proxyHandler(c)
-		}
-	})
-	router.POST("/*endpoint", proxyHandler)
-	router.Run(listenAddr)
+		c.Set("conn", conn)
+		defer conn.Release()
+		c.Next()
+	}
 }

@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
@@ -22,7 +22,7 @@ func getOffset(query url.Values) (uint64, error) {
 	return offset, nil
 }
 
-func getQueryOrder(query url.Values) (string, error) {
+func getQueryOrder(query url.Values) (db.Order, error) {
 	orderByStr := strings.ToUpper(query.Get("order_by"))
 	switch orderByStr {
 	case "", "ORDER_BY_UNSPECIFIED", "ORDER_BY_ASC":
@@ -73,7 +73,7 @@ func getEventMapAndHeight(eventArray []string) (url.Values, uint64, error) {
 	return m, height, nil
 }
 
-func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
+func handleStargateTxsSearch(c *gin.Context) {
 	q := c.Request.URL.Query()
 
 	offset, err := getOffset(q)
@@ -115,12 +115,7 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 
-	conn, err := db.AcquireFromPool(pool)
-	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	defer conn.Release()
+	conn := getConn(c)
 
 	var totalCount uint64
 	if shouldCountTotal {
@@ -132,7 +127,9 @@ func handleStargateTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		}
 	}
 
-	txResponses, err := db.QueryTxs(conn, events, height, limit, offsetInTimesOfLimit, order)
+	var txResponses []*types.TxResponse
+	txResponses, err = db.QueryTxs(conn, events, height, limit, offsetInTimesOfLimit, order)
+
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "offset", offset, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})

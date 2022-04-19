@@ -2,7 +2,6 @@ package rest
 
 import (
 	"fmt"
-	"net/url"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -10,21 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
-
-func getPage(query url.Values) (uint64, error) {
-	page, err := getUint(query, "page")
-	if err != nil {
-		return 0, fmt.Errorf("cannot parse page to unsigned int: %w", err)
-	}
-	if page == 0 {
-		page = 1
-	}
-	return page, nil
-}
 
 func convertToStdTx(txBytes []byte) (legacytx.StdTx, error) {
 	txI, err := encodingConfig.TxConfig.TxDecoder()(txBytes)
@@ -52,10 +39,10 @@ func packStdTxResponse(txRes *types.TxResponse) error {
 	return nil
 }
 
-func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
+func handleAminoTxsSearch(c *gin.Context) {
 	q := c.Request.URL.Query()
+	page, err := getPage(q, "page")
 	height := uint64(0)
-	page, err := getPage(q)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
@@ -70,17 +57,8 @@ func handleAminoTxsSearch(c *gin.Context, pool *pgxpool.Pool) {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	if len(events) == 0 {
-		c.AbortWithStatusJSON(400, gin.H{"error": "events needed"})
-		return
-	}
-	conn, err := db.AcquireFromPool(pool)
-	if err != nil {
-		logger.L.Errorw("Cannot acquire connection from database connection pool", "error", err)
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	defer conn.Release()
+
+	conn := getConn(c)
 	totalCount, err := db.QueryCount(conn, events, height)
 	if err != nil {
 		logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)

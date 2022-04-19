@@ -31,9 +31,11 @@ const DefaultDBPassword = "password"
 const DefaultDBPoolMin = 4
 const DefaultDBPoolMax = 32
 
+type Order string
+
 const (
-	ORDER_ASC  = "ASC"
-	ORDER_DESC = "DESC"
+	ORDER_ASC  Order = "ASC"
+	ORDER_DESC Order = "DESC"
 )
 
 var encodingConfig = app.MakeEncodingConfig()
@@ -93,6 +95,10 @@ func NewConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) 
 	if err != nil {
 		return nil, err
 	}
+	return NewConnPool(dbname, host, port, user, pwd, poolMin, poolMax)
+}
+
+func NewConnPool(dbname string, host string, port string, user string, pwd string, poolMin int, poolMax int) (pool *pgxpool.Pool, err error) {
 	s := fmt.Sprintf(
 		"dbname=%s host=%s port=%s user=%s password=%s pool_min_conns=%d pool_max_conns=%d",
 		dbname, host, port, user, pwd, poolMin, poolMax,
@@ -150,6 +156,15 @@ func InitDB(conn *pgxpool.Conn) error {
 	defer cancel()
 	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_tx_events ON txs USING gin (events)")
 	if err != nil {
+		return err
+	}
+	// TODO: add support to not only 0 in the future
+	ctx = context.Background()
+	_, err = conn.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_record ON txs USING GIN((tx #> '{tx, body, messages, 0, record}') jsonb_path_ops)`)
+	if err != nil {
+		return err
+	}
+	if _, err = conn.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_keywords ON txs USING GIN((string_to_array(tx #>> '{tx, body, messages, 0, record, contentMetadata, keywords}', ',')))`); err != nil {
 		return err
 	}
 	return nil
@@ -210,11 +225,11 @@ func QueryCount(conn *pgxpool.Conn, events types.StringEvents, height uint64) (u
 	return count, nil
 }
 
-func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limit uint64, offset uint64, order string) ([]*types.TxResponse, error) {
+func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limit uint64, offset uint64, order Order) ([]*types.TxResponse, error) {
 	sql := fmt.Sprintf(`
 		SELECT tx FROM txs
 		WHERE events @> $1
-		AND ($2 = 0 or height = $2)
+		AND ($2 = 0 OR height = $2)
 		ORDER BY id %s
 		LIMIT $3
 		OFFSET $4
@@ -227,6 +242,10 @@ func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limi
 		return nil, err
 	}
 	defer rows.Close()
+	return parseRows(rows, limit)
+}
+
+func parseRows(rows pgx.Rows, limit uint64) ([]*types.TxResponse, error) {
 	res := make([]*types.TxResponse, 0, limit)
 	for rows.Next() {
 		var jsonb pgtype.JSONB
