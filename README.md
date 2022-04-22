@@ -50,3 +50,7 @@ Start serving the `/txs` endpoint.
 The indexer will also poll and index new transactions from the lite client.
 
 Query format is the same as the `/txs?...` endpoint of the lite client, example: `http://localhost:8997/txs?message.action=send&page=3005&limit=100`
+
+### API Example
+
+Please refer to [examples](./examples)
