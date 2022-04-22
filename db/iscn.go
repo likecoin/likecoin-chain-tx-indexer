@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -20,6 +21,21 @@ type ISCNResponse struct {
 	Type            string `json:"@type"`
 	RecordTimestamp string `json:"recordTimestamp"`
 	Owner           string `json:"owner"`
+}
+
+func debugSQL(tx pgx.Tx, ctx context.Context, sql string, args ...interface{}) (err error) {
+	rows, err := tx.Query(ctx, "EXPLAIN "+sql, args...)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() && err == nil {
+		var line string
+		err = rows.Scan(&line)
+		log.Println(line)
+	}
+	return err
 }
 
 func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQuery, keywords Keywords, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
@@ -53,6 +69,7 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQu
 		OFFSET $4
 		LIMIT $5;
 	`, pagination.Order)
+	debugSQL(tx, ctx, sql, eventStrings, string(queryString), keywordString, pagination.getOffset(), pagination.Limit)
 	rows, err := tx.Query(ctx, sql, eventStrings, string(queryString), keywordString,
 		pagination.getOffset(), pagination.Limit)
 	if err != nil {

@@ -52,11 +52,11 @@ func TestISCNCombine(t *testing.T) {
 			length:  1,
 			contain: []string{"John Perry Barlow"},
 		},
-		{
-			query:   "stakeholder.entity.name=Apple+Daily",
-			length:  1,
-			contain: []string{"Apple Daily"},
-		},
+		// {
+		// 	query:   "stakeholder.entity.name=Apple+Daily&limit=10",
+		// 	length:  10,
+		// 	contain: []string{"Apple Daily"},
+		// },
 	}
 	for _, v := range table {
 		req := httptest.NewRequest(

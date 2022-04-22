@@ -48,6 +48,30 @@ func TestISCNCombineQuery(t *testing.T) {
 			keywords: Keywords{"Cyberspace", "EFF"},
 			length:   1,
 		},
+		{
+			query: ISCNRecordQuery{
+				Stakeholders: []Stakeholder{
+					{
+						Entity: &Entity{
+							Id: "John Perry Barlow",
+						},
+					},
+				},
+			},
+			length: 1,
+		},
+		// {
+		// 	query: ISCNRecordQuery{
+		// 		Stakeholders: []Stakeholder{
+		// 			{
+		// 				Entity: &Entity{
+		// 					Id: "Apple Daily",
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	length: 5,
+		// },
 	}
 
 	conn, err := AcquireFromPool(pool)
