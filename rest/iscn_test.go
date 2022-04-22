@@ -137,45 +137,46 @@ func TestISCNCombine(t *testing.T) {
 		length int
 	}{
 		{
-			query:  "iscn_id=iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
-			status: 200,
+			query: "iscn_id=iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
 		},
 		{
-			query:  "owner=cosmos1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmcwdt79j",
-			status: 200,
+			query: "owner=cosmos1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmcwdt79j",
 		},
 		{
-			query:  "fingerprint=hash://sha256/8e6984120afb8ac0f81080cf3e7a38042c472c4deb3e2588480df6e199741c89",
-			status: 200,
+			query: "fingerprint=hash://sha256/8e6984120afb8ac0f81080cf3e7a38042c472c4deb3e2588480df6e199741c89",
 		},
 		{
-			query:  "",
-			status: 200,
+			query: "",
 		},
 		{
 			query:  "limit=15&page=2",
-			status: 200,
 			length: 15,
 		},
 		{
 			query:  "keywords=DAO&limit=5",
-			status: 200,
 			length: 1,
 		},
 		{
 			query:  "keywords=Cyberspace&keywords=EFF&limit=5",
-			status: 200,
 			length: 1,
 		},
 		{
 			query:  "keywords=香港&owner=cosmos1ykkpc0dnetfsya88f5nrdd7p57kplaw8sva6pj&limit=5",
-			status: 200,
 			length: 5,
 		},
 		{
 			query:  "q=香港&limit=15",
-			status: 200,
 			length: 15,
+		},
+		{
+			query:   "stakeholder.entity.id=John+Perry+Barlow",
+			length:  1,
+			contain: []string{"John Perry Barlow"},
+		},
+		{
+			query:   "stakeholder.entity.name=Apple+Daily",
+			length:  1,
+			contain: []string{"Apple Daily"},
 		},
 	}
 	for _, v := range table {
@@ -186,6 +187,9 @@ func TestISCNCombine(t *testing.T) {
 			nil,
 		)
 		res, body := request(req)
+		if v.status == 0 {
+			v.status = 200
+		}
 		if res.StatusCode != v.status {
 			t.Fatalf("expect %d, got %d\n%s\n%s", v.status, res.StatusCode, v.query, body)
 		}
@@ -195,6 +199,16 @@ func TestISCNCombine(t *testing.T) {
 		}
 		if v.length != 0 && len(records.Records) != v.length {
 			t.Errorf("Length should be %d, got %d.\n%s\n", v.length, len(records.Records), v.query)
+		}
+		for _, record := range records.Records {
+			if v.contain != nil {
+				for _, s := range v.contain {
+					if !strings.Contains(record.String(), s) {
+						t.Errorf("record should contain %s, but not found: %s", s, record.String())
+					}
+				}
+			}
+
 		}
 	}
 }
