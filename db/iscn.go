@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -28,6 +29,7 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQu
 		return nil, err
 	}
 	keywordString := keywords.Marshal()
+	log.Println(eventStrings, string(queryString), keywordString)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 

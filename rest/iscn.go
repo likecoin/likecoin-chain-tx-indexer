@@ -2,6 +2,7 @@ package rest
 
 import (
 	"encoding/json"
+	"log"
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -50,6 +51,18 @@ func handleISCN(c *gin.Context) {
 	}
 	keywords := db.Keywords(q["keywords"])
 	if len(keywords) > 0 {
+		hasQuery = true
+	}
+	if sId, sName := q.Get("stakeholder.entity.id"), q.Get("stakeholder.entity.name"); sId != "" || sName != "" {
+		log.Println(sId)
+		query.Stakeholders = []db.Stakeholder{
+			{
+				Entity: &db.Entity{
+					Id:   sId,
+					Name: sName,
+				},
+			},
+		}
 		hasQuery = true
 	}
 	p := getPagination(q)
