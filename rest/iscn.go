@@ -53,7 +53,7 @@ func handleISCN(c *gin.Context) {
 	if len(keywords) > 0 {
 		hasQuery = true
 	}
-	if sId, sName := q.Get("stakeholder.entity.id"), q.Get("stakeholder.entity.name"); sId != "" || sName != "" {
+	if sId, sName := q.Get("stakeholders.entity.id"), q.Get("stakeholders.entity.name"); sId != "" || sName != "" {
 		log.Println(sId)
 		query.Stakeholders = []db.Stakeholder{
 			{
