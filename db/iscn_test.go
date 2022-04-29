@@ -60,25 +60,37 @@ func TestISCNCombineQuery(t *testing.T) {
 			},
 			length: 1,
 		},
-		// {
-		// 	query: ISCNRecordQuery{
-		// 		Stakeholders: []Stakeholder{
-		// 			{
-		// 				Entity: &Entity{
-		// 					Id: "Apple Daily",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	length: 5,
-		// },
+		{
+			query: ISCNRecordQuery{
+				Stakeholders: []Stakeholder{
+					{
+						Entity: &Entity{
+							Id: "Apple Daily",
+						},
+					},
+				},
+			},
+			length: 5,
+		},
+		{
+			query: ISCNRecordQuery{
+				Stakeholders: []Stakeholder{
+					{
+						Entity: &Entity{
+							Name: "depub.SPACE",
+						},
+					},
+				},
+			},
+			length: 5,
+		},
 	}
 
-	conn, err := AcquireFromPool(pool)
-	if err != nil {
-		t.Error(err)
-	}
-	defer conn.Release()
+	// conn, err := AcquireFromPool(pool)
+	// if err != nil {
+	// 	t.Error(err)
+	// }
+	// defer conn.Release()
 
 	p := Pagination{
 		Limit: 5,
@@ -87,26 +99,13 @@ func TestISCNCombineQuery(t *testing.T) {
 	}
 
 	for _, v := range tables {
-		records, err := QueryISCN(conn, v.events, v.query, v.keywords, p)
+		records, err := QueryISCN(pool, v.events, v.query, v.keywords, p)
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
-		switch v.length {
-		case 0:
-			if len(records) != 0 {
-				t.Error("records should be 0", records)
-			}
-
-		case 1:
-			if len(records) != 1 {
-				t.Error("records should be 1", records)
-			}
-
-		case 2:
-			if len(records) < 2 {
-				t.Error("records should be many", records)
-			}
+		if v.length != len(records) {
+			t.Errorf("There should be %d records, got %d.", v.length, len(records))
 		}
 		t.Log(len(records))
 	}

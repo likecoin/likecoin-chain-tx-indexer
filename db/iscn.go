@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackc/pgtype"
@@ -23,6 +24,11 @@ type ISCNResponse struct {
 	Owner           string `json:"owner"`
 }
 
+type queryResult struct {
+	rows pgx.Rows
+	err error
+}
+
 func debugSQL(tx pgx.Tx, ctx context.Context, sql string, args ...interface{}) (err error) {
 	rows, err := tx.Query(ctx, "EXPLAIN "+sql, args...)
 	if err != nil {
@@ -38,7 +44,7 @@ func debugSQL(tx pgx.Tx, ctx context.Context, sql string, args ...interface{}) (
 	return err
 }
 
-func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQuery, keywords Keywords, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQuery, keywords Keywords, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
 	eventStrings := getEventStrings(events)
 	queryString, err := query.Marshal()
 	if err != nil {
@@ -49,16 +55,63 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQu
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback(ctx)
+	resultChan := make(chan queryResult, 1)
 
-	// For GIN work with pagination
-	if _, err := tx.Exec(ctx, `SET LOCAL enable_indexscan = off;`); err != nil {
-		return nil, err
+	go func () {
+		conn, err := AcquireFromPool(pool)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		defer conn.Release()
+
+		txWithIndex, err := conn.Begin(ctx)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		if _, err := txWithIndex.Exec(ctx, `SET LOCAL enable_indexscan = off;`); err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		
+		defer txWithIndex.Rollback(ctx)
+		queryISCN(resultChan, ctx, txWithIndex, eventStrings, string(queryString), keywordString, pagination)
+		log.Println("Got result WITH index")
+	}()
+	go func() {
+		conn, err := AcquireFromPool(pool)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		defer conn.Release()
+
+		txWithoutIndex, err := conn.Begin(ctx)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		queryISCN(resultChan, ctx, txWithoutIndex, eventStrings, string(queryString), keywordString, pagination)
+		log.Println("Got result WITHOUT index")
+	}()
+	
+	select {
+	case result := <- resultChan:
+		if result.err != nil {
+			log.Fatal(result.err)
+			return nil, result.err
+		}
+		defer result.rows.Close()
+		return parseISCNRecords(result.rows)
+
+	case <- time.After(20 * time.Second):
+		return nil, fmt.Errorf("Timeout")
 	}
+}
+
+func queryISCN(result chan queryResult, ctx context.Context, tx pgx.Tx, eventStrings []string, queryString string, keywordString string, pagination Pagination) {
+	// For GIN work with pagination
 	sql := fmt.Sprintf(`
 		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 		FROM txs
@@ -69,14 +122,10 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQu
 		OFFSET $4
 		LIMIT $5;
 	`, pagination.Order)
-	debugSQL(tx, ctx, sql, eventStrings, string(queryString), keywordString, pagination.getOffset(), pagination.Limit)
+	// debugSQL(tx, ctx, sql, eventStrings, queryString, keywordString, pagination.getOffset(), pagination.Limit)
 	rows, err := tx.Query(ctx, sql, eventStrings, string(queryString), keywordString,
 		pagination.getOffset(), pagination.Limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return parseISCNRecords(rows)
+	result <- queryResult{rows, err}
 }
 
 func QueryISCNList(conn *pgxpool.Conn, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
