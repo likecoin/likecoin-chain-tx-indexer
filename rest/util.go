@@ -80,3 +80,7 @@ func getEvents(query url.Values) (events types.StringEvents, err error) {
 func getConn(c *gin.Context) *pgxpool.Conn {
 	return c.MustGet("conn").(*pgxpool.Conn)
 }
+
+func getPool(c *gin.Context) *pgxpool.Pool {
+	return c.MustGet("pool").(*pgxpool.Pool)
+}

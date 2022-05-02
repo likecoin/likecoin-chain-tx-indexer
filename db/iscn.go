@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -29,21 +28,6 @@ type queryResult struct {
 	err error
 }
 
-func debugSQL(tx pgx.Tx, ctx context.Context, sql string, args ...interface{}) (err error) {
-	rows, err := tx.Query(ctx, "EXPLAIN "+sql, args...)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	for rows.Next() && err == nil {
-		var line string
-		err = rows.Scan(&line)
-		log.Println(line)
-	}
-	return err
-}
-
 func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQuery, keywords Keywords, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
 	eventStrings := getEventStrings(events)
 	queryString, err := query.Marshal()
@@ -51,7 +35,6 @@ func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQu
 		return nil, err
 	}
 	keywordString := keywords.Marshal()
-	log.Println(eventStrings, string(queryString), keywordString, pagination)
 	ctx1, cancel1 := GetTimeoutContext()
 	ctx2, cancel2 := GetTimeoutContext()
 	defer cancel1()
@@ -80,9 +63,6 @@ func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQu
 		
 		defer txWithIndex.Rollback(ctx1)
 		queryISCN(resultChan, ctx1, txWithIndex, eventStrings, string(queryString), keywordString, pagination)
-		if ctx1.Err() == nil {
-			log.Println("Got result WITH index")
-		}
 	}()
 	go func() {
 		conn, err := AcquireFromPool(pool)
@@ -98,17 +78,14 @@ func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQu
 			return
 		}
 		queryISCN(resultChan, ctx2, txWithoutIndex, eventStrings, string(queryString), keywordString, pagination)
-		if ctx2.Err() == nil {
-			log.Println("Got result WITHOUT index")
-		}
 	}()
 	
 	select {
 	case result := <- resultChan:
 		return result.records, result.err
 
-	case <- time.After(20 * time.Second):
-		return nil, fmt.Errorf("Timeout")
+	case <- time.After(45 * time.Second):
+		return nil, fmt.Errorf("database query timeout")
 	}
 }
 
@@ -123,7 +100,7 @@ func queryISCN(result chan queryResult, ctx context.Context, tx pgx.Tx, eventStr
 		OFFSET $4
 		LIMIT $5;
 	`, pagination.Order)
-	// debugSQL(tx, ctx, sql, eventStrings, queryString, keywordString, pagination.getOffset(), pagination.Limit)
+
 	rows, err := tx.Query(ctx, sql, eventStrings, string(queryString), keywordString,
 		pagination.getOffset(), pagination.Limit)
 	if err != nil {
@@ -135,7 +112,13 @@ func queryISCN(result chan queryResult, ctx context.Context, tx pgx.Tx, eventStr
 	result <- queryResult{records: records, err: err}
 }
 
-func QueryISCNList(conn *pgxpool.Conn, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+func QueryISCNList(pool *pgxpool.Pool, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 

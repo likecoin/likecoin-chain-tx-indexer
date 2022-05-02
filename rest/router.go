@@ -30,14 +30,13 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 
 func getRouter(pool *pgxpool.Pool) *gin.Engine {
 	router := gin.New()
-	router.Use(withDB(pool))
-	router.GET(ISCN_ENDPOINT, handleISCN)
-	router.GET("/txs", handleAminoTxsSearch)
-	router.GET(STARGATE_ENDPOINT, handleStargateTxsSearch)
+	router.GET(ISCN_ENDPOINT, withPool(pool), handleISCN)
+	router.GET("/txs", withConn(pool), handleAminoTxsSearch)
+	router.GET(STARGATE_ENDPOINT, withConn(pool), handleStargateTxsSearch)
 	return router
 }
 
-func withDB(pool *pgxpool.Pool) gin.HandlerFunc {
+func withConn(pool *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conn, err := db.AcquireFromPool(pool)
 		if err != nil {
@@ -46,6 +45,13 @@ func withDB(pool *pgxpool.Pool) gin.HandlerFunc {
 		}
 		c.Set("conn", conn)
 		defer conn.Release()
+		c.Next()
+	}
+}
+
+func withPool(pool *pgxpool.Pool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("pool", pool)
 		c.Next()
 	}
 }

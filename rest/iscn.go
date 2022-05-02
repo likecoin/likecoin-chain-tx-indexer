@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/json"
-	"log"
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -54,7 +53,6 @@ func handleISCN(c *gin.Context) {
 		hasQuery = true
 	}
 	if sId, sName := q.Get("stakeholders.entity.id"), q.Get("stakeholders.entity.name"); sId != "" || sName != "" {
-		log.Println(sId)
 		query.Stakeholders = []db.Stakeholder{
 			{
 				Entity: &db.Entity{
@@ -67,13 +65,13 @@ func handleISCN(c *gin.Context) {
 	}
 	p := getPagination(q)
 
-	conn := getConn(c)
+	pool := getPool(c)
 	var records []iscnTypes.QueryResponseRecord
 	var err error
 	if hasQuery {
-		records, err = db.QueryISCN(conn, events, query, keywords, p)
+		records, err = db.QueryISCN(pool, events, query, keywords, p)
 	} else {
-		records, err = db.QueryISCNList(conn, p)
+		records, err = db.QueryISCNList(pool, p)
 	}
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})

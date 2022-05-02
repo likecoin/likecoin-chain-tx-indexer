@@ -1,7 +1,6 @@
 package db
 
 import (
-	"log"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -98,12 +97,6 @@ func TestISCNCombineQuery(t *testing.T) {
 		},
 	}
 
-	// conn, err := AcquireFromPool(pool)
-	// if err != nil {
-	// 	t.Error(err)
-	// }
-	// defer conn.Release()
-
 	for _, v := range tables {
 		p := Pagination{
 			Limit: uint64(v.length),
@@ -122,19 +115,13 @@ func TestISCNCombineQuery(t *testing.T) {
 }
 
 func TestISCNList(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer conn.Release()
-
 	p := Pagination{
 		Limit: 10,
 		Order: ORDER_DESC,
 		Page:  1,
 	}
 
-	records, err := QueryISCNList(conn, p)
+	records, err := QueryISCNList(pool, p)
 	if err != nil {
 		t.Error(err)
 	}
