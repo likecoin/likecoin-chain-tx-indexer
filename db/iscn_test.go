@@ -77,6 +77,18 @@ func TestISCNCombineQuery(t *testing.T) {
 				Stakeholders: []Stakeholder{
 					{
 						Entity: &Entity{
+							Name: "《明報》",
+						},
+					},
+				},
+			},
+			length: 5,
+		},
+		{
+			query: ISCNRecordQuery{
+				Stakeholders: []Stakeholder{
+					{
+						Entity: &Entity{
 							Name: "depub.SPACE",
 						},
 					},
@@ -92,22 +104,20 @@ func TestISCNCombineQuery(t *testing.T) {
 	// }
 	// defer conn.Release()
 
-	p := Pagination{
-		Limit: 5,
-		Page:  1,
-		Order: ORDER_DESC,
-	}
-
 	for _, v := range tables {
+		p := Pagination{
+			Limit: uint64(v.length),
+			Page:  1,
+			Order: ORDER_DESC,
+		}
+
 		records, err := QueryISCN(pool, v.events, v.query, v.keywords, p)
 		if err != nil {
-			t.Error(err)
-			t.FailNow()
+			t.Fatal(err)
 		}
 		if v.length != len(records) {
 			t.Errorf("There should be %d records, got %d.", v.length, len(records))
 		}
-		t.Log(len(records))
 	}
 }
 
