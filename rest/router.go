@@ -63,3 +63,10 @@ func withPool(pool *pgxpool.Pool) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func withPool(pool *pgxpool.Pool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("pool", pool)
+		c.Next()
+	}
+}
