@@ -11,8 +11,8 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	iscnTypes "github.com/likecoin/likechain/x/iscn/types"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	iscnTypes "github.com/likecoin/likecoin-chain/v2/x/iscn/types"
 )
 
 type ISCNResponse struct {
@@ -25,7 +25,7 @@ type ISCNResponse struct {
 
 type queryResult struct {
 	records []iscnTypes.QueryResponseRecord
-	err error
+	err     error
 }
 
 func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQuery, keywords Keywords, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
@@ -42,7 +42,7 @@ func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQu
 
 	resultChan := make(chan queryResult, 1)
 
-	go func () {
+	go func() {
 		conn, err := AcquireFromPool(pool)
 		if err != nil {
 			resultChan <- queryResult{nil, err}
@@ -60,7 +60,7 @@ func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQu
 			resultChan <- queryResult{nil, err}
 			return
 		}
-		
+
 		defer txWithIndex.Rollback(ctx1)
 		queryISCN(resultChan, ctx1, txWithIndex, eventStrings, string(queryString), keywordString, pagination)
 	}()
@@ -79,12 +79,12 @@ func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQu
 		}
 		queryISCN(resultChan, ctx2, txWithoutIndex, eventStrings, string(queryString), keywordString, pagination)
 	}()
-	
+
 	select {
-	case result := <- resultChan:
+	case result := <-resultChan:
 		return result.records, result.err
 
-	case <- time.After(45 * time.Second):
+	case <-time.After(45 * time.Second):
 		return nil, fmt.Errorf("database query timeout")
 	}
 }
@@ -108,7 +108,7 @@ func queryISCN(result chan queryResult, ctx context.Context, tx pgx.Tx, eventStr
 	}
 	defer rows.Close()
 
-	records, err := parseISCNRecords(rows) 
+	records, err := parseISCNRecords(rows)
 	result <- queryResult{records: records, err: err}
 }
 
