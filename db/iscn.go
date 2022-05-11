@@ -1,9 +1,11 @@
 package db
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackc/pgtype"
@@ -21,26 +23,73 @@ type ISCNResponse struct {
 	Owner           string `json:"owner"`
 }
 
-func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQuery, keywords Keywords, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+type queryResult struct {
+	records []iscnTypes.QueryResponseRecord
+	err error
+}
+
+func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQuery, keywords Keywords, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
 	eventStrings := getEventStrings(events)
 	queryString, err := query.Marshal()
 	if err != nil {
 		return nil, err
 	}
 	keywordString := keywords.Marshal()
-	ctx, cancel := GetTimeoutContext()
-	defer cancel()
+	ctx1, cancel1 := GetTimeoutContext()
+	ctx2, cancel2 := GetTimeoutContext()
+	defer cancel1()
+	defer cancel2()
 
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback(ctx)
+	resultChan := make(chan queryResult, 1)
 
-	// For GIN work with pagination
-	if _, err := tx.Exec(ctx, `SET LOCAL enable_indexscan = off;`); err != nil {
-		return nil, err
+	go func () {
+		conn, err := AcquireFromPool(pool)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		defer conn.Release()
+
+		txWithIndex, err := conn.Begin(ctx1)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		// For GIN work with pagination
+		if _, err := txWithIndex.Exec(ctx1, `SET LOCAL enable_indexscan = off;`); err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		
+		defer txWithIndex.Rollback(ctx1)
+		queryISCN(resultChan, ctx1, txWithIndex, eventStrings, string(queryString), keywordString, pagination)
+	}()
+	go func() {
+		conn, err := AcquireFromPool(pool)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		defer conn.Release()
+
+		txWithoutIndex, err := conn.Begin(ctx2)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		queryISCN(resultChan, ctx2, txWithoutIndex, eventStrings, string(queryString), keywordString, pagination)
+	}()
+	
+	select {
+	case result := <- resultChan:
+		return result.records, result.err
+
+	case <- time.After(45 * time.Second):
+		return nil, fmt.Errorf("database query timeout")
 	}
+}
+
+func queryISCN(result chan queryResult, ctx context.Context, tx pgx.Tx, eventStrings []string, queryString string, keywordString string, pagination Pagination) {
 	sql := fmt.Sprintf(`
 		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 		FROM txs
@@ -51,16 +100,25 @@ func QueryISCN(conn *pgxpool.Conn, events types.StringEvents, query ISCNRecordQu
 		OFFSET $4
 		LIMIT $5;
 	`, pagination.Order)
+
 	rows, err := tx.Query(ctx, sql, eventStrings, string(queryString), keywordString,
 		pagination.getOffset(), pagination.Limit)
 	if err != nil {
-		return nil, err
+		result <- queryResult{err: err}
 	}
 	defer rows.Close()
-	return parseISCNRecords(rows)
+
+	records, err := parseISCNRecords(rows) 
+	result <- queryResult{records: records, err: err}
 }
 
-func QueryISCNList(conn *pgxpool.Conn, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+func QueryISCNList(pool *pgxpool.Pool, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
