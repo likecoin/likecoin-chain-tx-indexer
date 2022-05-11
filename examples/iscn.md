@@ -32,6 +32,18 @@ curl $ENDPOINT/iscn/records?fingerprint=ipfs://QmRzbij1C7224PNiw4cNBt1NzH7SbArkG
 curl $ENDPOINT/iscn/records?keywords=decentralizehk&keywords=DAO
 ```
 
+## Query by stakeholders entity ID
+
+```bash
+curl $ENDPOINT/iscn/records?stakeholders.entity.id=did:cosmos:1vvxaklu364sejxe9tdwkg87aanejf8v6mwdu82
+```
+
+## Query by stakeholders entity name
+
+```bash
+curl $ENDPOINT/iscn/records?stakeholders.entity.name=joshkiu
+```
+
 ## Compound query
 
 ```bash
