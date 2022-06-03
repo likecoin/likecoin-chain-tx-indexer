@@ -52,7 +52,7 @@ func TestISCNCombineQuery(t *testing.T) {
 				Stakeholders: []Stakeholder{
 					{
 						Entity: &Entity{
-							Id: "John Perry Barlow",
+							Name: "John Perry Barlow",
 						},
 					},
 				},
@@ -64,7 +64,7 @@ func TestISCNCombineQuery(t *testing.T) {
 				Stakeholders: []Stakeholder{
 					{
 						Entity: &Entity{
-							Id: "Apple Daily",
+							Name: "Apple Daily",
 						},
 					},
 				},
@@ -97,9 +97,9 @@ func TestISCNCombineQuery(t *testing.T) {
 		},
 	}
 
-	for _, v := range tables {
+	for i, v := range tables {
 		p := Pagination{
-			Limit: uint64(v.length),
+			Limit: 5,
 			Page:  1,
 			Order: ORDER_DESC,
 		}
@@ -108,8 +108,8 @@ func TestISCNCombineQuery(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if v.length != len(records) {
-			t.Errorf("There should be %d records, got %d.", v.length, len(records))
+		if v.length != 0 && v.length != len(records) {
+			t.Errorf("%d: There should be %d records, got %d.\n", i, v.length, len(records))
 		}
 	}
 }
@@ -126,4 +126,61 @@ func TestISCNList(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log(len(records))
+}
+
+func TestISCNQueryAll(t *testing.T) {
+	tables := []struct {
+		term string
+		length   int
+	}{
+		{
+			term: "",
+		},
+		{
+			term: "kin ko",
+		},
+		{
+			term: "LikeCoin",
+		},
+		{
+			term: "ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84",
+			length:   1,
+		},
+		{
+			term: "iscn://likecoin-chain/zGY8c7obhwx7qa4Ro763kr6lvBCZ4SIMagYRXRXYSnM/1",
+			length:   1,
+		},
+		{
+			term: "cosmos1cp3fcmk5ny2c22s0mxut2xefwrdur2t0clgna0",
+		},
+		{
+			term: "《明報》",
+			length: 5,
+		},
+		{
+			term: "depub.SPACE",
+			length: 5,
+		},
+		{
+			term: "Apple Daily",
+			length: 5,
+		},
+	}
+
+	for _, v := range tables {
+		p := Pagination{
+			Limit: 5,
+			Page:  1,
+			Order: ORDER_DESC,
+		}
+
+		t.Log(v.term)
+		records, err := QueryISCNAll(pool, v.term, p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if v.length != 0 && v.length != len(records) {
+			t.Errorf("There should be %d records, got %d.", v.length, len(records))
+		}
+	}
 }

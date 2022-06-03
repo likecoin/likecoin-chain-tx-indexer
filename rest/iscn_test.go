@@ -48,7 +48,7 @@ func TestISCNCombine(t *testing.T) {
 			length: 15,
 		},
 		{
-			query:   "stakeholders.entity.id=John+Perry+Barlow",
+			query:   "stakeholders.entity.name=John+Perry+Barlow",
 			length:  1,
 			contain: []string{"John Perry Barlow"},
 		},

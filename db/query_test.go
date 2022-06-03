@@ -41,7 +41,7 @@ func TestCreateQuery(t *testing.T) {
 					},
 				},
 			},
-			output: `{"stakeholders":[{"entity":{"id":"John Perry Barlow"}}]}`,
+			output: `{"stakeholders":[{"entity":{"@id":"John Perry Barlow"}}]}`,
 		},
 		{
 			input: ISCNRecordQuery{
@@ -56,7 +56,7 @@ func TestCreateQuery(t *testing.T) {
 					},
 				},
 			},
-			output: `{"contentMetadata":{"@type":"Article"},"stakeholders":[{"entity":{"id":"John Perry Barlow"}}]}`,
+			output: `{"contentMetadata":{"@type":"Article"},"stakeholders":[{"entity":{"@id":"John Perry Barlow"}}]}`,
 		},
 	}
 	for _, v := range tables {

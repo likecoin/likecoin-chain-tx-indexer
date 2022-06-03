@@ -137,6 +137,88 @@ func QueryISCNList(pool *pgxpool.Pool, pagination Pagination) ([]iscnTypes.Query
 	defer rows.Close()
 	return parseISCNRecords(rows)
 }
+func QueryISCNAll(pool *pgxpool.Pool, term string, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+	ctx1, cancel1 := GetTimeoutContext()
+	ctx2, cancel2 := GetTimeoutContext()
+	defer cancel1()
+	defer cancel2()
+
+	resultChan := make(chan queryResult, 1)
+
+	go func() {
+		conn, err := AcquireFromPool(pool)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		defer conn.Release()
+
+		txWithIndex, err := conn.Begin(ctx1)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		// For GIN work with pagination
+		if _, err := txWithIndex.Exec(ctx1, `SET LOCAL enable_indexscan = off;`); err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		defer txWithIndex.Rollback(ctx1)
+		queryISCNAll(resultChan, ctx1, txWithIndex, term, pagination)
+	}()
+	go func() {
+		conn, err := AcquireFromPool(pool)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		defer conn.Release()
+
+		txWithoutIndex, err := conn.Begin(ctx2)
+		if err != nil {
+			resultChan <- queryResult{nil, err}
+			return
+		}
+		queryISCNAll(resultChan, ctx2, txWithoutIndex, term, pagination)
+	}()
+
+	select {
+	case result := <-resultChan:
+		return result.records, result.err
+
+	case <-time.After(45 * time.Second):
+		return nil, fmt.Errorf("database query timeout")
+	}
+}
+
+func queryISCNAll(result chan queryResult, ctx context.Context, tx pgx.Tx, term string, pagination Pagination) {
+	sql := fmt.Sprintf(`
+		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
+		FROM txs
+		WHERE tx #> '{tx, body, messages, 0, record}' @> '{"stakeholders": [{"entity": {"@id": "%[1]s"}}]}'
+				OR tx #> '{tx, body, messages, 0, record}' @> '{"stakeholders": [{"entity": {"name": "%[1]s"}}]}'
+				OR tx #> '{tx, body, messages, 0, record}' @> '{"contentFingerprints": ["%[1]s"]}'
+				OR string_to_array(tx #>> '{tx, body, messages, 0, record, contentMetadata, keywords}', ',') @> '{"%[1]s"}'
+				OR events @> '{"iscn_record.owner=\"%[1]s\""}'
+				OR events @> '{"iscn_record.iscn_id=\"%[1]s\""}'
+		ORDER BY id %[2]s
+		OFFSET $1
+		LIMIT $2;
+	`, term, pagination.Order)
+
+	rows, err := tx.Query(ctx, sql, pagination.getOffset(), pagination.Limit)
+	if err != nil {
+		result <- queryResult{err: err}
+		panic(err)
+	}
+	defer rows.Close()
+
+	records, err := parseISCNRecords(rows)
+	result <- queryResult{records: records, err: err}
+	if err != nil {
+		panic(err)
+	}
+}
 
 func QueryISCNByRecord(conn *pgxpool.Conn, query string) ([]iscnTypes.QueryResponseRecord, error) {
 	ctx, cancel := GetTimeoutContext()
