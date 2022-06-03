@@ -59,18 +59,18 @@ func TestISCNCombineQuery(t *testing.T) {
 			},
 			length: 1,
 		},
-		{
-			query: ISCNRecordQuery{
-				Stakeholders: []Stakeholder{
-					{
-						Entity: &Entity{
-							Name: "Apple Daily",
-						},
-					},
-				},
-			},
-			length: 5,
-		},
+		// {
+		// 	query: ISCNRecordQuery{
+		// 		Stakeholders: []Stakeholder{
+		// 			{
+		// 				Entity: &Entity{
+		// 					Name: "Apple Daily",
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	length: 5,
+		// },
 		{
 			query: ISCNRecordQuery{
 				Stakeholders: []Stakeholder{
@@ -168,10 +168,10 @@ func TestISCNQueryAll(t *testing.T) {
 			term: "depub.SPACE",
 			length: 5,
 		},
-		{
-			term: "Apple Daily",
-			length: 5,
-		},
+		// {
+		// 	term: "Apple Daily",
+		// 	length: 5,
+		// },
 	}
 
 	for _, v := range tables {
