@@ -32,6 +32,7 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 func getRouter(pool *pgxpool.Pool) *gin.Engine {
 	router := gin.New()
 	router.GET(ISCN_ENDPOINT, withPool(pool), handleISCN)
+	router.GET("/iscn/records/search", withPool(pool), handleISCNSearch)
 	router.GET("/txs", withConn(pool), handleAminoTxsSearch)
 	router.GET(STARGATE_ENDPOINT, withConn(pool), handleStargateTxsSearch)
 	router.GET(LATEST_HEIGHT_ENDPOINT, withConn(pool), handleLatestHeight)

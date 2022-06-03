@@ -81,6 +81,20 @@ func handleISCN(c *gin.Context) {
 	respondRecords(c, records)
 }
 
+func handleISCNSearch(c *gin.Context) {
+	q := c.Request.URL.Query()
+	p := getPagination(q)
+	term := q.Get("q")
+	pool := getPool(c)
+	records, err := db.QueryISCNAll(pool, term, p)
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	respondRecords(c, records)
+}
+
 func getPagination(q url.Values) db.Pagination {
 	p := db.Pagination{
 		Limit: 1,
