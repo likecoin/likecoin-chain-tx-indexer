@@ -141,6 +141,10 @@ func TestISCNQueryAll(t *testing.T) {
 			length: 5,
 		},
 		{
+			term: `" OR "1"="`,
+			// SQL injection test
+		},
+		{
 			term: "itdoesnotexists",
 		},
 		{
@@ -188,6 +192,20 @@ func TestISCNQueryAll(t *testing.T) {
 		}
 		if v.length != 0 && v.length != len(records) {
 			t.Errorf("There should be %d records, got %d.", v.length, len(records))
+		}
+	}
+}
+
+func TestEscape(t *testing.T) {
+	table := map[string]string{
+		"": "",	
+		`" OR "" = "`: `\" OR \"\" = \"`,	
+		`' OR '' = '`: `\' OR \'\' = \'`,	
+	}
+	for k, v := range table {
+		result := sqlEscapeString(k)
+		if result != v {
+			t.Errorf("Expect %s, got %s: %s", v, result, k)
 		}
 	}
 }

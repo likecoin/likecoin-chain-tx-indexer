@@ -155,7 +155,7 @@ func QueryISCNAll(pool *pgxpool.Pool, term string, pagination Pagination) ([]isc
 			ORDER BY id %[2]s
 			OFFSET $1
 			LIMIT $2;
-		`, term, pagination.Order)
+		`, sqlEscapeString(term), pagination.Order)
 
 		rows, err := tx.Query(ctx, sql, pagination.getOffset(), pagination.Limit)
 		if err != nil {
@@ -276,4 +276,14 @@ func getEventsValue(events types.StringEvents, t string, key string) string {
 		}
 	}
 	return ""
+}
+
+func sqlEscapeString(value string) string {
+    replace := map[string]string{"'":`\'`, `"`:`\"`}
+
+    for b, a := range replace {
+        value = strings.Replace(value, b, a, -1)
+    }
+    
+    return value;
 }
