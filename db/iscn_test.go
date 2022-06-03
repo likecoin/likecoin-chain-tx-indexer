@@ -137,6 +137,13 @@ func TestISCNQueryAll(t *testing.T) {
 			term: "",
 		},
 		{
+			term: "0xNaN",
+			length: 5,
+		},
+		{
+			term: "itdoesnotexists",
+		},
+		{
 			term: "kin ko",
 		},
 		{

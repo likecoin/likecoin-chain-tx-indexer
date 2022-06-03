@@ -147,6 +147,7 @@ func TestISCNCombine(t *testing.T) {
 		},
 		{
 			query: "",
+			status: 404,
 		},
 		{
 			query:  "limit=15&page=2",
@@ -180,6 +181,7 @@ func TestISCNCombine(t *testing.T) {
 		// },
 	}
 	for _, v := range table {
+		t.Log(v.query)
 		req := httptest.NewRequest(
 			"GET",
 			fmt.Sprintf("%s?%s",

@@ -85,6 +85,10 @@ func handleISCNSearch(c *gin.Context) {
 	q := c.Request.URL.Query()
 	p := getPagination(q)
 	term := q.Get("q")
+	if term == "" {
+		c.AbortWithStatusJSON(404, gin.H{"error": "parameter 'q' is required"})
+		return
+	}
 	pool := getPool(c)
 	records, err := db.QueryISCNAll(pool, term, p)
 	if err != nil {
