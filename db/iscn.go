@@ -35,7 +35,7 @@ func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQu
 		return nil, err
 	}
 	keywordString := keywords.Marshal()
-	callback := func (resultChan chan queryResult, ctx context.Context, tx pgx.Tx) {
+	callback := func(resultChan chan queryResult, ctx context.Context, tx pgx.Tx) {
 		sql := fmt.Sprintf(`
 			SELECT id, tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 			FROM txs
@@ -60,7 +60,7 @@ func QueryISCN(pool *pgxpool.Pool, events types.StringEvents, query ISCNRecordQu
 	return doubleQuery(pool, callback)
 }
 
-func doubleQuery(pool *pgxpool.Pool, callback func (chan queryResult, context.Context, pgx.Tx)) ([]iscnTypes.QueryResponseRecord, error) {
+func doubleQuery(pool *pgxpool.Pool, callback func(chan queryResult, context.Context, pgx.Tx)) ([]iscnTypes.QueryResponseRecord, error) {
 	ctx1, cancel1 := GetTimeoutContext()
 	ctx2, cancel2 := GetTimeoutContext()
 	defer cancel1()
@@ -170,22 +170,6 @@ func QueryISCNAll(pool *pgxpool.Pool, term string, pagination Pagination) ([]isc
 	return doubleQuery(pool, callback)
 }
 
-func QueryISCNByRecord(conn *pgxpool.Conn, query string) ([]iscnTypes.QueryResponseRecord, error) {
-	ctx, cancel := GetTimeoutContext()
-	defer cancel()
-	sql := `
-		SELECT tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
-		FROM txs
-		WHERE tx #> '{tx, body, messages, 0, record}' @> $1
-	`
-	rows, err := conn.Query(ctx, sql, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return parseISCNRecords(rows)
-}
-
 func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err error) {
 	res = make([]iscnTypes.QueryResponseRecord, 0)
 	for rows.Next() {
@@ -200,14 +184,14 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 		}
 
 		if err = json.Unmarshal(jsonb.Bytes, &iscn); err != nil {
-			logger.L.Errorw("Failed to unmarshal ISCN body from sql response", "jsonb", jsonb, "error", err)
-			return
+			// logger.L.Logw("Failed to unmarshal ISCN body from sql response", "jsonb", jsonb, "error", err)
+			continue
 		}
 
 		var events types.StringEvents
 		events, err = parseEvents(eventsRows)
 		if err != nil {
-			logger.L.Errorw("Failed to parse events of db rows", "id", id, "error", err)
+			// logger.L.Logw("Failed to parse events of db rows", "id", id, "error", err)
 			continue
 		}
 
@@ -227,19 +211,13 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 		iscn.Type = "Record"
 		iscn.RecordTimestamp = strings.Trim(timestamp, "\"")
 
-		var data []byte
-		if data, err = json.Marshal(iscn); err != nil {
-			logger.L.Errorw("Failed to marshal ISCN body to []byte", "iscn", iscn, "error", err)
-			return nil, err
-		}
-
 		result := iscnTypes.QueryResponseRecord{
 			Ipld: getEventsValue(events, "iscn_record", "ipld"),
 			Data: iscnTypes.IscnInput(data),
 		}
 		res = append(res, result)
 	}
-	return
+	return res, nil
 }
 
 func parseEvents(query pgtype.VarcharArray) (events types.StringEvents, err error) {
@@ -279,11 +257,11 @@ func getEventsValue(events types.StringEvents, t string, key string) string {
 }
 
 func sqlEscapeString(value string) string {
-    replace := map[string]string{"'":`\'`, `"`:`\"`}
+	replace := map[string]string{"'": `\'`, `"`: `\"`}
 
-    for b, a := range replace {
-        value = strings.Replace(value, b, a, -1)
-    }
-    
-    return value;
+	for b, a := range replace {
+		value = strings.Replace(value, b, a, -1)
+	}
+
+	return value
 }

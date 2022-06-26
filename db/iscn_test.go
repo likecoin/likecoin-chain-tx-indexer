@@ -37,15 +37,12 @@ func TestISCNCombineQuery(t *testing.T) {
 					},
 				},
 			},
-			length: 2,
 		},
 		{
 			keywords: Keywords{"DAO"},
-			length:   1,
 		},
 		{
 			keywords: Keywords{"Cyberspace", "EFF"},
-			length:   1,
 		},
 		{
 			query: ISCNRecordQuery{
@@ -59,18 +56,18 @@ func TestISCNCombineQuery(t *testing.T) {
 			},
 			length: 1,
 		},
-		// {
-		// 	query: ISCNRecordQuery{
-		// 		Stakeholders: []Stakeholder{
-		// 			{
-		// 				Entity: &Entity{
-		// 					Name: "Apple Daily",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	length: 5,
-		// },
+		{
+			query: ISCNRecordQuery{
+				Stakeholders: []Stakeholder{
+					{
+						Entity: &Entity{
+							Name: "Apple Daily",
+						},
+					},
+				},
+			},
+			length: 5,
+		},
 		{
 			query: ISCNRecordQuery{
 				Stakeholders: []Stakeholder{
@@ -130,14 +127,14 @@ func TestISCNList(t *testing.T) {
 
 func TestISCNQueryAll(t *testing.T) {
 	tables := []struct {
-		term string
-		length   int
+		term   string
+		length int
 	}{
 		{
 			term: "",
 		},
 		{
-			term: "0xNaN",
+			term:   "0xNaN",
 			length: 5,
 		},
 		{
@@ -154,22 +151,22 @@ func TestISCNQueryAll(t *testing.T) {
 			term: "LikeCoin",
 		},
 		{
-			term: "ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84",
-			length:   1,
+			term:   "ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84",
+			length: 1,
 		},
 		{
-			term: "iscn://likecoin-chain/zGY8c7obhwx7qa4Ro763kr6lvBCZ4SIMagYRXRXYSnM/1",
-			length:   1,
+			term:   "iscn://likecoin-chain/zGY8c7obhwx7qa4Ro763kr6lvBCZ4SIMagYRXRXYSnM/1",
+			length: 1,
 		},
 		{
 			term: "cosmos1cp3fcmk5ny2c22s0mxut2xefwrdur2t0clgna0",
 		},
 		{
-			term: "《明報》",
+			term:   "《明報》",
 			length: 5,
 		},
 		{
-			term: "depub.SPACE",
+			term:   "depub.SPACE",
 			length: 5,
 		},
 		// {
@@ -198,9 +195,9 @@ func TestISCNQueryAll(t *testing.T) {
 
 func TestEscape(t *testing.T) {
 	table := map[string]string{
-		"": "",	
-		`" OR "" = "`: `\" OR \"\" = \"`,	
-		`' OR '' = '`: `\' OR \'\' = \'`,	
+		"":            "",
+		`" OR "" = "`: `\" OR \"\" = \"`,
+		`' OR '' = '`: `\' OR \'\' = \'`,
 	}
 	for k, v := range table {
 		result := sqlEscapeString(k)

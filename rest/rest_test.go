@@ -18,7 +18,7 @@ var router *gin.Engine
 func TestMain(m *testing.M) {
 	logger.SetupLogger(zapcore.DebugLevel, []string{"stdout"}, "console")
 	pool, err := db.NewConnPool(
-		"mydb",
+		"wancat",
 		"localhost",
 		"5432",
 		"wancat",

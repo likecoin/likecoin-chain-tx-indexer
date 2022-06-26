@@ -2,3 +2,4 @@ data
 run.sh
 *.swp
 Caddyfile
+likecoin-chain-tx-indexer
