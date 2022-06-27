@@ -141,23 +141,30 @@ func QueryISCNList(pool *pgxpool.Pool, pagination Pagination) ([]iscnTypes.Query
 	defer rows.Close()
 	return parseISCNRecords(rows)
 }
+
 func QueryISCNAll(pool *pgxpool.Pool, term string, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
-	callback := func(resultChan chan queryResult, ctx context.Context, tx pgx.Tx) {
-		sql := fmt.Sprintf(`
+	iscnId := fmt.Sprintf(`{"iscn_record.iscn_id=\"%[1]s\""}`, term)
+	owner := fmt.Sprintf(`{"iscn_record.owner=\"%[1]s\""}`, term)
+	stakeholderId := fmt.Sprintf(`{"stakeholders": [{"entity": {"@id": "%s"}}]}`, term)
+	stakeholderName := fmt.Sprintf(`{"stakeholders": [{"entity": {"name": "%s"}}]}`, term)
+	contentFingerprints := fmt.Sprintf(`{"contentFingerprints": ["%s"]}`, term)
+	keywords := fmt.Sprintf(`{"%s"}`, term)
+	sql := fmt.Sprintf(`
 			SELECT id, tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 			FROM txs
-			WHERE tx #> '{tx, body, messages, 0, record}' @> '{"stakeholders": [{"entity": {"@id": "%[1]s"}}]}'
-					OR tx #> '{tx, body, messages, 0, record}' @> '{"stakeholders": [{"entity": {"name": "%[1]s"}}]}'
-					OR tx #> '{tx, body, messages, 0, record}' @> '{"contentFingerprints": ["%[1]s"]}'
-					OR string_to_array(tx #>> '{tx, body, messages, 0, record, contentMetadata, keywords}', ',') @> '{"%[1]s"}'
-					OR events @> '{"iscn_record.owner=\"%[1]s\""}'
-					OR events @> '{"iscn_record.iscn_id=\"%[1]s\""}'
-			ORDER BY id %[2]s
-			OFFSET $1
-			LIMIT $2;
-		`, sqlEscapeString(term), pagination.Order)
+			WHERE events @> $1
+					OR events @> $2
+					OR tx #> '{tx, body, messages, 0, record}' @> $3
+					OR tx #> '{tx, body, messages, 0, record}' @> $4
+					OR tx #> '{tx, body, messages, 0, record}' @> $5
+					OR string_to_array(tx #>> '{tx, body, messages, 0, record, contentMetadata, keywords}', ',') @> $6
+			ORDER BY id %s
+			OFFSET $7
+			LIMIT $8;
+		`, pagination.Order)
 
-		rows, err := tx.Query(ctx, sql, pagination.getOffset(), pagination.Limit)
+	callback := func(resultChan chan queryResult, ctx context.Context, tx pgx.Tx) {
+		rows, err := tx.Query(ctx, sql, iscnId, owner, stakeholderId, stakeholderName, contentFingerprints, keywords, pagination.getOffset(), pagination.Limit)
 		if err != nil {
 			resultChan <- queryResult{err: err}
 			return
@@ -254,14 +261,4 @@ func getEventsValue(events types.StringEvents, t string, key string) string {
 		}
 	}
 	return ""
-}
-
-func sqlEscapeString(value string) string {
-	replace := map[string]string{"'": `\'`, `"`: `\"`}
-
-	for b, a := range replace {
-		value = strings.Replace(value, b, a, -1)
-	}
-
-	return value
 }

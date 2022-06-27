@@ -192,17 +192,3 @@ func TestISCNQueryAll(t *testing.T) {
 		}
 	}
 }
-
-func TestEscape(t *testing.T) {
-	table := map[string]string{
-		"":            "",
-		`" OR "" = "`: `\" OR \"\" = \"`,
-		`' OR '' = '`: `\' OR \'\' = \'`,
-	}
-	for k, v := range table {
-		result := sqlEscapeString(k)
-		if result != v {
-			t.Errorf("Expect %s, got %s: %s", v, result, k)
-		}
-	}
-}
