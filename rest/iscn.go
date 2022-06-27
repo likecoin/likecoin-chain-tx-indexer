@@ -18,6 +18,11 @@ func handleISCN(c *gin.Context) {
 	q := c.Request.URL.Query()
 	hasQuery := false
 
+	if q.Get("q") != "" {
+		handleISCNSearch(c)
+		return
+	}
+
 	events := make([]types.StringEvent, 0)
 	if owner := q.Get("owner"); owner != "" {
 		events = append(events, types.StringEvent{
