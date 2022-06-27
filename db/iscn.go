@@ -129,13 +129,14 @@ func QueryISCNList(pool *pgxpool.Pool, pagination Pagination) ([]iscnTypes.Query
 	sql := fmt.Sprintf(`
 		SELECT id, tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 		FROM txs
-		WHERE events @> '{"message.module=\"iscn\""}'
+		WHERE events && '{"message.action=\"update_iscn_record\"", "message.action=\"create_iscn_record\""}'
 		ORDER BY id %s
 		OFFSET $1
 		LIMIT $2;
 	`, pagination.Order)
 	rows, err := conn.Query(ctx, sql, pagination.getOffset(), pagination.Limit)
 	if err != nil {
+		logger.L.Errorw("Query error:", "error", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -191,14 +192,14 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 		}
 
 		if err = json.Unmarshal(jsonb.Bytes, &iscn); err != nil {
-			// logger.L.Logw("Failed to unmarshal ISCN body from sql response", "jsonb", jsonb, "error", err)
+			logger.L.Warnw("Failed to unmarshal ISCN body from sql response", "id", id, "error", err)
 			continue
 		}
 
 		var events types.StringEvents
 		events, err = parseEvents(eventsRows)
 		if err != nil {
-			// logger.L.Logw("Failed to parse events of db rows", "id", id, "error", err)
+			logger.L.Warnw("Failed to parse events of db rows", "id", id, "error", err)
 			continue
 		}
 
