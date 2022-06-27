@@ -49,11 +49,11 @@ func TestISCNCombine(t *testing.T) {
 			length:  1,
 			contain: []string{"John Perry Barlow"},
 		},
-		// {
-		// 	query:   "stakeholders.entity.name=Apple+Daily&limit=10",
-		// 	length:  10,
-		// 	contain: []string{"Apple Daily"},
-		// },
+		{
+			query:   "stakeholders.entity.name=Apple+Daily&limit=10",
+			length:  10,
+			contain: []string{"Apple Daily"},
+		},
 		{
 			query:   "q=iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
 			contain: []string{"iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1"},
