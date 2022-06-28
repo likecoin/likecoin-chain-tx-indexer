@@ -140,6 +140,35 @@ func InitDB(conn *pgxpool.Conn) error {
 	if err != nil {
 		return err
 	}
+	_, err = conn.Exec(ctx, `
+	CREATE TEMP TABLE IF NOT EXISTS iscn (
+		id BIGSERIAL PRIMARY KEY,
+		iscn_id VARCHAR(80),
+		owner VARCHAR(50),
+		keywords VARCHAR(64)[],
+		fingerprints VARCHAR(256)[],
+		stakeholders JSONB,
+		data JSONB
+	)`)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Exec(ctx, `
+	CREATE TEMP TABLE IF NOT EXISTS meta (
+		id VARCHAR(10) PRIMARY KEY,
+		height BIGINT
+	)`)
+	if err != nil {
+		return err
+	}
+	_, err = conn.Exec(ctx, `
+	INSERT INTO meta VALUES ("iscn", 0)
+	ON CONFLICT DO NOTHING`)
+	if err != nil {
+		return err
+	}
+
 	ctx, cancel = GetTimeoutContext()
 	defer cancel()
 	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_txs_txhash ON txs USING hash ((tx->>'txhash'))")

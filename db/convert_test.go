@@ -3,13 +3,7 @@ package db
 import "testing"
 
 func TestConvert(t *testing.T) {
-	p := Pagination{
-		Limit: 10,
-		Page:  1,
-		Order: ORDER_ASC,
-	}
-
-	err := ConvertISCN(pool, p)
+	err := ConvertISCN(pool, 1000, 20)
 	if err != nil {
 		t.Error(err)
 	}

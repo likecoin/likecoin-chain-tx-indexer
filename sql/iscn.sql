@@ -31,7 +31,14 @@ INSERT INTO meta VALUES
     ('txs', 7773482);
 
 UPDATE meta
-    SET height = 300000
+    SET height = 400000
     WHERE id = 'iscn';
 
 SELECT * FROM meta;
+
+EXPLAIN ANALYSE SELECT id, height, tx #> '{"tx", "body", "messages", 0, "record"}' as records, events, tx #> '{"timestamp"}'
+FROM txs
+WHERE height > (SELECT height FROM meta WHERE id = 'iscn')
+	AND height < (SELECT height FROM meta WHERE id = 'iscn') + 10000
+	AND events && '{"message.module=\"iscn\""}'
+ORDER BY id ASC;

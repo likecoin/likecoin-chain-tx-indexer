@@ -20,7 +20,7 @@ type ISCN struct {
 	Data         []byte
 }
 
-func ConvertISCN(pool *pgxpool.Pool, pagination Pagination) error {
+func ConvertISCN(pool *pgxpool.Pool, offset int, limit int) error {
 	log.Println("Converting")
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
@@ -36,10 +36,10 @@ func ConvertISCN(pool *pgxpool.Pool, pagination Pagination) error {
 		FROM txs
 		WHERE events && '{"message.module=\"iscn\""}'
 		ORDER BY id ASC
-		OFFSET $1
+		OFFSET (SELECT height FROM meta WHERE id = 'iscn')
 		LIMIT $2;
 	`
-	rows, err := conn.Query(ctx, sql, pagination.getOffset(), pagination.Limit)
+	rows, err := conn.Query(ctx, sql, offset, limit)
 	if err != nil {
 		logger.L.Errorw("Query error:", "error", err)
 		return err
