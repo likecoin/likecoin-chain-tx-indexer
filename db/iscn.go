@@ -129,7 +129,11 @@ func QueryISCNList(pool *pgxpool.Pool, pagination Pagination) ([]iscnTypes.Query
 	sql := fmt.Sprintf(`
 		SELECT id, tx #> '{"tx", "body", "messages", 0, "record"}' as data, events, tx #> '{"timestamp"}'
 		FROM txs
-		WHERE events && '{"message.action=\"update_iscn_record\"", "message.action=\"create_iscn_record\""}'
+		WHERE events && '{"message.action=\"create_iscn_record\"",
+			"message.action=\"update_iscn_record\"",
+			"message.action=\"/likechain.iscn.MsgCreateIscnRecord\"",
+			"message.action=\"/likechain.iscn.MsgUpdateIscnRecord\""
+		}'
 		ORDER BY id %s
 		OFFSET $1
 		LIMIT $2;
