@@ -14,6 +14,7 @@ import (
 
 type ISCN struct {
 	Iscn         string
+	IscnPrefix   string
 	Owner        string
 	Keywords     []string
 	Fingerprints []string
@@ -82,7 +83,6 @@ func handleISCNRecords(rows pgx.Rows, batch *Batch) (err error) {
 			return
 		}
 
-		log.Println(height)
 		var events types.StringEvents
 		events, err = parseEvents(eventsRows)
 		if err != nil {
@@ -91,11 +91,8 @@ func handleISCNRecords(rows pgx.Rows, batch *Batch) (err error) {
 		}
 
 		switch getEventsValue(events, "message", "action") {
-		case "create_iscn_record", "/likechain.iscn.MsgCreateIscnRecord":
-			log.Println("create")
-			batch.InsertISCN(events, data, timestamp)
-		case "update_iscn_record", "/likechain.iscn.MsgUpdateIscnRecord":
-			log.Println("update")
+		case "create_iscn_record", "/likechain.iscn.MsgCreateIscnRecord", "update_iscn_record", "/likechain.iscn.MsgUpdateIscnRecord":
+			batch.InsertISCN(parseISCN(events, data, timestamp))
 		case "msg_change_iscn_record_ownership", "/likechain.iscn.MsgChangeIscnRecordOwnership":
 			log.Println("transfer")
 		default:
@@ -123,7 +120,15 @@ func formatStakeholders(stakeholders []Stakeholder) ([]byte, error) {
 	return json.Marshal(body)
 }
 
-func (batch *Batch) InsertISCN(events types.StringEvents, data pgtype.JSONB, timestamp string) {
+func (batch *Batch) InsertISCN(iscn ISCN) {
+	sql := `
+INSERT INTO iscn (iscn_id, iscn_id_prefix, owner, keywords, fingerprints, stakeholders, data) VALUES
+( $1, $2, $3, $4, $5, $6, $7)
+ON CONFLICT DO NOTHING;`
+	batch.Batch.Queue(sql, iscn.Iscn, iscn.IscnPrefix, iscn.Owner, iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders, iscn.Data)
+}
+
+func parseISCN(events types.StringEvents, data pgtype.JSONB, timestamp string) ISCN {
 	var record ISCNRecordQuery
 	if err := json.Unmarshal(data.Bytes, &record); err != nil {
 		log.Fatalln(err)
@@ -132,17 +137,13 @@ func (batch *Batch) InsertISCN(events types.StringEvents, data pgtype.JSONB, tim
 	if err != nil {
 		log.Fatalln(err)
 	}
-	iscn := ISCN{
+	return ISCN{
 		Iscn:         getEventsValue(events, "iscn_record", "iscn_id"),
+		IscnPrefix:   getEventsValue(events, "iscn_record", "iscn_id_prefix"),
 		Owner:        getEventsValue(events, "iscn_record", "owner"),
 		Keywords:     parseKeywords(record.ContentMetadata.Keywords),
 		Fingerprints: record.ContentFingerprints,
 		Stakeholders: holders,
 		Data:         data.Bytes,
 	}
-	sql := `
-INSERT INTO iscn (iscn_id, owner, keywords, fingerprints, stakeholders, data) VALUES
-( $1, $2, $3, $4, $5, $6)
-ON CONFLICT DO NOTHING;`
-	batch.Batch.Queue(sql, iscn.Iscn, iscn.Owner, iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders, iscn.Data)
 }

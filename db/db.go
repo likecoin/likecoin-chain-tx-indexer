@@ -141,16 +141,18 @@ func InitDB(conn *pgxpool.Conn) error {
 		return err
 	}
 	_, err = conn.Exec(ctx, `
-	CREATE TABLE IF NOT EXISTS iscn (
-		id BIGSERIAL PRIMARY KEY,
-		iscn_id VARCHAR(80),
-		owner VARCHAR(50),
-		keywords VARCHAR(64)[],
-		fingerprints VARCHAR(256)[],
-		stakeholders JSONB,
-		data JSONB,
-		UNIQUE(iscn_id)
-	)`)
+CREATE TABLE IF NOT EXISTS iscn (
+	id BIGSERIAL PRIMARY KEY,
+	iscn_id VARCHAR(80),
+	iscn_id_prefix VARCHAR(80),
+	owner VARCHAR(50),
+	keywords VARCHAR(64)[],
+	fingerprints VARCHAR(256)[],
+	stakeholders JSONB,
+	data JSONB,
+	UNIQUE(iscn_id),
+	UNIQUE(iscn_id_prefix)
+)`)
 	if err != nil {
 		return err
 	}
