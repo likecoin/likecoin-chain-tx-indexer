@@ -2,7 +2,7 @@ package db
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -23,25 +23,21 @@ type ISCN struct {
 }
 
 func ConvertISCN(conn *pgxpool.Conn, limit int) (finished bool, err error) {
-	log.Println("Converting", limit)
-
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
 	height, err := getHeight(conn)
 	if err != nil {
-		log.Fatalln(err)
+		return false, fmt.Errorf("Failed to get ISCN synchonized height: %w", err)
 	}
 
 	maxHeight, err := GetLatestHeight(conn)
 	if err != nil {
-		log.Fatalln(err)
+		return false, fmt.Errorf("Failed to get latest height: %w", err)
 	}
 	if finished = height+int64(limit) > maxHeight; !finished {
 		maxHeight = height + int64(limit)
 	}
-
-	log.Println("Previous height:", height)
 
 	sql := `
 		SELECT height, tx #> '{"tx", "body", "messages", 0, "record"}' as record, events, tx #> '{"timestamp"}'
@@ -54,7 +50,7 @@ func ConvertISCN(conn *pgxpool.Conn, limit int) (finished bool, err error) {
 	rows, err := conn.Query(ctx, sql, height, maxHeight)
 	if err != nil {
 		logger.L.Errorw("Query error:", "error", err)
-		return finished, err
+		return finished, fmt.Errorf("Query ISCN related txs error: %w", err)
 	}
 	defer rows.Close()
 	batch := NewBatch(conn, int(limit))
@@ -92,16 +88,20 @@ func handleISCNRecords(rows pgx.Rows, batch *Batch) (err error) {
 
 		switch action := getEventsValue(events, "message", "action"); action {
 		case "create_iscn_record", "/likechain.iscn.MsgCreateIscnRecord", "update_iscn_record", "/likechain.iscn.MsgUpdateIscnRecord":
-			batch.InsertISCN(parseISCN(events, data, timestamp))
+			iscn, err := parseISCN(events, data, timestamp)
+			if err != nil {
+				logger.L.Errorw("parse ISCN failed", "error", err, "data", data, "events", events)
+				break
+			}
+			batch.InsertISCN(iscn)
 		case "msg_change_iscn_record_ownership", "/likechain.iscn.MsgChangeIscnRecordOwnership":
-			log.Println("transfer")
 			batch.TransferISCN(events)
 		default:
-			log.Println("other:", getEventsValue(events, "message", "action"))
+			logger.L.Warnf("Unknown message action: %s", getEventsValue(events, "message", "action"))
 		}
 	}
 	batch.Batch.Queue(`UPDATE meta SET height = $1 WHERE id = 'iscn'`, batch.prevHeight)
-	log.Println("Last height:", batch.prevHeight)
+	logger.L.Infof("ISCN synced height: %d", batch.prevHeight)
 	return batch.Flush()
 }
 
@@ -134,17 +134,17 @@ func (batch *Batch) TransferISCN(events types.StringEvents) {
 	iscnId := getEventsValue(events, "iscn_record", "iscn_id")
 	newOwner := getEventsValue(events, "iscn_record", "owner")
 	batch.Batch.Queue(`UPDATE iscn SET owner = $2 WHERE iscn_id = $1`, iscnId, newOwner)
-	log.Printf("Send ISCN from %s to %s\n", sender, newOwner)
+	logger.L.Infof("Send ISCN %s from %s to %s\n", iscnId, sender, newOwner)
 }
 
-func parseISCN(events types.StringEvents, data pgtype.JSONB, timestamp string) ISCN {
+func parseISCN(events types.StringEvents, data pgtype.JSONB, timestamp string) (ISCN, error) {
 	var record ISCNRecordQuery
 	if err := json.Unmarshal(data.Bytes, &record); err != nil {
-		log.Fatalln(err, string(data.Bytes))
+		return ISCN{}, fmt.Errorf("Failed to unmarshal iscn: %w", err)
 	}
 	holders, err := formatStakeholders(record.Stakeholders)
 	if err != nil {
-		log.Fatalln(err)
+		return ISCN{}, fmt.Errorf("Failed to format stakeholder, %w", err)
 	}
 	return ISCN{
 		Iscn:         getEventsValue(events, "iscn_record", "iscn_id"),
@@ -154,5 +154,5 @@ func parseISCN(events types.StringEvents, data pgtype.JSONB, timestamp string) I
 		Fingerprints: record.ContentFingerprints,
 		Stakeholders: holders,
 		Data:         data.Bytes,
-	}
+	}, nil
 }
