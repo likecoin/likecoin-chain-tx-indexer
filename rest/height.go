@@ -12,8 +12,8 @@ func handleLatestHeight(c *gin.Context) {
 
 	latestHeight, err := db.GetLatestHeight(conn)
 	if err != nil {
-					c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-					return
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
 	}
 
 	respondLatestHeight(c, latestHeight)
@@ -22,16 +22,16 @@ func handleLatestHeight(c *gin.Context) {
 func respondLatestHeight(c *gin.Context, latestHeight int64) {
 
 	type BlockState struct {
-					LatestHeight int64 `json:"latest_height"`
+		LatestHeight int64 `json:"latest_height"`
 	}
 
 	response := BlockState{
-					LatestHeight: latestHeight,
+		LatestHeight: latestHeight,
 	}
 	resJson, err := json.Marshal(&response)
 	if err != nil {
-					c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-					return
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.Writer.Header().Set("Content-Type", "application/json")

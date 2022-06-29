@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/extractor"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/poller"
 	"github.com/likecoin/likecoin-chain-tx-indexer/rest"
@@ -53,9 +54,10 @@ var Command = &cobra.Command{
 			LcdEndpoint: lcdEndpoint,
 		}
 
+		iscnTrigger := make(chan int64)
 		go rest.Run(pool, listenAddr, lcdEndpoint)
-		go poller.PollISCN(pool)
-		poller.Run(pool, &ctx)
+		go extractor.RunISCN(pool, iscnTrigger)
+		poller.Run(pool, &ctx, iscnTrigger)
 	},
 }
 

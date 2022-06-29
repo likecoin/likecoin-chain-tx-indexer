@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 	iscnTypes "github.com/likecoin/likecoin-chain/v2/x/iscn/types"
 )
 
@@ -201,14 +202,14 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 		}
 
 		var events types.StringEvents
-		events, err = parseEvents(eventsRows)
+		events, err = utils.ParseEvents(eventsRows)
 		if err != nil {
 			logger.L.Warnw("Failed to parse events of db rows", "id", id, "error", err)
 			continue
 		}
 
-		iscn.Id = getEventsValue(events, "iscn_record", "iscn_id")
-		iscn.Owner = getEventsValue(events, "iscn_record", "owner")
+		iscn.Id = utils.GetEventsValue(events, "iscn_record", "iscn_id")
+		iscn.Owner = utils.GetEventsValue(events, "iscn_record", "owner")
 		iscn.Type = "Record"
 		iscn.RecordTimestamp = strings.Trim(timestamp, "\"")
 
@@ -218,52 +219,11 @@ func parseISCNRecords(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err e
 			return nil, err
 		}
 
-		iscn.Id = getEventsValue(events, "iscn_record", "iscn_id")
-		iscn.Owner = getEventsValue(events, "iscn_record", "owner")
-		iscn.Type = "Record"
-		iscn.RecordTimestamp = strings.Trim(timestamp, "\"")
-
 		result := iscnTypes.QueryResponseRecord{
-			Ipld: getEventsValue(events, "iscn_record", "ipld"),
+			Ipld: utils.GetEventsValue(events, "iscn_record", "ipld"),
 			Data: iscnTypes.IscnInput(data),
 		}
 		res = append(res, result)
 	}
 	return res, nil
-}
-
-func parseEvents(query pgtype.VarcharArray) (events types.StringEvents, err error) {
-	for _, row := range query.Elements {
-		arr := strings.SplitN(row.String, "=", 2)
-		k, v := arr[0], strings.Trim(arr[1], "\"")
-		if strings.Contains(k, ".") {
-			arr := strings.SplitN(k, ".", 2)
-			events = append(events, types.StringEvent{
-				Type: arr[0],
-				Attributes: []types.Attribute{
-					{
-						Key:   arr[1],
-						Value: v,
-					},
-				},
-			})
-		}
-	}
-	if len(events) == 0 {
-		return nil, fmt.Errorf("events needed")
-	}
-	return events, nil
-}
-
-func getEventsValue(events types.StringEvents, t string, key string) string {
-	for _, event := range events {
-		if event.Type == t {
-			for _, attr := range event.Attributes {
-				if attr.Key == key {
-					return attr.Value
-				}
-			}
-		}
-	}
-	return ""
 }

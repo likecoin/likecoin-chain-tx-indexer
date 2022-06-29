@@ -148,6 +148,8 @@ CREATE TABLE IF NOT EXISTS iscn (
 	owner VARCHAR(50),
 	keywords VARCHAR(64)[],
 	fingerprints VARCHAR(256)[],
+	ipld VARCHAR(64),
+	timestamp timestamp,
 	stakeholders JSONB,
 	data JSONB,
 	UNIQUE(iscn_id),

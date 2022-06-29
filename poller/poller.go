@@ -142,7 +142,7 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 	return maxHeight, nil
 }
 
-func Run(pool *pgxpool.Pool, ctx *CosmosCallContext) {
+func Run(pool *pgxpool.Pool, ctx *CosmosCallContext, triggers ...chan int64) {
 	lastHeight, err := getHeight(pool)
 	logger.L.Infow("Init Height", "lastHeight", lastHeight)
 	if err != nil {
@@ -162,6 +162,9 @@ func Run(pool *pgxpool.Pool, ctx *CosmosCallContext) {
 			if toSleep > sleepMax {
 				toSleep = sleepMax
 			}
+		}
+		for _, trigger := range triggers {
+			trigger <- returnedHeight
 		}
 		time.Sleep(toSleep)
 	}
