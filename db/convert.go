@@ -90,11 +90,12 @@ func handleISCNRecords(rows pgx.Rows, batch *Batch) (err error) {
 			return
 		}
 
-		switch getEventsValue(events, "message", "action") {
+		switch action := getEventsValue(events, "message", "action"); action {
 		case "create_iscn_record", "/likechain.iscn.MsgCreateIscnRecord", "update_iscn_record", "/likechain.iscn.MsgUpdateIscnRecord":
 			batch.InsertISCN(parseISCN(events, data, timestamp))
 		case "msg_change_iscn_record_ownership", "/likechain.iscn.MsgChangeIscnRecordOwnership":
 			log.Println("transfer")
+			batch.TransferISCN(events)
 		default:
 			log.Println("other:", getEventsValue(events, "message", "action"))
 		}
@@ -126,6 +127,14 @@ INSERT INTO iscn (iscn_id, iscn_id_prefix, owner, keywords, fingerprints, stakeh
 ( $1, $2, $3, $4, $5, $6, $7)
 ON CONFLICT DO NOTHING;`
 	batch.Batch.Queue(sql, iscn.Iscn, iscn.IscnPrefix, iscn.Owner, iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders, iscn.Data)
+}
+
+func (batch *Batch) TransferISCN(events types.StringEvents) {
+	sender := getEventsValue(events, "message", "sender")
+	iscnId := getEventsValue(events, "iscn_record", "iscn_id")
+	newOwner := getEventsValue(events, "iscn_record", "owner")
+	batch.Batch.Queue(`UPDATE iscn SET owner = $2 WHERE iscn_id = $1`, iscnId, newOwner)
+	log.Printf("Send ISCN from %s to %s\n", sender, newOwner)
 }
 
 func parseISCN(events types.StringEvents, data pgtype.JSONB, timestamp string) ISCN {

@@ -9,7 +9,7 @@ func TestConvert(t *testing.T) {
 	}
 	defer conn.Release()
 	for i := 0; i < 2; i++ {
-		err := ConvertISCN(conn, 50000)
+		err := ConvertISCN(conn, 10000)
 		if err != nil {
 			t.Error(err)
 		}
