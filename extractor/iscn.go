@@ -122,6 +122,7 @@ func parseISCN(events types.StringEvents, data []byte, timestamp string) (db.ISC
 		Fingerprints: record.ContentFingerprints,
 		Stakeholders: holders,
 		Timestamp:    timestamp,
+		Ipld:         utils.GetEventsValue(events, "iscn_record", "ipld"),
 		Data:         data,
 	}, nil
 }

@@ -13,7 +13,7 @@ type ISCN struct {
 	IscnPrefix   string
 	Owner        string
 	Timestamp    string
-	IPLD         string
+	Ipld         string
 	Keywords     []string
 	Fingerprints []string
 	Stakeholders []byte
@@ -43,10 +43,11 @@ func GetISCNHeight(conn *pgxpool.Conn) (int64, error) {
 
 func (batch *Batch) InsertISCN(iscn ISCN) {
 	sql := `
-INSERT INTO iscn (iscn_id, iscn_id_prefix, owner, keywords, fingerprints, stakeholders, data) VALUES
-( $1, $2, $3, $4, $5, $6, $7)
+INSERT INTO iscn (iscn_id, iscn_id_prefix, owner, keywords, fingerprints, stakeholders, data, timestamp, ipld) VALUES
+( $1, $2, $3, $4, $5, $6, $7, $8, $9)
 ON CONFLICT DO NOTHING;`
-	batch.Batch.Queue(sql, iscn.Iscn, iscn.IscnPrefix, iscn.Owner, iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders, iscn.Data)
+	batch.Batch.Queue(sql, iscn.Iscn, iscn.IscnPrefix, iscn.Owner,
+		iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders, iscn.Data, iscn.Timestamp, iscn.Ipld)
 }
 
 func (batch *Batch) TransferISCN(events types.StringEvents) {
