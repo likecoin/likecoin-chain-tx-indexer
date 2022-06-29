@@ -45,7 +45,10 @@ func TestMain(m *testing.M) {
 	}
 	defer conn.Release()
 
-	InitDB(conn)
+	err = InitDB(conn)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	m.Run()
 }
 

@@ -5,7 +5,8 @@ CREATE TEMP TABLE IF NOT EXISTS iscn (
 	keywords VARCHAR(64)[],
 	fingerprints VARCHAR(256)[],
 	stakeholders JSONB,
-	data JSONB
+	data JSONB,
+	UNIQUE(iscn_id)
 );
 
 CREATE TEMP TABLE IF NOT EXISTS meta (
@@ -36,7 +37,7 @@ UPDATE meta
 
 SELECT * FROM meta;
 
-EXPLAIN ANALYSE SELECT id, height, tx #> '{"tx", "body", "messages", 0, "record"}' as records, events, tx #> '{"timestamp"}'
+SELECT id, height, tx #> '{"tx", "body", "messages", 0, "record"}' as records, events, tx #> '{"timestamp"}'
 FROM txs
 WHERE height > (SELECT height FROM meta WHERE id = 'iscn')
 	AND height < (SELECT height FROM meta WHERE id = 'iscn') + 10000

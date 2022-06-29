@@ -141,21 +141,22 @@ func InitDB(conn *pgxpool.Conn) error {
 		return err
 	}
 	_, err = conn.Exec(ctx, `
-	CREATE TEMP TABLE IF NOT EXISTS iscn (
+	CREATE TABLE IF NOT EXISTS iscn (
 		id BIGSERIAL PRIMARY KEY,
 		iscn_id VARCHAR(80),
 		owner VARCHAR(50),
 		keywords VARCHAR(64)[],
 		fingerprints VARCHAR(256)[],
 		stakeholders JSONB,
-		data JSONB
+		data JSONB,
+		UNIQUE(iscn_id)
 	)`)
 	if err != nil {
 		return err
 	}
 
 	_, err = conn.Exec(ctx, `
-	CREATE TEMP TABLE IF NOT EXISTS meta (
+	CREATE TABLE IF NOT EXISTS meta (
 		id VARCHAR(10) PRIMARY KEY,
 		height BIGINT
 	)`)
@@ -163,8 +164,9 @@ func InitDB(conn *pgxpool.Conn) error {
 		return err
 	}
 	_, err = conn.Exec(ctx, `
-	INSERT INTO meta VALUES ("iscn", 0)
-	ON CONFLICT DO NOTHING`)
+	INSERT INTO meta VALUES ('iscn', 0)
+	ON CONFLICT DO NOTHING
+	`)
 	if err != nil {
 		return err
 	}
