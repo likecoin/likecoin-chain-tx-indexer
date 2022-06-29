@@ -3,8 +3,15 @@ package db
 import "testing"
 
 func TestConvert(t *testing.T) {
-	err := ConvertISCN(pool, 50000)
+	conn, err := AcquireFromPool(pool)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
+	}
+	defer conn.Release()
+	for i := 0; i < 2; i++ {
+		err := ConvertISCN(conn, 5000)
+		if err != nil {
+			t.Error(err)
+		}
 	}
 }

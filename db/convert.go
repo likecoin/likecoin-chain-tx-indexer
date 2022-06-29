@@ -21,34 +21,54 @@ type ISCN struct {
 	Data         []byte
 }
 
-func ConvertISCN(pool *pgxpool.Pool, limit int) error {
+func ConvertISCN(conn *pgxpool.Conn, limit int) error {
 	log.Println("Converting", limit)
-	conn, err := AcquireFromPool(pool)
-	if err != nil {
-		return err
-	}
-	defer conn.Release()
 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
+	height, err := getHeight(conn)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	maxHeight, err := GetLatestHeight(conn)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if height+int64(limit) < maxHeight {
+		maxHeight = height + int64(limit)
+	}
+
+	log.Println("Previous height:", height)
+
 	sql := `
 		SELECT height, tx #> '{"tx", "body", "messages", 0, "record"}' as record, events, tx #> '{"timestamp"}'
 		FROM txs
-		WHERE height > (SELECT MAX(height) FROM meta WHERE id = 'iscn')
-			AND height < (SELECT MAX(height) FROM meta WHERE id = 'iscn') + $1
+		WHERE height >= $1
+			AND height < $2
 			AND events @> '{"message.module=\"iscn\""}'
 		ORDER BY height ASC;
 	`
-	rows, err := conn.Query(ctx, sql, limit)
+	rows, err := conn.Query(ctx, sql, height, maxHeight)
 	if err != nil {
 		logger.L.Errorw("Query error:", "error", err)
 		return err
 	}
 	defer rows.Close()
-	batch := NewBatch(conn, limit)
+	batch := NewBatch(conn, int(limit))
+	batch.prevHeight = maxHeight
 
 	return handleISCNRecords(rows, &batch)
+}
+
+func getHeight(conn *pgxpool.Conn) (int64, error) {
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	row := conn.QueryRow(ctx, `SELECT height FROM meta WHERE id = 'iscn'`)
+	var height int64
+	err := row.Scan(&height)
+	return height, err
 }
 
 func handleISCNRecords(rows pgx.Rows, batch *Batch) (err error) {
@@ -81,8 +101,9 @@ func handleISCNRecords(rows pgx.Rows, batch *Batch) (err error) {
 		default:
 			log.Println("other:", getEventsValue(events, "message", "action"))
 		}
-		batch.prevHeight = height
 	}
+	batch.Batch.Queue(`UPDATE meta SET height = $1 WHERE id = 'iscn'`, batch.prevHeight)
+	log.Println("Last height:", batch.prevHeight)
 	return batch.Flush()
 }
 
@@ -103,7 +124,6 @@ func formatStakeholders(stakeholders []Stakeholder) ([]byte, error) {
 }
 
 func (batch *Batch) InsertISCN(events types.StringEvents, data pgtype.JSONB, timestamp string) {
-	log.Println(string(data.Bytes))
 	var record ISCNRecordQuery
 	if err := json.Unmarshal(data.Bytes, &record); err != nil {
 		log.Fatalln(err)
