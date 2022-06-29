@@ -9,22 +9,6 @@ func TestCreateQuery(t *testing.T) {
 	}{
 		{
 			input: ISCNRecordQuery{
-				ContentMetadata: &ContentMetadata{
-					Name: "Cyberspace",
-				},
-			},
-			output: `{"contentMetadata":{"name":"Cyberspace"}}`,
-		},
-		{
-			input: ISCNRecordQuery{
-				ContentMetadata: &ContentMetadata{
-					Type: "Article",
-				},
-			},
-			output: `{"contentMetadata":{"@type":"Article"}}`,
-		},
-		{
-			input: ISCNRecordQuery{
 				ContentFingerprints: []string{
 					"fingerprints",
 				},
@@ -45,9 +29,6 @@ func TestCreateQuery(t *testing.T) {
 		},
 		{
 			input: ISCNRecordQuery{
-				ContentMetadata: &ContentMetadata{
-					Type: "Article",
-				},
 				Stakeholders: []Stakeholder{
 					{
 						Entity: &Entity{
@@ -56,7 +37,7 @@ func TestCreateQuery(t *testing.T) {
 					},
 				},
 			},
-			output: `{"contentMetadata":{"@type":"Article"},"stakeholders":[{"entity":{"@id":"John Perry Barlow"}}]}`,
+			output: `{"stakeholders":[{"entity":{"@id":"John Perry Barlow"}}]}`,
 		},
 	}
 	for _, v := range tables {
@@ -72,7 +53,7 @@ func TestCreateQuery(t *testing.T) {
 	}
 }
 
-func TestKeywordsMar(t *testing.T) {
+func TestKeywords(t *testing.T) {
 	table := []struct {
 		input  Keywords
 		output string

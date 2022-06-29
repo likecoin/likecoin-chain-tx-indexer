@@ -22,7 +22,7 @@ type ISCN struct {
 	Data         []byte
 }
 
-func ConvertISCN(conn *pgxpool.Conn, limit int) error {
+func ConvertISCN(conn *pgxpool.Conn, limit int) (finished bool, err error) {
 	log.Println("Converting", limit)
 
 	ctx, cancel := GetTimeoutContext()
@@ -37,7 +37,7 @@ func ConvertISCN(conn *pgxpool.Conn, limit int) error {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if height+int64(limit) < maxHeight {
+	if finished = height+int64(limit) > maxHeight; !finished {
 		maxHeight = height + int64(limit)
 	}
 
@@ -54,13 +54,13 @@ func ConvertISCN(conn *pgxpool.Conn, limit int) error {
 	rows, err := conn.Query(ctx, sql, height, maxHeight)
 	if err != nil {
 		logger.L.Errorw("Query error:", "error", err)
-		return err
+		return finished, err
 	}
 	defer rows.Close()
 	batch := NewBatch(conn, int(limit))
 	batch.prevHeight = maxHeight
 
-	return handleISCNRecords(rows, &batch)
+	return finished, handleISCNRecords(rows, &batch)
 }
 
 func getHeight(conn *pgxpool.Conn) (int64, error) {
@@ -140,7 +140,7 @@ func (batch *Batch) TransferISCN(events types.StringEvents) {
 func parseISCN(events types.StringEvents, data pgtype.JSONB, timestamp string) ISCN {
 	var record ISCNRecordQuery
 	if err := json.Unmarshal(data.Bytes, &record); err != nil {
-		log.Fatalln(err)
+		log.Fatalln(err, string(data.Bytes))
 	}
 	holders, err := formatStakeholders(record.Stakeholders)
 	if err != nil {

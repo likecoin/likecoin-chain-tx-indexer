@@ -13,8 +13,6 @@ type ISCNRecordQuery struct {
 }
 
 type ContentMetadata struct {
-	Name     string `json:"name,omitempty"`
-	Type     string `json:"@type,omitempty"`
 	Keywords string `json:"keywords,omitempty"`
 }
 
