@@ -3,7 +3,6 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +25,6 @@ func handleISCN(c *gin.Context) {
 	hasQuery := false
 
 	for k, v := range q {
-		log.Println(k, v)
 		switch k {
 		case "iscn_id":
 			if len(v) > 0 {

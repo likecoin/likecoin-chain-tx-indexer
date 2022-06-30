@@ -3,7 +3,6 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/jackc/pgtype"
@@ -49,7 +48,8 @@ func QueryISCN(pool *pgxpool.Pool, iscn ISCN, pagination Pagination) ([]iscnType
 	rows, err := conn.Query(ctx, sql, iscn.Iscn, iscn.Owner, iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders,
 		pagination.getOffset(), pagination.Limit)
 	if err != nil {
-		log.Fatal(err)
+		logger.L.Errorw("Query ISCN failed", "error", err, "iscn query", iscn)
+		return nil, fmt.Errorf("Query ISCN failed: %w", err)
 	}
 	defer rows.Close()
 
@@ -110,8 +110,8 @@ func QueryISCNAll(pool *pgxpool.Pool, term string, pagination Pagination) ([]isc
 
 	rows, err := conn.Query(ctx, sql, term, []string{term}, stakeholderId, stakeholderName, pagination.getOffset(), pagination.Limit)
 	if err != nil {
-		log.Fatal(err)
-		return nil, err
+		logger.L.Errorw("Query ISCN failed", "error", err, "term", term)
+		return nil, fmt.Errorf("Query ISCN failed: %w", err)
 	}
 	defer rows.Close()
 	return parseISCN(rows)
@@ -125,11 +125,13 @@ func parseISCN(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err error) {
 		var data pgtype.JSONB
 		err = rows.Scan(&iscn.Id, &iscn.Owner, &iscn.RecordTimestamp, &ipld, &data)
 		if err != nil {
-			log.Fatal(err)
+			logger.L.Errorw("Scan ISCN row failed", "error", err)
+			return nil, fmt.Errorf("Scan ISCN failed: %w", err)
 		}
 
 		if err = json.Unmarshal(data.Bytes, &iscn.IscnRecord); err != nil {
-			log.Fatal(err)
+			logger.L.Errorw("Unmarshal ISCN data failed", "error", err, "data", string(data.Bytes))
+			return nil, fmt.Errorf("Unmarshal ISCN data failed: %w", err)
 		}
 
 		var output []byte

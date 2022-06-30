@@ -1,9 +1,9 @@
 package extractor
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -16,17 +16,24 @@ import (
 
 // todo: move to config
 const LIMIT = 10000
-const TIME_WAIT = 5000
 
 func RunISCN(pool *pgxpool.Pool, trigger chan int64) {
 	conn, err := db.AcquireFromPool(pool)
 	if err != nil {
-		log.Fatal(err)
+		logger.L.Errorw("Failed to acquire connection for ISCN extractor", "error", err)
+		return
 	}
-	defer conn.Release()
 
 	var finished bool
 	for {
+		if err = conn.Ping(context.Background()); err != nil {
+			conn, err = db.AcquireFromPool(pool)
+			if err != nil {
+				logger.L.Errorw("Failed to acquire connection for ISCN extractor", "error", err)
+				time.Sleep(10 * time.Second)
+				continue
+			}
+		}
 		finished, err = extractISCN(conn)
 		if err != nil {
 			logger.L.Errorw("Extract ISCN error", "error", err)
@@ -40,6 +47,7 @@ func RunISCN(pool *pgxpool.Pool, trigger chan int64) {
 			}
 		}
 	}
+	conn.Release()
 }
 
 func extractISCN(conn *pgxpool.Conn) (finished bool, err error) {
@@ -62,6 +70,7 @@ func extractISCN(conn *pgxpool.Conn) (finished bool, err error) {
 	}
 
 	rows, err := db.GetISCNTxs(conn, begin, end)
+	defer rows.Close()
 
 	batch := db.NewBatch(conn, LIMIT)
 
