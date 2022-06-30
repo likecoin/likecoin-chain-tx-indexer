@@ -47,7 +47,6 @@ func RunISCN(pool *pgxpool.Pool, trigger chan int64) {
 			}
 		}
 	}
-	conn.Release()
 }
 
 func extractISCN(conn *pgxpool.Conn) (finished bool, err error) {
