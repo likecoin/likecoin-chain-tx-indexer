@@ -2,9 +2,10 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/url"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	iscnTypes "github.com/likecoin/likecoin-chain/v2/x/iscn/types"
@@ -16,65 +17,57 @@ type ISCNRecordsResponse struct {
 
 func handleISCN(c *gin.Context) {
 	q := c.Request.URL.Query()
-	hasQuery := false
-
 	if q.Get("q") != "" {
 		handleISCNSearch(c)
 		return
 	}
 
-	events := make([]types.StringEvent, 0)
-	if owner := q.Get("owner"); owner != "" {
-		events = append(events, types.StringEvent{
-			Type: "iscn_record",
-			Attributes: []types.Attribute{
-				{
-					Key:   "owner",
-					Value: owner,
-				},
-			},
-		})
-		hasQuery = true
-	}
-	if iscnId := q.Get("iscn_id"); iscnId != "" {
-		events = append(events, types.StringEvent{
-			Type: "iscn_record",
-			Attributes: []types.Attribute{
-				{
-					Key:   "iscn_id",
-					Value: iscnId,
-				},
-			},
-		})
-		hasQuery = true
-	}
-	query := db.ISCNRecordQuery{}
-	if fingerprint := q.Get("fingerprint"); fingerprint != "" {
-		query.ContentFingerprints = []string{fingerprint}
-		hasQuery = true
-	}
-	keywords := db.Keywords(q["keywords"])
-	if len(keywords) > 0 {
-		hasQuery = true
-	}
-	if sId, sName := q.Get("stakeholders.entity.id"), q.Get("stakeholders.entity.name"); sId != "" || sName != "" {
-		query.Stakeholders = []db.Stakeholder{
-			{
-				Entity: &db.Entity{
-					Id:   sId,
-					Name: sName,
-				},
-			},
+	var iscn db.ISCN
+	hasQuery := false
+
+	for k, v := range q {
+		log.Println(k, v)
+		switch k {
+		case "iscn_id":
+			if len(v) > 0 {
+				hasQuery = true
+				iscn.Iscn = v[0]
+			}
+		case "owner":
+			if len(v) > 0 {
+				hasQuery = true
+				iscn.Owner = v[0]
+			}
+		case "fingerprint", "fingerprints":
+			hasQuery = true
+			iscn.Fingerprints = v
+		case "keywords":
+			hasQuery = true
+			iscn.Keywords = v
+		case "stakeholders.entity.id", "stakeholders.id":
+			if len(v) > 0 {
+				hasQuery = true
+				iscn.Stakeholders = []byte(fmt.Sprintf(`[{"id": "%s"}]`, v[0]))
+			}
+		case "stakeholders.entity.name", "stakeholders.name":
+			if len(v) > 0 {
+				hasQuery = true
+				iscn.Stakeholders = []byte(fmt.Sprintf(`[{"name": "%s"}]`, v[0]))
+			}
+		case "limit", "page":
+		default:
+			c.AbortWithStatusJSON(400, gin.H{"error": fmt.Sprintf("unknown query %s", k)})
+			return
 		}
-		hasQuery = true
 	}
+
 	p := getPagination(q)
 
 	pool := getPool(c)
 	var records []iscnTypes.QueryResponseRecord
 	var err error
 	if hasQuery {
-		records, err = db.QueryISCN(pool, events, query, keywords, p)
+		records, err = db.QueryISCN(pool, iscn, p)
 	} else {
 		records, err = db.QueryISCNList(pool, p)
 	}

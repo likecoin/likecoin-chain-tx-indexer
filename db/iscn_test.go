@@ -132,10 +132,10 @@ func TestISCNQueryAll(t *testing.T) {
 			term:   "depub.SPACE",
 			length: 5,
 		},
-		// {
-		// 	term: "Apple Daily",
-		// 	length: 5,
-		// },
+		{
+			term:   "Apple Daily",
+			length: 5,
+		},
 	}
 
 	for _, v := range tables {
