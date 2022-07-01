@@ -88,7 +88,10 @@ func TestISCNCombine(t *testing.T) {
 		if res.StatusCode != 200 {
 			continue
 		}
-		var records ISCNRecordsResponse
+		var records struct {
+			Records []json.RawMessage
+		}
+
 		if err := json.Unmarshal([]byte(body), &records); err != nil {
 			t.Fatal(err)
 		}
@@ -102,8 +105,8 @@ func TestISCNCombine(t *testing.T) {
 		for _, record := range records.Records {
 			if v.contain != nil {
 				for _, s := range v.contain {
-					if !strings.Contains(record.String(), s) {
-						t.Errorf("record should contain %s, but not found: %s", s, record.String())
+					if !strings.Contains(string(record), s) {
+						t.Errorf("record should contain %s, but not found: %s", s, string(record))
 					}
 				}
 			}

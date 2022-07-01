@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain/v2/app"
 )
 
@@ -30,6 +31,36 @@ func getUint(query url.Values, key string) (uint64, error) {
 	} else {
 		return strconv.ParseUint(valueStr, 10, 64)
 	}
+}
+
+func getOffset(query url.Values) (uint64, error) {
+	offset, err := getUint(query, "pagination.offset")
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse pagination.offset to unsigned int: %w", err)
+	}
+	return offset, nil
+}
+
+func getQueryOrder(query url.Values) (db.Order, error) {
+	orderByStr := strings.ToUpper(query.Get("order_by"))
+	switch orderByStr {
+	case "", "ORDER_BY_UNSPECIFIED", "ORDER_BY_ASC", "ASC":
+		return db.ORDER_ASC, nil
+	case "ORDER_BY_DESC", "DESC":
+		return db.ORDER_DESC, nil
+	default:
+		return "", fmt.Errorf("available values for order_by: ORDER_BY_UNSPECIFIED, ORDER_BY_ASC, ORDER_BY_DESC")
+	}
+}
+
+func trimSingleQuotes(s string) (string, error) {
+	if len(s) < 2 {
+		return "", fmt.Errorf("invalid query event value: %s", s)
+	}
+	if s[0] != '\'' || s[len(s)-1] != '\'' {
+		return "", fmt.Errorf("expect query event value missing single quotes: %s", s)
+	}
+	return s[1 : len(s)-1], nil
 }
 
 func getLimit(query url.Values, key string) (uint64, error) {

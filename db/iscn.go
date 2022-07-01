@@ -3,39 +3,31 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
-	iscnTypes "github.com/likecoin/likecoin-chain/v2/x/iscn/types"
 )
 
-type ISCNResponse struct {
-	iscnTypes.IscnRecord
-	Id              string    `json:"@id"`
-	RecordTimestamp time.Time `json:"recordTimestamp"`
-	Owner           string    `json:"owner"`
-}
-
-func QueryISCN(pool *pgxpool.Pool, iscn ISCN, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+func QueryISCN(pool *pgxpool.Pool, iscn ISCN, pagination Pagination) (ISCNResponse, error) {
 	sql := fmt.Sprintf(`
-			SELECT iscn_id, owner, timestamp, ipld, data
+			SELECT id, iscn_id, owner, timestamp, ipld, data
 			FROM iscn
-			WHERE	($1 = '' OR iscn_id = $1)
+			WHERE	($6 = 0 OR id > $6)
+				AND ($7 = 0 OR id < $7)
+				AND ($1 = '' OR iscn_id = $1)
 				AND ($2 = '' OR owner = $2)
 				AND ($3::varchar[] IS NULL OR keywords @> $3)
 				AND ($4::varchar[] IS NULL OR fingerprints @> $4)
 				AND ($5::jsonb IS NULL OR stakeholders @> $5)
 			ORDER BY id %s
-			OFFSET $6
-			LIMIT $7;
+			LIMIT $8;
 		`, pagination.Order)
 
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
-		return nil, err
+		return ISCNResponse{}, err
 	}
 	defer conn.Release()
 
@@ -46,20 +38,20 @@ func QueryISCN(pool *pgxpool.Pool, iscn ISCN, pagination Pagination) ([]iscnType
 	// 	pagination.getOffset(), pagination.Limit)
 
 	rows, err := conn.Query(ctx, sql, iscn.Iscn, iscn.Owner, iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders,
-		pagination.getOffset(), pagination.Limit)
+		pagination.Begin, pagination.End, pagination.Limit)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "iscn query", iscn)
-		return nil, fmt.Errorf("Query ISCN failed: %w", err)
+		return ISCNResponse{}, fmt.Errorf("Query ISCN failed: %w", err)
 	}
 	defer rows.Close()
 
 	return parseISCN(rows)
 }
 
-func QueryISCNList(pool *pgxpool.Pool, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+func QueryISCNList(pool *pgxpool.Pool, pagination Pagination) (ISCNResponse, error) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
-		return nil, err
+		return ISCNResponse{}, err
 	}
 	defer conn.Release()
 
@@ -67,84 +59,79 @@ func QueryISCNList(pool *pgxpool.Pool, pagination Pagination) ([]iscnTypes.Query
 	defer cancel()
 
 	sql := fmt.Sprintf(`
-		SELECT iscn_id, owner, timestamp, ipld, data
+		SELECT id, iscn_id, owner, timestamp, ipld, data
 		FROM iscn
+		WHERE ($1 = 0 OR id > $1)
+			AND ($2 = 0 OR id < $2)
 		ORDER BY id %s
-		OFFSET $1
-		LIMIT $2;
+		LIMIT $3;
 	`, pagination.Order)
-	rows, err := conn.Query(ctx, sql, pagination.getOffset(), pagination.Limit)
+	rows, err := conn.Query(ctx, sql, pagination.Begin, pagination.End, pagination.Limit)
 	if err != nil {
 		logger.L.Errorw("Query error:", "error", err)
-		return nil, err
+		return ISCNResponse{}, err
 	}
 	defer rows.Close()
 	return parseISCN(rows)
 }
 
-func QueryISCNAll(pool *pgxpool.Pool, term string, pagination Pagination) ([]iscnTypes.QueryResponseRecord, error) {
+func QueryISCNAll(pool *pgxpool.Pool, term string, pagination Pagination) (ISCNResponse, error) {
 	stakeholderId := fmt.Sprintf(`[{"id": "%s"}]`, term)
 	stakeholderName := fmt.Sprintf(`[{"name": "%s"}]`, term)
 	sql := fmt.Sprintf(`
-		SELECT iscn_id, owner, timestamp, ipld, data
+		SELECT id, iscn_id, owner, timestamp, ipld, data
 		FROM iscn
-		WHERE iscn_id = $1
+		WHERE (iscn_id = $1
 			OR owner = $1
 			OR keywords @> $2
 			OR fingerprints @> $2
 			OR stakeholders @> $3
-			OR stakeholders @> $4
+			OR stakeholders @> $4)
+			AND ($5 = 0 OR id > $5)
+			AND ($6 = 0 OR id < $6)
 		ORDER BY id %s
-		OFFSET $5
-		LIMIT $6;
+		LIMIT $7
 		`, pagination.Order)
 
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
-		return nil, err
+		return ISCNResponse{}, err
 	}
 	defer conn.Release()
 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, term, []string{term}, stakeholderId, stakeholderName, pagination.getOffset(), pagination.Limit)
+	rows, err := conn.Query(ctx, sql, term, []string{term}, stakeholderId, stakeholderName, pagination.Begin, pagination.End, pagination.Limit)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "term", term)
-		return nil, fmt.Errorf("Query ISCN failed: %w", err)
+		return ISCNResponse{}, fmt.Errorf("Query ISCN failed: %w", err)
 	}
 	defer rows.Close()
 	return parseISCN(rows)
 }
 
-func parseISCN(rows pgx.Rows) (res []iscnTypes.QueryResponseRecord, err error) {
-	res = make([]iscnTypes.QueryResponseRecord, 0)
+func parseISCN(rows pgx.Rows) (ISCNResponse, error) {
+	res := ISCNResponse{}
 	for rows.Next() {
-		var iscn ISCNResponse
+		var iscn ISCNResponseData
 		var ipld string
 		var data pgtype.JSONB
-		err = rows.Scan(&iscn.Id, &iscn.Owner, &iscn.RecordTimestamp, &ipld, &data)
+		err := rows.Scan(&res.Last, &iscn.Id, &iscn.Owner, &iscn.RecordTimestamp, &ipld, &data)
 		if err != nil {
 			logger.L.Errorw("Scan ISCN row failed", "error", err)
-			return nil, fmt.Errorf("Scan ISCN failed: %w", err)
+			return res, fmt.Errorf("Scan ISCN failed: %w", err)
 		}
 
-		if err = json.Unmarshal(data.Bytes, &iscn.IscnRecord); err != nil {
+		if err = json.Unmarshal(data.Bytes, &iscn); err != nil {
 			logger.L.Errorw("Unmarshal ISCN data failed", "error", err, "data", string(data.Bytes))
-			return nil, fmt.Errorf("Unmarshal ISCN data failed: %w", err)
+			return res, fmt.Errorf("Unmarshal ISCN data failed: %w", err)
 		}
 
-		var output []byte
-		if output, err = json.Marshal(iscn); err != nil {
-			logger.L.Errorw("Failed to marshal ISCN body to []byte", "iscn", iscn, "error", err)
-			return nil, err
-		}
-
-		result := iscnTypes.QueryResponseRecord{
+		res.Records = append(res.Records, ISCNResponseRecord{
 			Ipld: ipld,
-			Data: iscnTypes.IscnInput(output),
-		}
-		res = append(res, result)
+			Data: iscn,
+		})
 	}
 	return res, nil
 }

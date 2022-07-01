@@ -23,12 +23,12 @@ func TestISCNCombineQuery(t *testing.T) {
 		},
 		{
 			ISCN: ISCN{
-				Keywords: Keywords{"DAO"},
+				Keywords: []string{"DAO"},
 			},
 		},
 		{
 			ISCN: ISCN{
-				Keywords: Keywords{"Cyberspace", "EFF"},
+				Keywords: []string{"Cyberspace", "EFF"},
 			},
 		},
 		{
@@ -60,16 +60,15 @@ func TestISCNCombineQuery(t *testing.T) {
 	for i, v := range tables {
 		p := Pagination{
 			Limit: 5,
-			Page:  1,
 			Order: ORDER_DESC,
 		}
 
-		records, err := QueryISCN(pool, v.ISCN, p)
+		res, err := QueryISCN(pool, v.ISCN, p)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if v.length != 0 && v.length != len(records) {
-			t.Fatalf("%d: There should be %d records, got %d.\n", i, v.length, len(records))
+		if v.length != 0 && v.length != len(res.Records) {
+			t.Fatalf("%d: There should be %d records, got %d.\n", i, v.length, len(res.Records))
 		}
 	}
 }
@@ -78,14 +77,13 @@ func TestISCNList(t *testing.T) {
 	p := Pagination{
 		Limit: 10,
 		Order: ORDER_DESC,
-		Page:  1,
 	}
 
-	records, err := QueryISCNList(pool, p)
+	res, err := QueryISCNList(pool, p)
 	if err != nil {
 		t.Error(err)
 	}
-	t.Log(len(records))
+	t.Log(len(res.Records))
 }
 
 func TestISCNQueryAll(t *testing.T) {
@@ -141,17 +139,40 @@ func TestISCNQueryAll(t *testing.T) {
 	for _, v := range tables {
 		p := Pagination{
 			Limit: 5,
-			Page:  1,
 			Order: ORDER_DESC,
 		}
 
 		t.Log(v.term)
-		records, err := QueryISCNAll(pool, v.term, p)
+		res, err := QueryISCNAll(pool, v.term, p)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if v.length != 0 && v.length != len(records) {
-			t.Errorf("There should be %d records, got %d.", v.length, len(records))
+		if v.length != 0 && v.length != len(res.Records) {
+			t.Errorf("There should be %d records, got %d.", v.length, len(res.Records))
+		}
+	}
+}
+
+func TestISCNPagination(t *testing.T) {
+	table := map[Pagination]uint64{
+		{
+			Begin: 1300,
+			Limit: 10,
+			Order: ORDER_ASC,
+		}: 1310,
+		{
+			End:   1300,
+			Limit: 10,
+			Order: ORDER_DESC,
+		}: 1290,
+	}
+	for p, a := range table {
+		res, err := QueryISCNList(pool, p)
+		if err != nil {
+			t.Error(err)
+		}
+		if res.Last != a {
+			t.Error("pagination", p, "expect", a, "got", res.Last)
 		}
 	}
 }

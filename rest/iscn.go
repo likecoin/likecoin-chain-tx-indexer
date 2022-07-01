@@ -7,12 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
-	iscnTypes "github.com/likecoin/likecoin-chain/v2/x/iscn/types"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
-
-type ISCNRecordsResponse struct {
-	Records []iscnTypes.QueryResponseRecord `json:"records"`
-}
 
 func handleISCN(c *gin.Context) {
 	q := c.Request.URL.Query()
@@ -52,74 +48,78 @@ func handleISCN(c *gin.Context) {
 				hasQuery = true
 				iscn.Stakeholders = []byte(fmt.Sprintf(`[{"name": "%s"}]`, v[0]))
 			}
-		case "limit", "page":
+		case "limit", "begin", "end", "order_by":
 		default:
 			c.AbortWithStatusJSON(400, gin.H{"error": fmt.Sprintf("unknown query %s", k)})
 			return
 		}
 	}
 
-	p := getPagination(q)
+	p, err := getPagination(q)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err})
+	}
 
 	pool := getPool(c)
-	var records []iscnTypes.QueryResponseRecord
-	var err error
+	var res db.ISCNResponse
 	if hasQuery {
-		records, err = db.QueryISCN(pool, iscn, p)
+		res, err = db.QueryISCN(pool, iscn, p)
 	} else {
-		records, err = db.QueryISCNList(pool, p)
+		res, err = db.QueryISCNList(pool, p)
 	}
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	respondRecords(c, records)
+	respondRecords(c, res)
 }
 
 func handleISCNSearch(c *gin.Context) {
 	q := c.Request.URL.Query()
-	p := getPagination(q)
+	p, err := getPagination(q)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err})
+	}
 	term := q.Get("q")
 	if term == "" {
 		c.AbortWithStatusJSON(404, gin.H{"error": "parameter 'q' is required"})
 		return
 	}
 	pool := getPool(c)
-	records, err := db.QueryISCNAll(pool, term, p)
+	res, err := db.QueryISCNAll(pool, term, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	respondRecords(c, records)
+	respondRecords(c, res)
 }
 
-func getPagination(q url.Values) db.Pagination {
-	p := db.Pagination{
-		Limit: 1,
-		Page:  0,
-		Order: db.ORDER_DESC,
+func getPagination(q url.Values) (p db.Pagination, err error) {
+	if p.Limit, err = getLimit(q, "limit"); err != nil {
+		return p, err
 	}
-	if page, err := getPage(q, "page"); err == nil {
-		p.Page = page
+	if p.Begin, err = getUint(q, "begin"); err != nil {
+		return p, fmt.Errorf("cannot use %s as begin", q.Get("begin"))
 	}
-	if limit, err := getLimit(q, "limit"); err == nil {
-		p.Limit = limit
+	if p.End, err = getUint(q, "end"); err != nil {
+		return p, fmt.Errorf("cannot use %s as end", q.Get("end"))
 	}
-	return p
+	if p.Order, err = getQueryOrder(q); err != nil {
+		return p, err
+	}
+	logger.L.Debugf("%#v", p)
+	return p, nil
 }
 
-func respondRecords(c *gin.Context, iscnInputs []iscnTypes.QueryResponseRecord) {
-	if len(iscnInputs) == 0 {
+func respondRecords(c *gin.Context, res db.ISCNResponse) {
+	if len(res.Records) == 0 {
 		c.AbortWithStatusJSON(404, gin.H{"error": "Record not found"})
 		return
 	}
 
-	response := ISCNRecordsResponse{
-		Records: iscnInputs,
-	}
-	resJson, err := json.Marshal(&response)
+	resJson, err := json.Marshal(&res)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

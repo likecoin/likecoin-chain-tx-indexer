@@ -8,18 +8,6 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
-type ISCN struct {
-	Iscn         string
-	IscnPrefix   string
-	Owner        string
-	Timestamp    string
-	Ipld         string
-	Keywords     []string
-	Fingerprints []string
-	Stakeholders []byte
-	Data         []byte
-}
-
 func GetISCNTxs(conn *pgxpool.Conn, begin, end int64) (pgx.Rows, error) {
 	ctx, _ := GetTimeoutContext()
 

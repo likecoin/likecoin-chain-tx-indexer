@@ -14,6 +14,46 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
+type iscnData struct {
+	ContentFingerprints []string         `json:"contentFingerprints,omitempty"`
+	ContentMetadata     *contentMetadata `json:"contentMetadata,omitempty"`
+	Stakeholders        []stakeholder    `json:"stakeholders,omitempty"`
+}
+
+type contentMetadata struct {
+	Keywords string `json:"keywords,omitempty"`
+}
+
+type stakeholder struct {
+	Entity *entity `json:"entity,omitempty"`
+}
+
+type entity struct {
+	Id   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+func (e *entity) UnmarshalJSON(data []byte) (err error) {
+	dict := make(map[string]interface{})
+	if err = json.Unmarshal(data, &dict); err != nil {
+		return
+	}
+	if v, ok := dict["id"].(string); ok {
+		e.Id = v
+	}
+	if v, ok := dict["@id"].(string); ok {
+		e.Id = v
+	}
+	if v, ok := dict["name"].(string); ok {
+		e.Name = v
+	}
+	return nil
+}
+
+func (q iscnData) Marshal() ([]byte, error) {
+	return json.Marshal(q)
+}
+
 // todo: move to config
 const LIMIT = 10000
 
@@ -117,7 +157,7 @@ func extractISCN(conn *pgxpool.Conn) (finished bool, err error) {
 }
 
 func parseISCN(events types.StringEvents, data []byte, timestamp string) (db.ISCN, error) {
-	var record db.ISCNRecordQuery
+	var record iscnData
 	if err := json.Unmarshal(data, &record); err != nil {
 		return db.ISCN{}, fmt.Errorf("Failed to unmarshal iscn: %w", err)
 	}
@@ -138,8 +178,8 @@ func parseISCN(events types.StringEvents, data []byte, timestamp string) (db.ISC
 	}, nil
 }
 
-func formatStakeholders(stakeholders []db.Stakeholder) ([]byte, error) {
-	body := make([]*db.Entity, len(stakeholders))
+func formatStakeholders(stakeholders []stakeholder) ([]byte, error) {
+	body := make([]*entity, len(stakeholders))
 	for i, v := range stakeholders {
 		body[i] = v.Entity
 	}
