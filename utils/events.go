@@ -43,11 +43,3 @@ func GetEventsValue(events types.StringEvents, t string, key string) string {
 	}
 	return ""
 }
-
-func ParseKeywords(keyword string) []string {
-	arr := strings.Split(keyword, ",")
-	for i, v := range arr {
-		arr[i] = strings.TrimSpace(v)
-	}
-	return arr
-}
