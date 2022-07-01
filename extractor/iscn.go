@@ -17,36 +17,39 @@ import (
 // todo: move to config
 const LIMIT = 10000
 
-func RunISCN(pool *pgxpool.Pool, trigger chan int64) {
-	conn, err := db.AcquireFromPool(pool)
-	if err != nil {
-		logger.L.Errorw("Failed to acquire connection for ISCN extractor", "error", err)
-		return
-	}
+func RunISCN(pool *pgxpool.Pool) chan<- int64 {
+	trigger := make(chan int64, 100)
+	go func() {
+		conn, err := db.AcquireFromPool(pool)
+		if err != nil {
+			logger.L.Errorw("Failed to acquire connection for ISCN extractor", "error", err)
+			return
+		}
 
-	var finished bool
-	for {
-		if err = conn.Ping(context.Background()); err != nil {
-			conn, err = db.AcquireFromPool(pool)
+		logger.L.Info("ISCN extractor started")
+		var finished bool
+		for {
+			if err = conn.Ping(context.Background()); err != nil {
+				conn, err = db.AcquireFromPool(pool)
+				if err != nil {
+					logger.L.Errorw("Failed to acquire connection for ISCN extractor", "error", err)
+					time.Sleep(10 * time.Second)
+					continue
+				}
+			}
+			finished, err = extractISCN(conn)
 			if err != nil {
-				logger.L.Errorw("Failed to acquire connection for ISCN extractor", "error", err)
+				logger.L.Errorw("Extract ISCN error", "error", err)
 				time.Sleep(10 * time.Second)
 				continue
 			}
-		}
-		finished, err = extractISCN(conn)
-		if err != nil {
-			logger.L.Errorw("Extract ISCN error", "error", err)
-			time.Sleep(10 * time.Second)
-			continue
-		}
-		if finished {
-			select {
-			case height := <-trigger:
+			if finished {
+				height := <-trigger
 				logger.L.Infof("ISCN extractor: trigger by poller, sync to %d", height)
 			}
 		}
-	}
+	}()
+	return trigger
 }
 
 func extractISCN(conn *pgxpool.Conn) (finished bool, err error) {

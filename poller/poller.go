@@ -142,7 +142,7 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 	return maxHeight, nil
 }
 
-func Run(pool *pgxpool.Pool, ctx *CosmosCallContext, triggers ...chan int64) {
+func Run(pool *pgxpool.Pool, ctx *CosmosCallContext, triggers ...chan<- int64) {
 	lastHeight, err := getHeight(pool)
 	logger.L.Infow("Init Height", "lastHeight", lastHeight)
 	if err != nil {
@@ -155,9 +155,11 @@ func Run(pool *pgxpool.Pool, ctx *CosmosCallContext, triggers ...chan int64) {
 			// reset sleep time to normal value
 			toSleep = sleepInitial
 			lastHeight = returnedHeight
-			for _, trigger := range triggers {
-				trigger <- returnedHeight
-			}
+			go func() {
+				for _, trigger := range triggers {
+					trigger <- returnedHeight
+				}
+			}()
 		} else {
 			logger.L.Errorw("cannot poll block", "error", err)
 			// exponential back-off with max cap

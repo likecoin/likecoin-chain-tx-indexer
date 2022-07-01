@@ -54,10 +54,8 @@ var Command = &cobra.Command{
 			LcdEndpoint: lcdEndpoint,
 		}
 
-		iscnTrigger := make(chan int64)
 		go rest.Run(pool, listenAddr, lcdEndpoint)
-		go extractor.RunISCN(pool, iscnTrigger)
-		poller.Run(pool, &ctx, iscnTrigger)
+		poller.Run(pool, &ctx, extractor.RunISCN(pool))
 	},
 }
 
