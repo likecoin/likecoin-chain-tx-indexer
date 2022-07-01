@@ -21,8 +21,25 @@ type Stakeholder struct {
 }
 
 type Entity struct {
-	Id   string `json:"@id,omitempty"`
+	Id   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
+}
+
+func (e *Entity) UnmarshalJSON(data []byte) (err error) {
+	dict := make(map[string]interface{})
+	if err = json.Unmarshal(data, &dict); err != nil {
+		return
+	}
+	if v, ok := dict["id"].(string); ok {
+		e.Id = v
+	}
+	if v, ok := dict["@id"].(string); ok {
+		e.Id = v
+	}
+	if v, ok := dict["name"].(string); ok {
+		e.Name = v
+	}
+	return nil
 }
 
 func (q ISCNRecordQuery) Marshal() ([]byte, error) {

@@ -17,8 +17,8 @@ import (
 	tmTypes "github.com/tendermint/tendermint/types"
 )
 
-const batchSize = 1000
-const batchMaxHeightDiff = 100000
+const batchSize = 10
+const batchMaxHeightDiff = 100
 
 // TODO: move into config
 const sleepInitial = 5 * time.Second
@@ -155,6 +155,9 @@ func Run(pool *pgxpool.Pool, ctx *CosmosCallContext, triggers ...chan int64) {
 			// reset sleep time to normal value
 			toSleep = sleepInitial
 			lastHeight = returnedHeight
+			for _, trigger := range triggers {
+				trigger <- returnedHeight
+			}
 		} else {
 			logger.L.Errorw("cannot poll block", "error", err)
 			// exponential back-off with max cap
@@ -162,9 +165,6 @@ func Run(pool *pgxpool.Pool, ctx *CosmosCallContext, triggers ...chan int64) {
 			if toSleep > sleepMax {
 				toSleep = sleepMax
 			}
-		}
-		for _, trigger := range triggers {
-			trigger <- returnedHeight
 		}
 		time.Sleep(toSleep)
 	}

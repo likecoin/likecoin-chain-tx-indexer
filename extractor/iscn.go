@@ -94,7 +94,7 @@ func extractISCN(conn *pgxpool.Conn) (finished bool, err error) {
 		case "create_iscn_record", "/likechain.iscn.MsgCreateIscnRecord", "update_iscn_record", "/likechain.iscn.MsgUpdateIscnRecord":
 			iscn, err := parseISCN(events, data.Bytes, timestamp)
 			if err != nil {
-				logger.L.Errorw("parse ISCN failed", "error", err, "data", data.Bytes, "events", events)
+				logger.L.Errorw("parse ISCN failed", "error", err, "data", string(data.Bytes), "events", events)
 				break
 			}
 			batch.InsertISCN(iscn)
