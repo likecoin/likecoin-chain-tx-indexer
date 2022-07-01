@@ -38,7 +38,7 @@ func QueryISCN(pool *pgxpool.Pool, iscn ISCN, pagination Pagination) (ISCNRespon
 	// 	pagination.getOffset(), pagination.Limit)
 
 	rows, err := conn.Query(ctx, sql, iscn.Iscn, iscn.Owner, iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders,
-		pagination.Begin, pagination.End, pagination.Limit)
+		pagination.After, pagination.Before, pagination.Limit)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "iscn query", iscn)
 		return ISCNResponse{}, fmt.Errorf("Query ISCN failed: %w", err)
@@ -66,7 +66,7 @@ func QueryISCNList(pool *pgxpool.Pool, pagination Pagination) (ISCNResponse, err
 		ORDER BY id %s
 		LIMIT $3;
 	`, pagination.Order)
-	rows, err := conn.Query(ctx, sql, pagination.Begin, pagination.End, pagination.Limit)
+	rows, err := conn.Query(ctx, sql, pagination.After, pagination.Before, pagination.Limit)
 	if err != nil {
 		logger.L.Errorw("Query error:", "error", err)
 		return ISCNResponse{}, err
@@ -102,7 +102,7 @@ func QueryISCNAll(pool *pgxpool.Pool, term string, pagination Pagination) (ISCNR
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, term, []string{term}, stakeholderId, stakeholderName, pagination.Begin, pagination.End, pagination.Limit)
+	rows, err := conn.Query(ctx, sql, term, []string{term}, stakeholderId, stakeholderName, pagination.After, pagination.Before, pagination.Limit)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "term", term)
 		return ISCNResponse{}, fmt.Errorf("Query ISCN failed: %w", err)

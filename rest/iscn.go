@@ -48,7 +48,7 @@ func handleISCN(c *gin.Context) {
 				hasQuery = true
 				iscn.Stakeholders = []byte(fmt.Sprintf(`[{"name": "%s"}]`, v[0]))
 			}
-		case "limit", "begin", "end", "order_by":
+		case "limit", "after", "before", "order_by":
 		default:
 			c.AbortWithStatusJSON(400, gin.H{"error": fmt.Sprintf("unknown query %s", k)})
 			return
@@ -100,10 +100,10 @@ func getPagination(q url.Values) (p db.Pagination, err error) {
 	if p.Limit, err = getLimit(q, "limit"); err != nil {
 		return p, err
 	}
-	if p.Begin, err = getUint(q, "begin"); err != nil {
+	if p.After, err = getUint(q, "after"); err != nil {
 		return p, fmt.Errorf("cannot use %s as begin", q.Get("begin"))
 	}
-	if p.End, err = getUint(q, "end"); err != nil {
+	if p.Before, err = getUint(q, "before"); err != nil {
 		return p, fmt.Errorf("cannot use %s as end", q.Get("end"))
 	}
 	if p.Order, err = getQueryOrder(q); err != nil {

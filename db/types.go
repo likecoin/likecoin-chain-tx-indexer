@@ -18,10 +18,10 @@ type ISCN struct {
 }
 
 type Pagination struct {
-	Begin uint64
-	End   uint64
-	Limit uint64
-	Order Order
+	After  uint64
+	Before uint64
+	Limit  uint64
+	Order  Order
 }
 
 type ISCNResponse struct {

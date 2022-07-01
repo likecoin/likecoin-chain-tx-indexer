@@ -156,14 +156,14 @@ func TestISCNQueryAll(t *testing.T) {
 func TestISCNPagination(t *testing.T) {
 	table := map[Pagination]uint64{
 		{
-			Begin: 1300,
+			After: 1300,
 			Limit: 10,
 			Order: ORDER_ASC,
 		}: 1310,
 		{
-			End:   1300,
-			Limit: 10,
-			Order: ORDER_DESC,
+			Before: 1300,
+			Limit:  10,
+			Order:  ORDER_DESC,
 		}: 1290,
 	}
 	for p, a := range table {

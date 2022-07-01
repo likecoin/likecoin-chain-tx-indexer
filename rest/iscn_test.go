@@ -28,7 +28,7 @@ func TestISCNCombine(t *testing.T) {
 			query: "",
 		},
 		{
-			query: "limit=15&page=2",
+			query: "limit=15",
 		},
 		{
 			query:  "keywords=DAO&limit=5",
