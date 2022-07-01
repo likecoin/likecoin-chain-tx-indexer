@@ -17,7 +17,7 @@ import (
 	tmTypes "github.com/tendermint/tendermint/types"
 )
 
-const batchSize = 10
+const batchSize = 1000
 const batchMaxHeightDiff = 100
 
 // TODO: move into config
