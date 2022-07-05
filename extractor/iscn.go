@@ -95,7 +95,7 @@ func RunISCN(pool *pgxpool.Pool) chan<- int64 {
 }
 
 func extractISCN(conn *pgxpool.Conn) (finished bool, err error) {
-	begin, err := db.GetISCNHeight(conn)
+	begin, err := db.GetMetaHeight(conn, "iscn")
 	if err != nil {
 		return false, fmt.Errorf("Failed to get ISCN synchonized height: %w", err)
 	}

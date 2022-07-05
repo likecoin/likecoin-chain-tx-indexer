@@ -168,7 +168,7 @@ func InitDB(conn *pgxpool.Conn) error {
 		return err
 	}
 	_, err = conn.Exec(ctx, `
-	INSERT INTO meta VALUES ('iscn', 0)
+	INSERT INTO meta VALUES ('iscn', 0), ('nft', 0)
 	ON CONFLICT DO NOTHING
 	`)
 	if err != nil {

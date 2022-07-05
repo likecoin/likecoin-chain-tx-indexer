@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	iscnTypes "github.com/likecoin/likechain/x/iscn/types"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 

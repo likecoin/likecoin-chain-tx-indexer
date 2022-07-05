@@ -22,10 +22,10 @@ func GetISCNTxs(conn *pgxpool.Conn, begin, end int64) (pgx.Rows, error) {
 	return conn.Query(ctx, sql, begin, end)
 }
 
-func GetISCNHeight(conn *pgxpool.Conn) (int64, error) {
+func GetMetaHeight(conn *pgxpool.Conn, key string) (int64, error) {
 	ctx, _ := GetTimeoutContext()
 	var height int64
-	err := conn.QueryRow(ctx, `SELECT height FROM meta WHERE id = 'iscn'`).Scan(&height)
+	err := conn.QueryRow(ctx, `SELECT height FROM meta WHERE id = $1`, key).Scan(&height)
 	return height, err
 }
 
