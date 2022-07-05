@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
-	"github.com/likecoin/likecoin-chain/v2/app"
+	"github.com/likecoin/likechain/app"
 )
 
 var encodingConfig = app.MakeEncodingConfig()
