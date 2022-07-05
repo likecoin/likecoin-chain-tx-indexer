@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
-	iscnTypes "github.com/likecoin/likecoin-chain/v2/x/iscn/types"
+	iscnTypes "github.com/likecoin/likecoin-chain/v3/x/iscn/types"
 )
 
 type ISCNRecordsResponse struct {
