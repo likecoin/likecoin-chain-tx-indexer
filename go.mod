@@ -7,6 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.7.4
 	github.com/jackc/pgtype v1.8.1
 	github.com/jackc/pgx/v4 v4.13.0
+	github.com/joho/godotenv v1.4.0
 	github.com/likecoin/likecoin-chain/v2 v2.0.1-0.20220511051305-f3cc9d46a8f1
 	github.com/spf13/cobra v1.4.0
 	github.com/tendermint/go-amino v0.16.0
