@@ -2,93 +2,56 @@ package db
 
 import (
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestISCNCombineQuery(t *testing.T) {
 	tables := []struct {
-		query    ISCNRecordQuery
-		events   types.StringEvents
-		keywords Keywords
-		length   int
+		ISCN
+		length int
 	}{
 		{
-			events: []types.StringEvent{
-				{
-					Type: "iscn_record",
-					Attributes: []types.Attribute{
-						{
-							Key:   "iscn_id",
-							Value: "iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Iscn: "iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
 			},
 			length: 1,
 		},
 		{
-			query: ISCNRecordQuery{
-				Stakeholders: []Stakeholder{
-					{
-						Entity: &Entity{
-							Name: "kin ko",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Stakeholders: []byte(`[{"name": "kin"}]`),
+			},
+			length: 5,
+		},
+		{
+			ISCN: ISCN{
+				Keywords: Keywords{"DAO"},
 			},
 		},
 		{
-			keywords: Keywords{"DAO"},
+			ISCN: ISCN{
+				Keywords: Keywords{"Cyberspace", "EFF"},
+			},
 		},
 		{
-			keywords: Keywords{"Cyberspace", "EFF"},
-		},
-		{
-			query: ISCNRecordQuery{
-				Stakeholders: []Stakeholder{
-					{
-						Entity: &Entity{
-							Name: "John Perry Barlow",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Stakeholders: []byte(`[{"name": "John Perry Barlow"}]`),
 			},
 			length: 1,
 		},
 		{
-			query: ISCNRecordQuery{
-				Stakeholders: []Stakeholder{
-					{
-						Entity: &Entity{
-							Name: "Apple Daily",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Stakeholders: []byte(`[{"name": "Apple Daily"}]`),
 			},
 			length: 5,
 		},
 		{
-			query: ISCNRecordQuery{
-				Stakeholders: []Stakeholder{
-					{
-						Entity: &Entity{
-							Name: "《明報》",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Stakeholders: []byte(`[{"name": "《明報》"}]`),
 			},
 			length: 5,
 		},
 		{
-			query: ISCNRecordQuery{
-				Stakeholders: []Stakeholder{
-					{
-						Entity: &Entity{
-							Name: "depub.SPACE",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Stakeholders: []byte(`[{"name": "depub.SPACE"}]`),
 			},
 			length: 5,
 		},
@@ -101,12 +64,12 @@ func TestISCNCombineQuery(t *testing.T) {
 			Order: ORDER_DESC,
 		}
 
-		records, err := QueryISCN(pool, v.events, v.query, v.keywords, p)
+		records, err := QueryISCN(pool, v.ISCN, p)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if v.length != 0 && v.length != len(records) {
-			t.Errorf("%d: There should be %d records, got %d.\n", i, v.length, len(records))
+			t.Fatalf("%d: There should be %d records, got %d.\n", i, v.length, len(records))
 		}
 	}
 }

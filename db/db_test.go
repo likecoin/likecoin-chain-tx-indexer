@@ -45,12 +45,12 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func debugSQL(tx pgx.Tx, ctx context.Context, sql string, args ...interface{}) (err error) {
+func debugSQL(conn *pgxpool.Conn, ctx context.Context, sql string, args ...interface{}) (err error) {
 	// add this line to debug SQL (only in test)
 	// debugSQL(tx, ctx, sql, eventStrings, queryString, keywordString, pagination.getOffset(), pagination.Limit)
-	rows, err := tx.Query(ctx, "EXPLAIN "+sql, args...)
+	rows, err := conn.Query(ctx, "EXPLAIN "+sql, args...)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer rows.Close()
 
@@ -60,4 +60,10 @@ func debugSQL(tx pgx.Tx, ctx context.Context, sql string, args ...interface{}) (
 		log.Println(line)
 	}
 	return err
+}
+
+type DBLogger struct{}
+
+func (logg DBLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]any) {
+	// log.Println(msg, data)
 }
