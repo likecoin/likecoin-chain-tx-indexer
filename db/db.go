@@ -167,9 +167,6 @@ func InitDB(conn *pgxpool.Conn) error {
 	if _, err = conn.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_keywords ON txs USING GIN((string_to_array(tx #>> '{tx, body, messages, 0, record, contentMetadata, keywords}', ',')))`); err != nil {
 		return err
 	}
-	if _, err = conn.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_keywords ON txs USING GIN((string_to_array(tx #>> '{tx, body, messages, 0, record, contentMetadata, keywords}', ',')))`); err != nil {
-		return err
-	}
 	return nil
 }
 
