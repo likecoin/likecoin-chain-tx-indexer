@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/joho/godotenv"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/utils"
@@ -14,14 +15,14 @@ import (
 
 var pool *pgxpool.Pool
 
-func TestConvert(t *testing.T) {
+func TestExtract(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer conn.Release()
 	for i := 0; i < 2; i++ {
-		_, err := extractISCN(conn)
+		_, err := db.Extract(conn, handlers)
 		if err != nil {
 			t.Fatal(err)
 		}
