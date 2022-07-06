@@ -55,7 +55,7 @@ var Command = &cobra.Command{
 		}
 
 		go rest.Run(pool, listenAddr, lcdEndpoint)
-		poller.Run(pool, &ctx, extractor.RunISCN(pool))
+		poller.Run(pool, &ctx, extractor.Run(pool))
 	},
 }
 

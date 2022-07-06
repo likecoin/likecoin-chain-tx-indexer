@@ -10,7 +10,7 @@ type ISCN struct {
 	IscnPrefix   string
 	Version      int
 	Owner        string
-	Timestamp    string
+	Timestamp    time.Time
 	Ipld         string
 	Keywords     []string
 	Fingerprints []string
