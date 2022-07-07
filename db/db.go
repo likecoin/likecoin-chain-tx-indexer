@@ -183,7 +183,7 @@ func InitDB(conn *pgxpool.Conn) error {
 	CREATE TABLE IF NOT EXISTS nft_class (
 		id varchar(80) primary key,
 		parent_type class_parent_type,
-		parent_iscn_id_prefix varchar(80) references iscn(iscn_id_prefix),
+		parent_iscn_id_prefix varchar(80),
 		parent_account varchar(50),
 		name varchar(256),
 		symbol varchar(20),
