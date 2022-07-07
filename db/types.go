@@ -8,6 +8,7 @@ import (
 type ISCN struct {
 	Iscn         string
 	IscnPrefix   string
+	Version      int
 	Owner        string
 	Timestamp    string
 	Ipld         string

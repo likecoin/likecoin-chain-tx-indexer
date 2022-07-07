@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -168,6 +170,7 @@ func parseISCN(events types.StringEvents, data []byte, timestamp string) (db.ISC
 	return db.ISCN{
 		Iscn:         utils.GetEventsValue(events, "iscn_record", "iscn_id"),
 		IscnPrefix:   utils.GetEventsValue(events, "iscn_record", "iscn_id_prefix"),
+		Version:      getIscnVersion(utils.GetEventsValue(events, "iscn_record", "iscn_id")),
 		Owner:        utils.GetEventsValue(events, "iscn_record", "owner"),
 		Keywords:     utils.ParseKeywords(record.ContentMetadata.Keywords),
 		Fingerprints: record.ContentFingerprints,
@@ -176,6 +179,16 @@ func parseISCN(events types.StringEvents, data []byte, timestamp string) (db.ISC
 		Ipld:         utils.GetEventsValue(events, "iscn_record", "ipld"),
 		Data:         data,
 	}, nil
+}
+
+func getIscnVersion(iscn string) int {
+	arr := strings.Split(iscn, "/")
+	last := arr[len(arr)-1]
+	result, err := strconv.Atoi(last)
+	if err != nil {
+		return 0
+	}
+	return result
 }
 
 func formatStakeholders(stakeholders []stakeholder) ([]byte, error) {

@@ -31,10 +31,10 @@ func GetISCNHeight(conn *pgxpool.Conn) (int64, error) {
 
 func (batch *Batch) InsertISCN(iscn ISCN) {
 	sql := `
-INSERT INTO iscn (iscn_id, iscn_id_prefix, owner, keywords, fingerprints, stakeholders, data, timestamp, ipld) VALUES
-( $1, $2, $3, $4, $5, $6, $7, $8, $9)
+INSERT INTO iscn (iscn_id, iscn_id_prefix, version, owner, keywords, fingerprints, stakeholders, data, timestamp, ipld) VALUES
+( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 ON CONFLICT DO NOTHING;`
-	batch.Batch.Queue(sql, iscn.Iscn, iscn.IscnPrefix, iscn.Owner,
+	batch.Batch.Queue(sql, iscn.Iscn, iscn.IscnPrefix, iscn.Version, iscn.Owner,
 		iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders, iscn.Data, iscn.Timestamp, iscn.Ipld)
 }
 
