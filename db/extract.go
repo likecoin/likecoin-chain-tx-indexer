@@ -43,10 +43,12 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 	FROM txs
 	WHERE height >= $1
 		AND height < $2
+		AND events && $3
 	ORDER BY height ASC;
 	`
+	eventString := getEventStrings(getHandlingEvents(handlers))
 
-	rows, err := conn.Query(ctx, sql, begin, end)
+	rows, err := conn.Query(ctx, sql, begin, end, eventString)
 	defer rows.Close()
 
 	batch := NewBatch(conn, LIMIT)
@@ -58,13 +60,13 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 		var timestamp time.Time
 		err := rows.Scan(&height, &messageData, &eventData, &timestamp)
 		if err != nil {
-			panic(err)
+			return false, fmt.Errorf("Failed to scan tx row on height %d: %w", height, err)
 		}
 
 		var messages []json.RawMessage
 		err = messageData.AssignTo(&messages)
 		if err != nil {
-			panic(err)
+			return false, fmt.Errorf("Failed to unmarshal tx message on height %d: %w", height, err)
 		}
 		var events []struct {
 			Events types.StringEvents `json:"events"`
@@ -72,7 +74,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 
 		err = eventData.AssignTo(&events)
 		if err != nil {
-			panic(err)
+			return false, fmt.Errorf("Failed to unmarshal tx event on height %d: %w", height, err)
 		}
 
 		for i, event := range events {
@@ -80,7 +82,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 			if handler, ok := handlers[action]; ok {
 				err = handler(&batch, messages[i], event.Events, timestamp)
 				if err != nil {
-					panic(err)
+					logger.L.Errorw("Handle message failed", "action", action, "error", err, "message", string(messages[i]), "events", event.Events.String())
 				}
 			}
 		}
@@ -92,6 +94,20 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 		return false, fmt.Errorf("send batch failed: %w", err)
 	}
 	return finished, nil
+}
+
+func getHandlingEvents(handlers map[string]EventHandler) types.StringEvents {
+	result := make(types.StringEvents, 0, len(handlers))
+	for action, _ := range handlers {
+		result = append(result, types.StringEvent{
+			Type: "message",
+			Attributes: []types.Attribute{{
+				Key:   "action",
+				Value: action,
+			}},
+		})
+	}
+	return result
 }
 
 func GetMetaHeight(conn *pgxpool.Conn, key string) (int64, error) {

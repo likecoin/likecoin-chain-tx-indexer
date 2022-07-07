@@ -2,7 +2,7 @@ package extractor
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +17,7 @@ type nftClassMessage struct {
 func createNftClass(batch *db.Batch, messageData []byte, event types.StringEvents, timestamp time.Time) error {
 	var message nftClassMessage
 	if err := json.Unmarshal(messageData, &message); err != nil {
-		panic(err)
+		return fmt.Errorf("Failed to unmarshal NFT class message: %w", err)
 	}
 	var c db.NftClass = message.Input
 	c.Id = utils.GetEventsValue(event, "likechain.likenft.EventNewClass", "class_id")
@@ -46,13 +46,12 @@ func mintNft(batch *db.Batch, messageData []byte, event types.StringEvents, time
 		Input db.Nft
 	}
 	if err := json.Unmarshal(messageData, &message); err != nil {
-		panic(err)
+		return fmt.Errorf("Failed to unmarshal mint NFT message: %w", err)
 	}
 	nft := message.Input
 	nft.NftId = utils.GetEventsValue(event, "likechain.likenft.EventMintNFT", "nft_id")
 	nft.Owner = utils.GetEventsValue(event, "likechain.likenft.EventMintNFT", "owner")
 	nft.ClassId = utils.GetEventsValue(event, "likechain.likenft.EventMintNFT", "class_id")
-	log.Printf("%+v\n", nft)
 	batch.InsertNft(nft)
 	return nil
 }

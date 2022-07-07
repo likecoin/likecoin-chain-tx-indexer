@@ -175,12 +175,9 @@ func InitDB(conn *pgxpool.Conn) error {
 		return err
 	}
 	// ignore error of type alread exists
-	_, err = conn.Exec(ctx, `
+	conn.Exec(ctx, `
 	CREATE TYPE class_parent_type AS ENUM ('UNKNOWN', 'ISCN', 'ACCOUNT')
 	`)
-	if err != nil {
-		logger.L.Debug(err)
-	}
 
 	_, err = conn.Exec(ctx, `
 	CREATE TABLE IF NOT EXISTS nft_class (
