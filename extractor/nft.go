@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
@@ -53,5 +54,16 @@ func mintNft(batch *db.Batch, messageData []byte, event types.StringEvents, time
 	nft.Owner = utils.GetEventsValue(event, "likechain.likenft.EventMintNFT", "owner")
 	nft.ClassId = utils.GetEventsValue(event, "likechain.likenft.EventMintNFT", "class_id")
 	batch.InsertNft(nft)
+	return nil
+}
+
+func sendNft(batch *db.Batch, messageData []byte, event types.StringEvents, timestamp time.Time) error {
+	classId := utils.GetEventsValue(event, "cosmos.nft.v1beta1.EventSend", "class_id")
+	nftId := utils.GetEventsValue(event, "cosmos.nft.v1beta1.EventSend", "id")
+	sender := utils.GetEventsValue(event, "cosmos.nft.v1beta1.EventSend", "sender")
+	receiver := utils.GetEventsValue(event, "cosmos.nft.v1beta1.EventSend", "receiver")
+	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
+	batch.Batch.Queue(sql, receiver, classId, nftId)
+	logger.L.Debugf("transfer nft %s from %s to %s\n", nftId, sender, receiver)
 	return nil
 }
