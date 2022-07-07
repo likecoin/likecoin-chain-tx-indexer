@@ -37,6 +37,15 @@ type NftClassParent struct {
 	Account      string `json:"account"`
 }
 
+type Nft struct {
+	NftId    string
+	ClassId  string
+	Owner    string
+	Uri      string
+	UriHash  string
+	Metadata json.RawMessage
+}
+
 type Pagination struct {
 	After  uint64
 	Before uint64

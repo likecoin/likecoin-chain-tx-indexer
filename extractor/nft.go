@@ -2,6 +2,7 @@ package extractor
 
 import (
 	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -21,19 +22,7 @@ func createNftClass(batch *db.Batch, messageData []byte, event types.StringEvent
 	var c db.NftClass = message.Input
 	c.Id = utils.GetEventsValue(event, "likechain.likenft.EventNewClass", "class_id")
 	c.Parent = getNftParent(event)
-	sql := `
-	INSERT INTO nft_class
-	(id, parent_type, parent_iscn_id_prefix, parent_account,
-	name, symbol, description, uri, uri_hash,
-	metadata, config, price)
-	VALUES
-	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-	`
-	batch.Batch.Queue(sql,
-		c.Id, c.Parent.Type, c.Parent.IscnIdPrefix, c.Parent.Account,
-		c.Name, c.Symbol, c.Description, c.URI, c.URIHash,
-		c.Metadata, c.Config, c.Price,
-	)
+	batch.InsertNftClass(c)
 	return nil
 }
 
@@ -50,4 +39,20 @@ func getNftParent(event types.StringEvents) db.NftClassParent {
 		p.Type = "UNKNOWN"
 	}
 	return p
+}
+
+func mintNft(batch *db.Batch, messageData []byte, event types.StringEvents, timestamp time.Time) error {
+	var message struct {
+		Input db.Nft
+	}
+	if err := json.Unmarshal(messageData, &message); err != nil {
+		panic(err)
+	}
+	nft := message.Input
+	nft.NftId = utils.GetEventsValue(event, "likechain.likenft.EventMintNFT", "nft_id")
+	nft.Owner = utils.GetEventsValue(event, "likechain.likenft.EventMintNFT", "owner")
+	nft.ClassId = utils.GetEventsValue(event, "likechain.likenft.EventMintNFT", "class_id")
+	log.Printf("%+v\n", nft)
+	batch.InsertNft(nft)
+	return nil
 }

@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS nft (
     nft_id varchar(80),
     uri varchar(256),
     uri_hash varchar(256),
-    metadata jsonb
+    metadata jsonb,
+	UNIQUE(class_id, nft_id)
 );
 
 CREATE TABLE IF NOT EXISTS nft_events (

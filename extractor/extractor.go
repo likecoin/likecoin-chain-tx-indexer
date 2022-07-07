@@ -17,6 +17,7 @@ var handlers = map[string]db.EventHandler{
 	"msg_change_iscn_record_ownership":             transferISCN,
 	"/likechain.iscn.MsgChangeIscnRecordOwnership": transferISCN,
 	"new_class": createNftClass,
+	"mint_nft":  mintNft,
 }
 
 func Run(pool *pgxpool.Pool) chan<- int64 {

@@ -113,3 +113,28 @@ ON CONFLICT DO NOTHING;`
 func (batch *Batch) UpdateISCNHeight(height int64) {
 	batch.Batch.Queue(`UPDATE meta SET height = $1 WHERE id = 'iscn'`, height)
 }
+
+func (batch *Batch) InsertNftClass(c NftClass) {
+	sql := `
+	INSERT INTO nft_class
+	(id, parent_type, parent_iscn_id_prefix, parent_account,
+	name, symbol, description, uri, uri_hash,
+	metadata, config, price)
+	VALUES
+	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	`
+	batch.Batch.Queue(sql,
+		c.Id, c.Parent.Type, c.Parent.IscnIdPrefix, c.Parent.Account,
+		c.Name, c.Symbol, c.Description, c.URI, c.URIHash,
+		c.Metadata, c.Config, c.Price,
+	)
+}
+
+func (batch *Batch) InsertNft(n Nft) {
+	sql := `
+	INSERT INTO nft
+	(nft_id, class_id, owner, uri, uri_hash, metadata)
+	VALUES
+	($1, $2, $3, $4, $5, $6)`
+	batch.Batch.Queue(sql, n.NftId, n.ClassId, n.Owner, n.Uri, n.UriHash, n.Metadata)
+}

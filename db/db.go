@@ -200,6 +200,20 @@ func InitDB(conn *pgxpool.Conn) error {
 	if err != nil {
 		return err
 	}
+	_, err = conn.Exec(ctx, `
+	CREATE TABLE IF NOT EXISTS nft (
+		id bigserial primary key,
+		class_id varchar(80) references nft_class(id),
+		owner varchar(50),
+		nft_id varchar(80),
+		uri varchar(256),
+		uri_hash varchar(256),
+		metadata jsonb,
+		UNIQUE(class_id, nft_id)
+	);`)
+	if err != nil {
+		return err
+	}
 
 	ctx, cancel = GetTimeoutContext()
 	defer cancel()
