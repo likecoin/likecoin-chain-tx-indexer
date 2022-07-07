@@ -133,7 +133,7 @@ func (batch *Batch) UpdateISCNHeight(height int64) {
 func (batch *Batch) InsertNftClass(c NftClass) {
 	sql := `
 	INSERT INTO nft_class
-	(id, parent_type, parent_iscn_id_prefix, parent_account,
+	(class_id, parent_type, parent_iscn_id_prefix, parent_account,
 	name, symbol, description, uri, uri_hash,
 	metadata, config, price)
 	VALUES

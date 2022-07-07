@@ -19,7 +19,7 @@ type ISCN struct {
 }
 
 type NftClass struct {
-	Id          string
+	Id          string          `json:"id"`
 	Name        string          `json:"name"`
 	Description string          `json:"description"`
 	Symbol      string          `json:"symbol"`
@@ -27,8 +27,8 @@ type NftClass struct {
 	URIHash     string          `json:"uri_hash"`
 	Config      json.RawMessage `json:"config"`
 	Metadata    json.RawMessage `json:"metadata"`
-	Parent      NftClassParent
-	Price       int
+	Parent      NftClassParent  `json:"parent"`
+	Price       int             `json:"price"`
 }
 
 type NftClassParent struct {
@@ -51,6 +51,20 @@ type Pagination struct {
 	Before uint64
 	Limit  uint64
 	Order  Order
+}
+
+type NftClassResponse struct {
+	Classes []NftClass `json:"classes"`
+}
+
+type QueryNftByIscnResponse struct {
+	IscnIdPrefix string
+	Classes      []QueryNftClassResponse
+}
+
+type QueryNftClassResponse struct {
+	NftClass
+	Nfts []json.RawMessage
 }
 
 type ISCNResponse struct {

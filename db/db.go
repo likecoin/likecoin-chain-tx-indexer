@@ -181,7 +181,8 @@ func InitDB(conn *pgxpool.Conn) error {
 
 	_, err = conn.Exec(ctx, `
 	CREATE TABLE IF NOT EXISTS nft_class (
-		id varchar(80) primary key,
+		id bigserial primary key,
+		class_id varchar(80) unique,
 		parent_type class_parent_type,
 		parent_iscn_id_prefix varchar(80),
 		parent_account varchar(50),
@@ -200,7 +201,7 @@ func InitDB(conn *pgxpool.Conn) error {
 	_, err = conn.Exec(ctx, `
 	CREATE TABLE IF NOT EXISTS nft (
 		id bigserial primary key,
-		class_id varchar(80) references nft_class(id),
+		class_id varchar(80) references nft_class(class_id),
 		owner varchar(50),
 		nft_id varchar(80),
 		uri varchar(256),
