@@ -58,13 +58,14 @@ type NftClassResponse struct {
 }
 
 type QueryNftByIscnResponse struct {
-	IscnIdPrefix string
-	Classes      []QueryNftClassResponse
+	IscnIdPrefix string                  `json:"iscn_id_prefix"`
+	Classes      []QueryNftClassResponse `json:"classes"`
 }
 
 type QueryNftClassResponse struct {
 	NftClass
-	Nfts []json.RawMessage
+	Count int               `json:"count"`
+	Nfts  []json.RawMessage `json:"nfts"`
 }
 
 type ISCNResponse struct {

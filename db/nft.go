@@ -49,11 +49,18 @@ func GetNftClass(conn *pgxpool.Conn, pagination Pagination) (NftClassResponse, e
 
 func GetNftByIscn(conn *pgxpool.Conn, iscn string) (QueryNftByIscnResponse, error) {
 	sql := `
-	SELECT c.class_id, array_agg(row_to_json(n.*))
+	SELECT c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
+	c.config, c.metadata, c.price,
+	c.parent_type, c.parent_iscn_id_prefix, c.parent_account,
+	(
+		SELECT array_agg(row_to_json((n.*)))
+		FROM nft as n
+		WHERE n.class_id = c.class_id
+		GROUP BY n.class_id
+	) as nfts
 	FROM nft_class as c
-	LEFT JOIN nft as n ON n.class_id = c.class_id
 	WHERE c.parent_iscn_id_prefix = $1
-	GROUP BY c.class_id`
+	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 	rows, err := conn.Query(ctx, sql, iscn)
@@ -63,17 +70,23 @@ func GetNftByIscn(conn *pgxpool.Conn, iscn string) (QueryNftByIscnResponse, erro
 
 	res := QueryNftByIscnResponse{
 		IscnIdPrefix: iscn,
-		Classes:      make([]QueryNftClassResponse, 2),
+		Classes:      make([]QueryNftClassResponse, 0),
 	}
 	for rows.Next() {
+		log.Println("hey")
 		var c QueryNftClassResponse
 		var nfts pgtype.JSONBArray
-		if err = rows.Scan(&c.Id, &nfts); err != nil {
+		if err = rows.Scan(
+			&c.Id, &c.Name, &c.Description, &c.Symbol, &c.URI, &c.URIHash,
+			&c.Config, &c.Metadata, &c.Price,
+			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account, &nfts,
+		); err != nil {
 			panic(err)
 		}
 		if err = nfts.AssignTo(&c.Nfts); err != nil {
 			panic(err)
 		}
+		c.Count = len(c.Nfts)
 		res.Classes = append(res.Classes, c)
 	}
 	return res, nil
