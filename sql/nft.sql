@@ -2,7 +2,7 @@ CREATE TYPE class_parent_type AS ENUM ('UNKNOWN', 'ISCN', 'ACCOUNT');
 CREATE TABLE IF NOT EXISTS nft_class (
     id varchar(80) primary key,     -- normally 66
     parent_type class_parent_type,
-    parent_iscn_prefix varchar(80) references iscn(iscn_id_prefix),
+    parent_iscn_id_prefix varchar(80) references iscn(iscn_id_prefix),
     parent_account varchar(50),
     name varchar(256),
     symbol varchar(20),

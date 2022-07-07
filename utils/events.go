@@ -36,7 +36,7 @@ func GetEventsValue(events types.StringEvents, t string, key string) string {
 		if event.Type == t {
 			for _, attr := range event.Attributes {
 				if attr.Key == key {
-					return attr.Value
+					return strings.Trim(attr.Value, "\"")
 				}
 			}
 		}

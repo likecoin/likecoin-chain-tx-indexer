@@ -12,8 +12,5 @@ func TestNFT(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer conn.Release()
-	_, err = extractNFTClass(conn)
-	if err != nil {
-		t.Error(err)
-	}
+	GetNFTTxs(conn)
 }

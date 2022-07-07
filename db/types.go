@@ -18,6 +18,25 @@ type ISCN struct {
 	Data         []byte
 }
 
+type NftClass struct {
+	Id          string
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	Symbol      string          `json:"symbol"`
+	URI         string          `json:"uri"`
+	URIHash     string          `json:"uri_hash"`
+	Config      json.RawMessage `json:"config"`
+	Metadata    json.RawMessage `json:"metadata"`
+	Parent      NftClassParent
+	Price       int
+}
+
+type NftClassParent struct {
+	Type         string `json:"type"`
+	IscnIdPrefix string `json:"iscn_id_prefix"`
+	Account      string `json:"account"`
+}
+
 type Pagination struct {
 	After  uint64
 	Before uint64

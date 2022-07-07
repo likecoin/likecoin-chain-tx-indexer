@@ -2,9 +2,7 @@ package extractor
 
 import (
 	"fmt"
-	"log"
 
-	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 )
@@ -28,18 +26,6 @@ func extractNFTClass(conn *pgxpool.Conn) (finished bool, err error) {
 		finished = true
 	}
 
-	rows, err := db.GetNFTTxs(conn, begin, end)
-	defer rows.Close()
-
-	for rows.Next() {
-		var messages pgtype.JSONBArray
-		var events pgtype.JSONBArray
-		err := rows.Scan(&messages, &events)
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println(messages.Elements)
-	}
 	return true, nil
 
 }

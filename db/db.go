@@ -174,6 +174,32 @@ func InitDB(conn *pgxpool.Conn) error {
 	if err != nil {
 		return err
 	}
+	// ignore error of type alread exists
+	_, err = conn.Exec(ctx, `
+	CREATE TYPE class_parent_type AS ENUM ('UNKNOWN', 'ISCN', 'ACCOUNT')
+	`)
+	if err != nil {
+		logger.L.Debug(err)
+	}
+
+	_, err = conn.Exec(ctx, `
+	CREATE TABLE IF NOT EXISTS nft_class (
+		id varchar(80) primary key,
+		parent_type class_parent_type,
+		parent_iscn_id_prefix varchar(80) references iscn(iscn_id_prefix),
+		parent_account varchar(50),
+		name varchar(256),
+		symbol varchar(20),
+		description text,
+		uri varchar(256),
+		uri_hash varchar(256),
+		metadata jsonb,
+		config jsonb,
+		price int
+	);`)
+	if err != nil {
+		return err
+	}
 
 	ctx, cancel = GetTimeoutContext()
 	defer cancel()
