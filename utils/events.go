@@ -5,12 +5,11 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/jackc/pgtype"
 )
 
-func ParseEvents(query pgtype.VarcharArray) (events types.StringEvents, err error) {
-	for _, row := range query.Elements {
-		arr := strings.SplitN(row.String, "=", 2)
+func ParseEvents(query []string) (events types.StringEvents, err error) {
+	for _, row := range query {
+		arr := strings.SplitN(row, "=", 2)
 		k, v := arr[0], strings.Trim(arr[1], "\"")
 		if strings.Contains(k, ".") {
 			arr := strings.SplitN(k, ".", 2)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
 func GetNftClass(conn *pgxpool.Conn, pagination Pagination) (NftClassResponse, error) {
@@ -149,5 +150,44 @@ func GetOwnerByClassId(conn *pgxpool.Conn, classId string) (QueryOwnerByClassIdR
 		owner.Count = len(owner.Nfts)
 		res.Owners = append(res.Owners, owner)
 	}
+	return res, nil
+}
+
+func GetNftEventsByNftId(conn *pgxpool.Conn, classId string, nftId string) (QueryEventsResponse, error) {
+	sql := `
+	SELECT action, class_id, nft_id, sender, receiver, timestamp, tx_hash, events
+	FROM nft_event
+	WHERE class_id = $1 AND (nft_id = '' OR nft_id = $2)
+	ORDER BY id`
+
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(ctx, sql, classId, nftId)
+	if err != nil {
+		panic(err)
+	}
+
+	res := QueryEventsResponse{
+		ClassId: classId,
+		NftId:   nftId,
+		Events:  make([]NftEvent, 0),
+	}
+	for rows.Next() {
+		var e NftEvent
+		var eventRaw []string
+		if err = rows.Scan(
+			&e.Action, &e.ClassId, &e.NftId, &e.Sender,
+			&e.Receiver, &e.Timestamp, &e.TxHash, &eventRaw,
+		); err != nil {
+			panic(err)
+		}
+		e.Events, err = utils.ParseEvents(eventRaw)
+		if err != nil {
+			panic(err)
+		}
+		res.Events = append(res.Events, e)
+	}
+	res.Count = len(res.Events)
 	return res, nil
 }

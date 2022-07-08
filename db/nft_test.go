@@ -62,3 +62,17 @@ func TestOwnerByClassId(t *testing.T) {
 	}
 	t.Log(res)
 }
+
+func TestEventsByNftId(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Release()
+
+	res, err := GetNftEventsByNftId(conn, "likenft1ltlz9q5c0xu2xtrjudrgm4emfu37du755kytk8swu4s6yjm268msp6mgf8", "testing-aurora-86")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(res)
+}

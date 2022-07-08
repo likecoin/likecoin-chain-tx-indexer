@@ -50,14 +50,14 @@ type Nft struct {
 }
 
 type NftEvent struct {
-	Action    string
-	ClassId   string
-	NftId     string
-	Sender    string
-	Receiver  string
-	Events    types.StringEvents
-	TxHash    string
-	Timestamp time.Time
+	Action    string             `json:"action"`
+	ClassId   string             `json:"class_id"`
+	NftId     string             `json:"nft_id"`
+	Sender    string             `json:"sender"`
+	Receiver  string             `json:"receiver"`
+	Events    types.StringEvents `json:"events"`
+	TxHash    string             `json:"tx_hash"`
+	Timestamp time.Time          `json:"timestamp"`
 }
 
 func (n *NftEvent) Attach(payload EventPayload) {
@@ -72,6 +72,26 @@ type Pagination struct {
 	Before uint64
 	Limit  uint64
 	Order  Order
+}
+
+type ISCNResponse struct {
+	Records []ISCNResponseRecord `json:"records"`
+	Last    uint64               `json:"last"`
+}
+
+type ISCNResponseRecord struct {
+	Ipld string           `json:"ipld,omitempty"`
+	Data ISCNResponseData `json:"data,omitempty"`
+}
+
+type ISCNResponseData struct {
+	Id                  string          `json:"@id"`
+	RecordTimestamp     time.Time       `json:"recordTimestamp"`
+	Owner               string          `json:"owner"`
+	RecordNotes         json.RawMessage `json:"recordNotes"`
+	ContentFingerprints json.RawMessage `json:"contentFingerprints,omitempty"`
+	ContentMetadata     json.RawMessage `json:"contentMetadata,omitempty"`
+	Stakeholders        json.RawMessage `json:"stakeholders,omitempty"`
 }
 
 type NftClassResponse struct {
@@ -110,22 +130,9 @@ type QueryOwnerResponse struct {
 	Nfts  []string `json:"nfts"`
 }
 
-type ISCNResponse struct {
-	Records []ISCNResponseRecord `json:"records"`
-	Last    uint64               `json:"last"`
-}
-
-type ISCNResponseRecord struct {
-	Ipld string           `json:"ipld,omitempty"`
-	Data ISCNResponseData `json:"data,omitempty"`
-}
-
-type ISCNResponseData struct {
-	Id                  string          `json:"@id"`
-	RecordTimestamp     time.Time       `json:"recordTimestamp"`
-	Owner               string          `json:"owner"`
-	RecordNotes         json.RawMessage `json:"recordNotes"`
-	ContentFingerprints json.RawMessage `json:"contentFingerprints,omitempty"`
-	ContentMetadata     json.RawMessage `json:"contentMetadata,omitempty"`
-	Stakeholders        json.RawMessage `json:"stakeholders,omitempty"`
+type QueryEventsResponse struct {
+	ClassId string     `json:"class_id"`
+	NftId   string     `json:"nft_id"`
+	Count   int        `json:"count"`
+	Events  []NftEvent `json:"events"`
 }
