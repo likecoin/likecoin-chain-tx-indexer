@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS nft (
 	UNIQUE(class_id, nft_id)
 );
 
-CREATE TABLE IF NOT EXISTS nft_events (
+CREATE TABLE IF NOT EXISTS nft_event (
     id bigserial primary key,
     action text,
     class_id text references nft_class(id),

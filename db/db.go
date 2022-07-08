@@ -212,6 +212,21 @@ func InitDB(conn *pgxpool.Conn) error {
 	if err != nil {
 		return err
 	}
+	_, err = conn.Exec(ctx, `
+	CREATE TABLE IF NOT EXISTS nft_event (
+		id bigserial primary key,
+		action text,
+		class_id text references nft_class(id),
+		nft_id text,
+		sender text,
+		receiver text,
+		events text[],
+		tx_hash text,
+		timestamp timestamp
+	);`)
+	if err != nil {
+		return err
+	}
 
 	ctx, cancel = GetTimeoutContext()
 	defer cancel()

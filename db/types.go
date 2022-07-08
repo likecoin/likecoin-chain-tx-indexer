@@ -3,6 +3,8 @@ package db
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 type ISCN struct {
@@ -44,6 +46,17 @@ type Nft struct {
 	Uri      string          `json:"uri"`
 	UriHash  string          `json:"uri_hash"`
 	Metadata json.RawMessage `json:"metadata"`
+}
+
+type NftEvent struct {
+	Action    string
+	ClassId   string
+	NftId     string
+	Sender    string
+	Receiver  string
+	Events    types.StringEvents
+	TxHash    string
+	Timestamp time.Time
 }
 
 type Pagination struct {
