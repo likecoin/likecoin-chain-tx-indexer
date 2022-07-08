@@ -30,7 +30,8 @@ func handleNftByIscn(c *gin.Context) {
 	conn := getConn(c)
 	res, err := db.GetNftByIscn(conn, iscn)
 	if err != nil {
-		panic(err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err})
+		return
 	}
 
 	c.JSON(200, res)
@@ -48,7 +49,8 @@ func handleNftByOwner(c *gin.Context) {
 	conn := getConn(c)
 	res, err := db.GetNftByOwner(conn, owner)
 	if err != nil {
-		panic(err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err})
+		return
 	}
 
 	c.JSON(200, res)
@@ -62,7 +64,8 @@ func handleOwnerByClassId(c *gin.Context) {
 	conn := getConn(c)
 	res, err := db.GetOwnerByClassId(conn, classId)
 	if err != nil {
-		panic(err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err})
+		return
 	}
 
 	c.JSON(200, res)
@@ -81,7 +84,8 @@ func handleNftEvents(c *gin.Context) {
 	conn := getConn(c)
 	res, err := db.GetNftEventsByNftId(conn, classId, nftId)
 	if err != nil {
-		panic(err)
+		c.AbortWithStatusJSON(500, gin.H{"error": err})
+		return
 	}
 
 	c.JSON(200, res)

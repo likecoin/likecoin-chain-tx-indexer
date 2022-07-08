@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
@@ -26,7 +27,8 @@ func GetNftClass(conn *pgxpool.Conn, pagination Pagination) (NftClassResponse, e
 
 	rows, err := conn.Query(ctx, sql, pagination.After, pagination.Before, pagination.Limit)
 	if err != nil {
-		panic(err)
+		logger.L.Errorw("Failed to query nft class", "error", err)
+		return NftClassResponse{}, fmt.Errorf("query nft class error: %w", err)
 	}
 	defer rows.Close()
 
@@ -40,7 +42,8 @@ func GetNftClass(conn *pgxpool.Conn, pagination Pagination) (NftClassResponse, e
 			&c.Config, &c.Metadata, &c.Price,
 			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account,
 		); err != nil {
-			panic(err)
+			logger.L.Errorw("failed to scan nft class", "error", err)
+			return NftClassResponse{}, fmt.Errorf("query nft class data failed: %w", err)
 		}
 		log.Println(c)
 		response.Classes = append(response.Classes, c)
@@ -66,7 +69,8 @@ func GetNftByIscn(conn *pgxpool.Conn, iscn string) (QueryNftByIscnResponse, erro
 	defer cancel()
 	rows, err := conn.Query(ctx, sql, iscn)
 	if err != nil {
-		panic(err)
+		logger.L.Errorw("Failed to query nft class by iscn id prefix", "error", err, "iscn", iscn)
+		return QueryNftByIscnResponse{}, fmt.Errorf("query nft class by iscn id prefix error: %w", err)
 	}
 
 	res := QueryNftByIscnResponse{
@@ -82,10 +86,12 @@ func GetNftByIscn(conn *pgxpool.Conn, iscn string) (QueryNftByIscnResponse, erro
 			&c.Config, &c.Metadata, &c.Price,
 			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account, &nfts,
 		); err != nil {
-			panic(err)
+			logger.L.Errorw("failed to scan nft class", "error", err)
+			return QueryNftByIscnResponse{}, fmt.Errorf("query nft class data failed: %w", err)
 		}
 		if err = nfts.AssignTo(&c.Nfts); err != nil {
-			panic(err)
+			logger.L.Errorw("failed to scan nfts", "error", err)
+			return QueryNftByIscnResponse{}, fmt.Errorf("query nfts failed: %w", err)
 		}
 		c.Count = len(c.Nfts)
 		res.Classes = append(res.Classes, c)
@@ -106,7 +112,8 @@ func GetNftByOwner(conn *pgxpool.Conn, owner string) (QueryNftByOwnerResponse, e
 	defer cancel()
 	rows, err := conn.Query(ctx, sql, owner)
 	if err != nil {
-		panic(err)
+		logger.L.Errorw("Failed to query nft by owner", "error", err, "owner", owner)
+		return QueryNftByOwnerResponse{}, fmt.Errorf("query nft class error: %w", err)
 	}
 	res := QueryNftByOwnerResponse{
 		Owner: owner,
@@ -118,6 +125,8 @@ func GetNftByOwner(conn *pgxpool.Conn, owner string) (QueryNftByOwnerResponse, e
 			&n.ClassParent.Type, &n.ClassParent.IscnIdPrefix, &n.ClassParent.Account,
 		); err != nil {
 			panic(err)
+			logger.L.Errorw("failed to scan nft", "error", err, "owner", owner)
+			return QueryNftByOwnerResponse{}, fmt.Errorf("query nft failed: %w", err)
 		}
 		res.Nfts = append(res.Nfts, n)
 	}
@@ -135,7 +144,8 @@ func GetOwnerByClassId(conn *pgxpool.Conn, classId string) (QueryOwnerByClassIdR
 
 	rows, err := conn.Query(ctx, sql, classId)
 	if err != nil {
-		panic(err)
+		logger.L.Errorw("Failed to query owner", "error", err)
+		return QueryOwnerByClassIdResponse{}, fmt.Errorf("query owner error: %w", err)
 	}
 
 	res := QueryOwnerByClassIdResponse{
@@ -146,6 +156,8 @@ func GetOwnerByClassId(conn *pgxpool.Conn, classId string) (QueryOwnerByClassIdR
 		var owner QueryOwnerResponse
 		if err = rows.Scan(&owner.Owner, &owner.Nfts); err != nil {
 			panic(err)
+			logger.L.Errorw("failed to scan owner", "error", err)
+			return QueryOwnerByClassIdResponse{}, fmt.Errorf("query owner data failed: %w", err)
 		}
 		owner.Count = len(owner.Nfts)
 		res.Owners = append(res.Owners, owner)
@@ -165,7 +177,8 @@ func GetNftEventsByNftId(conn *pgxpool.Conn, classId string, nftId string) (Quer
 
 	rows, err := conn.Query(ctx, sql, classId, nftId)
 	if err != nil {
-		panic(err)
+		logger.L.Errorw("Failed to query nft events", "error", err)
+		return QueryEventsResponse{}, fmt.Errorf("query nft events error: %w", err)
 	}
 
 	res := QueryEventsResponse{
@@ -180,11 +193,13 @@ func GetNftEventsByNftId(conn *pgxpool.Conn, classId string, nftId string) (Quer
 			&e.Action, &e.ClassId, &e.NftId, &e.Sender,
 			&e.Receiver, &e.Timestamp, &e.TxHash, &eventRaw,
 		); err != nil {
-			panic(err)
+			logger.L.Errorw("failed to scan nft events", "error", err, "class_id", classId, "nft_id", nftId)
+			return QueryEventsResponse{}, fmt.Errorf("query nft events data failed: %w", err)
 		}
 		e.Events, err = utils.ParseEvents(eventRaw)
 		if err != nil {
-			panic(err)
+			logger.L.Errorw("failed to parse events", "error", err, "event_raw", eventRaw)
+			return QueryEventsResponse{}, fmt.Errorf("parse nft events data failed: %w", err)
 		}
 		res.Events = append(res.Events, e)
 	}
