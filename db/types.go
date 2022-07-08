@@ -38,12 +38,12 @@ type NftClassParent struct {
 }
 
 type Nft struct {
-	NftId    string
-	ClassId  string
-	Owner    string
-	Uri      string
-	UriHash  string
-	Metadata json.RawMessage
+	NftId    string          `json:"nft_id"`
+	ClassId  string          `json:"class_id"`
+	Owner    string          `json:"owner"`
+	Uri      string          `json:"uri"`
+	UriHash  string          `json:"uri_hash"`
+	Metadata json.RawMessage `json:"metadata"`
 }
 
 type Pagination struct {
@@ -64,8 +64,18 @@ type QueryNftByIscnResponse struct {
 
 type QueryNftClassResponse struct {
 	NftClass
-	Count int               `json:"count"`
-	Nfts  []json.RawMessage `json:"nfts"`
+	Count int   `json:"count"`
+	Nfts  []Nft `json:"nfts"`
+}
+
+type QueryNftResponse struct {
+	Nft
+	ClassParent NftClassParent `json:"class_parent"`
+}
+
+type QueryNftByOwnerResponse struct {
+	Owner string             `json:"owner"`
+	Nfts  []QueryNftResponse `json:"nfts"`
 }
 
 type ISCNResponse struct {

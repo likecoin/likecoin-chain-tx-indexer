@@ -91,3 +91,34 @@ func GetNftByIscn(conn *pgxpool.Conn, iscn string) (QueryNftByIscnResponse, erro
 	}
 	return res, nil
 }
+
+func GetNftByOwner(conn *pgxpool.Conn, owner string) (QueryNftByOwnerResponse, error) {
+	sql := `
+	SELECT n.nft_id, n.class_id, n.uri, n.uri_hash, n.metadata,
+		c.parent_type, c.parent_iscn_id_prefix, c.parent_account
+	FROM nft as n
+	JOIN nft_class as c
+	ON n.class_id = c.class_id
+	WHERE owner = $1
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	rows, err := conn.Query(ctx, sql, owner)
+	if err != nil {
+		panic(err)
+	}
+	res := QueryNftByOwnerResponse{
+		Owner: owner,
+		Nfts:  make([]QueryNftResponse, 0),
+	}
+	for rows.Next() {
+		var n QueryNftResponse
+		if err = rows.Scan(&n.NftId, &n.ClassId, &n.Uri, &n.UriHash, &n.Metadata,
+			&n.ClassParent.Type, &n.ClassParent.IscnIdPrefix, &n.ClassParent.Account,
+		); err != nil {
+			panic(err)
+		}
+		res.Nfts = append(res.Nfts, n)
+	}
+	return res, nil
+}
