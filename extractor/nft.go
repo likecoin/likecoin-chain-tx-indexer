@@ -3,7 +3,6 @@ package extractor
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
@@ -15,15 +14,15 @@ type nftClassMessage struct {
 	Input db.NftClass `json:"input"`
 }
 
-func createNftClass(batch *db.Batch, messageData []byte, event types.StringEvents, timestamp time.Time) error {
+func createNftClass(payload db.EventPayload) error {
 	var message nftClassMessage
-	if err := json.Unmarshal(messageData, &message); err != nil {
+	if err := json.Unmarshal(payload.Message, &message); err != nil {
 		return fmt.Errorf("Failed to unmarshal NFT class message: %w", err)
 	}
 	var c db.NftClass = message.Input
-	c.Id = utils.GetEventsValue(event, "likechain.likenft.EventNewClass", "class_id")
-	c.Parent = getNftParent(event)
-	batch.InsertNftClass(c)
+	c.Id = utils.GetEventsValue(payload.Events, "likechain.likenft.EventNewClass", "class_id")
+	c.Parent = getNftParent(payload.Events)
+	payload.Batch.InsertNftClass(c)
 	return nil
 }
 
@@ -42,28 +41,30 @@ func getNftParent(event types.StringEvents) db.NftClassParent {
 	return p
 }
 
-func mintNft(batch *db.Batch, messageData []byte, event types.StringEvents, timestamp time.Time) error {
+func mintNft(payload db.EventPayload) error {
 	var message struct {
 		Input db.Nft
 	}
-	if err := json.Unmarshal(messageData, &message); err != nil {
+	if err := json.Unmarshal(payload.Message, &message); err != nil {
 		return fmt.Errorf("Failed to unmarshal mint NFT message: %w", err)
 	}
+	events := payload.Events
 	nft := message.Input
-	nft.NftId = utils.GetEventsValue(event, "likechain.likenft.EventMintNFT", "nft_id")
-	nft.Owner = utils.GetEventsValue(event, "likechain.likenft.EventMintNFT", "owner")
-	nft.ClassId = utils.GetEventsValue(event, "likechain.likenft.EventMintNFT", "class_id")
-	batch.InsertNft(nft)
+	nft.NftId = utils.GetEventsValue(events, "likechain.likenft.EventMintNFT", "nft_id")
+	nft.Owner = utils.GetEventsValue(events, "likechain.likenft.EventMintNFT", "owner")
+	nft.ClassId = utils.GetEventsValue(events, "likechain.likenft.EventMintNFT", "class_id")
+	payload.Batch.InsertNft(nft)
 	return nil
 }
 
-func sendNft(batch *db.Batch, messageData []byte, event types.StringEvents, timestamp time.Time) error {
-	classId := utils.GetEventsValue(event, "cosmos.nft.v1beta1.EventSend", "class_id")
-	nftId := utils.GetEventsValue(event, "cosmos.nft.v1beta1.EventSend", "id")
-	sender := utils.GetEventsValue(event, "cosmos.nft.v1beta1.EventSend", "sender")
-	receiver := utils.GetEventsValue(event, "cosmos.nft.v1beta1.EventSend", "receiver")
+func sendNft(payload db.EventPayload) error {
+	events := payload.Events
+	classId := utils.GetEventsValue(events, "cosmos.nft.v1beta1.EventSend", "class_id")
+	nftId := utils.GetEventsValue(events, "cosmos.nft.v1beta1.EventSend", "id")
+	sender := utils.GetEventsValue(events, "cosmos.nft.v1beta1.EventSend", "sender")
+	receiver := utils.GetEventsValue(events, "cosmos.nft.v1beta1.EventSend", "receiver")
 	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
-	batch.Batch.Queue(sql, receiver, classId, nftId)
+	payload.Batch.Batch.Queue(sql, receiver, classId, nftId)
 	logger.L.Debugf("transfer nft %s from %s to %s\n", nftId, sender, receiver)
 	return nil
 }

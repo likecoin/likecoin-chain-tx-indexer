@@ -15,7 +15,14 @@ import (
 // todo: move to config
 const LIMIT = 10000
 
-type EventHandler func(batch *Batch, message []byte, events types.StringEvents, timestamp time.Time) error
+type EventPayload struct {
+	Batch     *Batch
+	Message   []byte
+	Events    types.StringEvents
+	Timestamp time.Time
+	TxHash    string
+}
+type EventHandler func(EventPayload) error
 
 func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished bool, err error) {
 	begin, err := GetMetaHeight(conn, "iscn")
@@ -39,7 +46,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 	ctx, _ := GetTimeoutContext()
 
 	sql := `
-	SELECT height, tx #> '{"tx", "body", "messages"}' AS messages, tx -> 'logs' AS logs, tx #> '{"timestamp"}' as timestamp
+	SELECT tx #> '{"tx", "body", "messages"}' AS messages, tx -> 'logs' AS logs, tx -> 'timestamp', tx -> 'txhash'
 	FROM txs
 	WHERE height >= $1
 		AND height < $2
@@ -54,19 +61,19 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 	batch := NewBatch(conn, LIMIT)
 
 	for rows.Next() {
-		var height int64
 		var messageData pgtype.JSONB
 		var eventData pgtype.JSONB
 		var timestamp time.Time
-		err := rows.Scan(&height, &messageData, &eventData, &timestamp)
+		var txHash string
+		err := rows.Scan(&messageData, &eventData, &timestamp, &txHash)
 		if err != nil {
-			return false, fmt.Errorf("Failed to scan tx row on height %d: %w", height, err)
+			return false, fmt.Errorf("Failed to scan tx row on tx %s: %w", txHash, err)
 		}
 
 		var messages []json.RawMessage
 		err = messageData.AssignTo(&messages)
 		if err != nil {
-			return false, fmt.Errorf("Failed to unmarshal tx message on height %d: %w", height, err)
+			return false, fmt.Errorf("Failed to unmarshal tx message on tx %s: %w", txHash, err)
 		}
 		var events []struct {
 			Events types.StringEvents `json:"events"`
@@ -74,15 +81,22 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 
 		err = eventData.AssignTo(&events)
 		if err != nil {
-			return false, fmt.Errorf("Failed to unmarshal tx event on height %d: %w", height, err)
+			return false, fmt.Errorf("Failed to unmarshal tx event on tx %s: %w", txHash, err)
 		}
 
 		for i, event := range events {
 			action := utils.GetEventsValue(event.Events, "message", "action")
 			if handler, ok := handlers[action]; ok {
-				err = handler(&batch, messages[i], event.Events, timestamp)
+				payload := EventPayload{
+					Batch:     &batch,
+					Message:   messages[i],
+					Events:    event.Events,
+					Timestamp: timestamp,
+					TxHash:    txHash,
+				}
+				err = handler(payload)
 				if err != nil {
-					logger.L.Errorw("Handle message failed", "action", action, "error", err, "message", string(messages[i]), "events", event.Events.String())
+					logger.L.Errorw("Handle message failed", "action", action, "error", err, "payload", payload)
 				}
 			}
 		}

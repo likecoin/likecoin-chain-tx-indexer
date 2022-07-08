@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
@@ -57,7 +55,9 @@ func (q iscnData) Marshal() ([]byte, error) {
 	return json.Marshal(q)
 }
 
-func insertISCN(batch *db.Batch, message []byte, events types.StringEvents, timestamp time.Time) error {
+func insertISCN(payload db.EventPayload) error {
+	message := payload.Message
+	events := payload.Events
 	var data iscnMessage
 	if err := json.Unmarshal(message, &data); err != nil {
 		return fmt.Errorf("Failed to unmarshal iscn: %w", err)
@@ -78,19 +78,20 @@ func insertISCN(batch *db.Batch, message []byte, events types.StringEvents, time
 		Keywords:     utils.ParseKeywords(record.ContentMetadata.Keywords),
 		Fingerprints: record.ContentFingerprints,
 		Stakeholders: holders,
-		Timestamp:    timestamp,
+		Timestamp:    payload.Timestamp,
 		Ipld:         utils.GetEventsValue(events, "iscn_record", "ipld"),
 		Data:         data.Record,
 	}
-	batch.InsertISCN(iscn)
+	payload.Batch.InsertISCN(iscn)
 	return nil
 }
 
-func transferISCN(batch *db.Batch, message []byte, events types.StringEvents, timestamp time.Time) error {
+func transferISCN(payload db.EventPayload) error {
+	events := payload.Events
 	sender := utils.GetEventsValue(events, "message", "sender")
 	iscnId := utils.GetEventsValue(events, "iscn_record", "iscn_id")
 	newOwner := utils.GetEventsValue(events, "iscn_record", "owner")
-	batch.Batch.Queue(`UPDATE iscn SET owner = $2 WHERE iscn_id = $1`, iscnId, newOwner)
+	payload.Batch.Batch.Queue(`UPDATE iscn SET owner = $2 WHERE iscn_id = $1`, iscnId, newOwner)
 	logger.L.Debugf("Send ISCN %s from %s to %s\n", iscnId, sender, newOwner)
 	return nil
 }
