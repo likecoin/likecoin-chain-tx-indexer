@@ -18,8 +18,8 @@ func QueryISCN(pool *pgxpool.Pool, iscn ISCN, pagination Pagination) (ISCNRespon
 				AND ($7 = 0 OR id < $7)
 				AND ($1 = '' OR iscn_id = $1)
 				AND ($2 = '' OR owner = $2)
-				AND ($3::varchar[] IS NULL OR keywords @> $3)
-				AND ($4::varchar[] IS NULL OR fingerprints @> $4)
+				AND ($3::text[] IS NULL OR keywords @> $3)
+				AND ($4::text[] IS NULL OR fingerprints @> $4)
 				AND ($5::jsonb IS NULL OR stakeholders @> $5)
 			ORDER BY id %s
 			LIMIT $8;
