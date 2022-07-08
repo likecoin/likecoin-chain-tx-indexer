@@ -78,6 +78,17 @@ type QueryNftByOwnerResponse struct {
 	Nfts  []QueryNftResponse `json:"nfts"`
 }
 
+type QueryOwnerByClassIdResponse struct {
+	ClassId string               `json:"class_id"`
+	Owners  []QueryOwnerResponse `json:"owners"`
+}
+
+type QueryOwnerResponse struct {
+	Owner string   `json:"owner"`
+	Count int      `json:"count"`
+	Nfts  []string `json:"nfts"`
+}
+
 type ISCNResponse struct {
 	Records []ISCNResponseRecord `json:"records"`
 	Last    uint64               `json:"last"`

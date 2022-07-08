@@ -48,3 +48,17 @@ func TestQueryNftByOwner(t *testing.T) {
 	}
 	t.Log(res)
 }
+
+func TestOwnerByClassId(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Release()
+
+	res, err := GetOwnerByClassId(conn, "likenft1furc4kuuepyts7ahr0wchc4nev52gkjyeg485vcs9f52snnv0t3s4g0wya")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(res)
+}

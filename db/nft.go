@@ -122,3 +122,32 @@ func GetNftByOwner(conn *pgxpool.Conn, owner string) (QueryNftByOwnerResponse, e
 	}
 	return res, nil
 }
+
+func GetOwnerByClassId(conn *pgxpool.Conn, classId string) (QueryOwnerByClassIdResponse, error) {
+	sql := `
+	SELECT owner, array_agg(nft_id)
+	FROM nft
+	WHERE class_id = $1
+	GROUP BY owner`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(ctx, sql, classId)
+	if err != nil {
+		panic(err)
+	}
+
+	res := QueryOwnerByClassIdResponse{
+		ClassId: classId,
+		Owners:  make([]QueryOwnerResponse, 0),
+	}
+	for rows.Next() {
+		var owner QueryOwnerResponse
+		if err = rows.Scan(&owner.Owner, &owner.Nfts); err != nil {
+			panic(err)
+		}
+		owner.Count = len(owner.Nfts)
+		res.Owners = append(res.Owners, owner)
+	}
+	return res, nil
+}

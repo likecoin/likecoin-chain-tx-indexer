@@ -15,6 +15,10 @@ func handleNft(c *gin.Context) {
 		handleNftByOwner(c)
 		return
 	}
+	if q.Get("class_id") != "" {
+		handleOwnerByClassId(c)
+		return
+	}
 
 	c.AbortWithStatusJSON(400, gin.H{"error": "params is require"})
 }
@@ -43,6 +47,20 @@ func handleNftByOwner(c *gin.Context) {
 
 	conn := getConn(c)
 	res, err := db.GetNftByOwner(conn, owner)
+	if err != nil {
+		panic(err)
+	}
+
+	c.JSON(200, res)
+}
+
+func handleOwnerByClassId(c *gin.Context) {
+	q := c.Request.URL.Query()
+
+	classId := q.Get("class_id")
+
+	conn := getConn(c)
+	res, err := db.GetOwnerByClassId(conn, classId)
 	if err != nil {
 		panic(err)
 	}
