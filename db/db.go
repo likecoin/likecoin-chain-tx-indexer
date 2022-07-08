@@ -216,7 +216,7 @@ func InitDB(conn *pgxpool.Conn) error {
 	CREATE TABLE IF NOT EXISTS nft_event (
 		id bigserial primary key,
 		action text,
-		class_id text references nft_class(id),
+		class_id text,
 		nft_id text,
 		sender text,
 		receiver text,

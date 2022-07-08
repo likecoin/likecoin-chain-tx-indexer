@@ -11,7 +11,8 @@ import (
 )
 
 type nftClassMessage struct {
-	Input db.NftClass `json:"input"`
+	Input   db.NftClass `json:"input"`
+	Creator string      `json:"creator"`
 }
 
 func createNftClass(payload db.EventPayload) error {
@@ -23,6 +24,13 @@ func createNftClass(payload db.EventPayload) error {
 	c.Id = utils.GetEventsValue(payload.Events, "likechain.likenft.EventNewClass", "class_id")
 	c.Parent = getNftParent(payload.Events)
 	payload.Batch.InsertNftClass(c)
+
+	e := db.NftEvent{
+		ClassId: c.Id,
+		Sender:  message.Creator,
+	}
+	e.Attach(payload)
+	payload.Batch.InsertNftEvent(e)
 	return nil
 }
 
@@ -54,6 +62,14 @@ func mintNft(payload db.EventPayload) error {
 	nft.Owner = utils.GetEventsValue(events, "likechain.likenft.EventMintNFT", "owner")
 	nft.ClassId = utils.GetEventsValue(events, "likechain.likenft.EventMintNFT", "class_id")
 	payload.Batch.InsertNft(nft)
+
+	e := db.NftEvent{
+		ClassId: nft.ClassId,
+		NftId:   nft.NftId,
+		Sender:  nft.Owner,
+	}
+	e.Attach(payload)
+	payload.Batch.InsertNftEvent(e)
 	return nil
 }
 
@@ -66,5 +82,14 @@ func sendNft(payload db.EventPayload) error {
 	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
 	payload.Batch.Batch.Queue(sql, receiver, classId, nftId)
 	logger.L.Debugf("transfer nft %s from %s to %s\n", nftId, sender, receiver)
+
+	e := db.NftEvent{
+		ClassId:  classId,
+		NftId:    nftId,
+		Sender:   sender,
+		Receiver: receiver,
+	}
+	e.Attach(payload)
+	payload.Batch.InsertNftEvent(e)
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
 type ISCN struct {
@@ -57,6 +58,13 @@ type NftEvent struct {
 	Events    types.StringEvents
 	TxHash    string
 	Timestamp time.Time
+}
+
+func (n *NftEvent) Attach(payload EventPayload) {
+	n.Action = utils.GetEventsValue(payload.Events, "message", "action")
+	n.Events = payload.Events
+	n.Timestamp = payload.Timestamp
+	n.TxHash = payload.TxHash
 }
 
 type Pagination struct {

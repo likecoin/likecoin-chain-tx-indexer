@@ -168,3 +168,11 @@ func (batch *Batch) InsertNft(n Nft) {
 	($1, $2, $3, $4, $5, $6)`
 	batch.Batch.Queue(sql, n.NftId, n.ClassId, n.Owner, n.Uri, n.UriHash, n.Metadata)
 }
+
+func (batch *Batch) InsertNftEvent(e NftEvent) {
+	sql := `
+	INSERT INTO nft_event
+	(action, class_id, nft_id, sender, receiver, events, tx_hash, timestamp)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	batch.Batch.Queue(sql, e.Action, e.ClassId, e.NftId, e.Sender, e.Receiver, getEventStrings(e.Events), e.TxHash, e.Timestamp)
+}
