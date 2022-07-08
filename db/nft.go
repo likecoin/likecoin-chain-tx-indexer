@@ -169,7 +169,7 @@ func GetNftEventsByNftId(conn *pgxpool.Conn, classId string, nftId string) (Quer
 	sql := `
 	SELECT action, class_id, nft_id, sender, receiver, timestamp, tx_hash, events
 	FROM nft_event
-	WHERE class_id = $1 AND (nft_id = '' OR nft_id = $2)
+	WHERE class_id = $1 AND (nft_id = '' OR $2 = '' OR nft_id = $2)
 	ORDER BY id`
 
 	ctx, cancel := GetTimeoutContext()
