@@ -142,17 +142,17 @@ func InitDB(conn *pgxpool.Conn) error {
 	}
 	_, err = conn.Exec(ctx, `
 	CREATE TABLE IF NOT EXISTS iscn (
-		id BIGSERIAL PRIMARY KEY,
-		iscn_id VARCHAR(80),
-		iscn_id_prefix VARCHAR(80),
-		version INT,
-		owner VARCHAR(50),
-		keywords VARCHAR(64)[],
-		fingerprints VARCHAR(256)[],
-		ipld VARCHAR(64),
+		id bigserial primary key,
+		iscn_id text,
+		iscn_id_prefix text,
+		version int,
+		owner text,
+		keywords text[],
+		fingerprints text[],
+		ipld text,
 		timestamp timestamp,
-		stakeholders JSONB,
-		data JSONB,
+		stakeholders jsonb,
+		data jsonb,
 		UNIQUE(iscn_id)
 	)`)
 	if err != nil {
@@ -182,15 +182,15 @@ func InitDB(conn *pgxpool.Conn) error {
 	_, err = conn.Exec(ctx, `
 	CREATE TABLE IF NOT EXISTS nft_class (
 		id bigserial primary key,
-		class_id varchar(80) unique,
+		class_id text unique,
 		parent_type class_parent_type,
-		parent_iscn_id_prefix varchar(80),
-		parent_account varchar(50),
-		name varchar(256),
-		symbol varchar(20),
+		parent_iscn_id_prefix text,
+		parent_account text,
+		name text,
+		symbol text,
 		description text,
-		uri varchar(256),
-		uri_hash varchar(256),
+		uri text,
+		uri_hash text,
 		metadata jsonb,
 		config jsonb,
 		price int
@@ -201,11 +201,11 @@ func InitDB(conn *pgxpool.Conn) error {
 	_, err = conn.Exec(ctx, `
 	CREATE TABLE IF NOT EXISTS nft (
 		id bigserial primary key,
-		class_id varchar(80) references nft_class(class_id),
-		owner varchar(50),
-		nft_id varchar(80),
-		uri varchar(256),
-		uri_hash varchar(256),
+		class_id text,
+		owner text,
+		nft_id text,
+		uri text,
+		uri_hash text,
 		metadata jsonb,
 		UNIQUE(class_id, nft_id)
 	);`)
