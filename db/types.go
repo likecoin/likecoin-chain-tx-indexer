@@ -106,7 +106,7 @@ type QueryNftByIscnResponse struct {
 type QueryNftClassResponse struct {
 	NftClass
 	Count int   `json:"count"`
-	Nfts  []Nft `json:"nfts"`
+	Nfts  []Nft `json:"nfts,omitempty"`
 }
 
 type QueryNftResponse struct {

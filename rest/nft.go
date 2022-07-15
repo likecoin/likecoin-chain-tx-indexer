@@ -5,30 +5,22 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 )
 
-func handleNft(c *gin.Context) {
-	q := c.Request.URL.Query()
-	if q.Get("iscn_id_prefix") != "" {
-		handleNftByIscn(c)
-		return
-	}
-	if q.Get("owner") != "" {
-		handleNftByOwner(c)
-		return
-	}
-	if q.Get("class_id") != "" {
-		handleOwnerByClassId(c)
-		return
-	}
-
-	c.AbortWithStatusJSON(400, gin.H{"error": "params is require"})
-}
-
 func handleNftByIscn(c *gin.Context) {
 	q := c.Request.URL.Query()
 
 	iscn := q.Get("iscn_id_prefix")
+	if iscn == "" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "iscn_id_prefix is required"})
+		return
+	}
+	expand, err := getBool(q, "expand")
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err})
+		return
+	}
+
 	conn := getConn(c)
-	res, err := db.GetNftByIscn(conn, iscn)
+	res, err := db.GetNftByIscn(conn, iscn, expand)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err})
 		return
@@ -60,6 +52,10 @@ func handleOwnerByClassId(c *gin.Context) {
 	q := c.Request.URL.Query()
 
 	classId := q.Get("class_id")
+	if classId == "" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "class_id is require"})
+		return
+	}
 
 	conn := getConn(c)
 	res, err := db.GetOwnerByClassId(conn, classId)
