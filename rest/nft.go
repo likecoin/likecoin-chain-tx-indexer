@@ -68,19 +68,18 @@ func handleOwnerByClassId(c *gin.Context) {
 }
 
 func handleNftEvents(c *gin.Context) {
-	q := c.Request.URL.Query()
+	var form db.QueryEventsRequest
+	c.BindQuery(&form)
 
-	classId := q.Get("class_id")
-	if classId == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "class_id is required"})
+	if form.ClassId == "" && form.IscnIdPrefix == "" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "must provide class_id or iscn_id_prefix"})
 		return
 	}
-	nftId := q.Get("nft_id")
-
 	conn := getConn(c)
-	res, err := db.GetNftEventsByNftId(conn, classId, nftId)
+
+	res, err := db.GetNftEvents(conn, form)
 	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err})
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 

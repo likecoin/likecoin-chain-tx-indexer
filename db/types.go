@@ -55,7 +55,7 @@ type NftEvent struct {
 	NftId     string             `json:"nft_id"`
 	Sender    string             `json:"sender"`
 	Receiver  string             `json:"receiver"`
-	Events    types.StringEvents `json:"events"`
+	Events    types.StringEvents `json:"events,omitempty"`
 	TxHash    string             `json:"tx_hash"`
 	Timestamp time.Time          `json:"timestamp"`
 }
@@ -130,9 +130,14 @@ type QueryOwnerResponse struct {
 	Nfts  []string `json:"nfts"`
 }
 
+type QueryEventsRequest struct {
+	ClassId      string `form:"class_id"`
+	NftId        string `form:"nft_id"`
+	IscnIdPrefix string `form:"iscn_id_prefix"`
+	Verbose      bool   `form:"verbose"`
+}
+
 type QueryEventsResponse struct {
-	ClassId string     `json:"class_id"`
-	NftId   string     `json:"nft_id"`
-	Count   int        `json:"count"`
-	Events  []NftEvent `json:"events"`
+	Count  int        `json:"count"`
+	Events []NftEvent `json:"events"`
 }

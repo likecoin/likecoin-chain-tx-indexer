@@ -166,26 +166,28 @@ func GetOwnerByClassId(conn *pgxpool.Conn, classId string) (QueryOwnerByClassIdR
 	return res, nil
 }
 
-func GetNftEventsByNftId(conn *pgxpool.Conn, classId string, nftId string) (QueryEventsResponse, error) {
+func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest) (QueryEventsResponse, error) {
 	sql := `
-	SELECT action, class_id, nft_id, sender, receiver, timestamp, tx_hash, events
-	FROM nft_event
-	WHERE class_id = $1 AND (nft_id = '' OR $2 = '' OR nft_id = $2)
-	ORDER BY id`
+	SELECT action, e.class_id, e.nft_id, e.sender, e.receiver, e.timestamp, e.tx_hash, e.events
+	FROM nft_event as e
+	JOIN nft_class as c
+	ON e.class_id = c.class_id
+	WHERE ($1 = '' OR e.class_id = $1)
+		AND (nft_id = '' OR $2 = '' OR nft_id = $2)
+		AND ($3 = '' OR c.parent_iscn_id_prefix = $3)
+	ORDER BY e.id`
 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, classId, nftId)
+	rows, err := conn.Query(ctx, sql, q.ClassId, q.NftId, q.IscnIdPrefix)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft events", "error", err)
 		return QueryEventsResponse{}, fmt.Errorf("query nft events error: %w", err)
 	}
 
 	res := QueryEventsResponse{
-		ClassId: classId,
-		NftId:   nftId,
-		Events:  make([]NftEvent, 0),
+		Events: make([]NftEvent, 0),
 	}
 	for rows.Next() {
 		var e NftEvent
@@ -194,13 +196,15 @@ func GetNftEventsByNftId(conn *pgxpool.Conn, classId string, nftId string) (Quer
 			&e.Action, &e.ClassId, &e.NftId, &e.Sender,
 			&e.Receiver, &e.Timestamp, &e.TxHash, &eventRaw,
 		); err != nil {
-			logger.L.Errorw("failed to scan nft events", "error", err, "class_id", classId, "nft_id", nftId)
+			logger.L.Errorw("failed to scan nft events", "error", err, "q", q)
 			return QueryEventsResponse{}, fmt.Errorf("query nft events data failed: %w", err)
 		}
-		e.Events, err = utils.ParseEvents(eventRaw)
-		if err != nil {
-			logger.L.Errorw("failed to parse events", "error", err, "event_raw", eventRaw)
-			return QueryEventsResponse{}, fmt.Errorf("parse nft events data failed: %w", err)
+		if q.Verbose {
+			e.Events, err = utils.ParseEvents(eventRaw)
+			if err != nil {
+				logger.L.Errorw("failed to parse events", "error", err, "event_raw", eventRaw)
+				return QueryEventsResponse{}, fmt.Errorf("parse nft events data failed: %w", err)
+			}
 		}
 		res.Events = append(res.Events, e)
 	}
