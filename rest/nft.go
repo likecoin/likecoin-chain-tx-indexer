@@ -5,31 +5,26 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 )
 
-func handleNftByIscn(c *gin.Context) {
-	q := c.Request.URL.Query()
+func handleNftClass(c *gin.Context) {
+	var q db.QueryClassRequest
 
-	iscn := q.Get("iscn_id_prefix")
-	if iscn == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "iscn_id_prefix is required"})
-		return
-	}
-	expand, err := getBool(q, "expand")
+	err := c.BindQuery(&q)
 	if err != nil {
-		c.AbortWithStatusJSON(400, gin.H{"error": err})
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
 	conn := getConn(c)
-	res, err := db.GetNftByIscn(conn, iscn, expand)
+	res, err := db.GetClasses(conn, q)
 	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err})
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(200, res)
 }
 
-func handleNftByOwner(c *gin.Context) {
+func handleNft(c *gin.Context) {
 	q := c.Request.URL.Query()
 
 	owner := q.Get("owner")
@@ -48,7 +43,7 @@ func handleNftByOwner(c *gin.Context) {
 	c.JSON(200, res)
 }
 
-func handleOwnerByClassId(c *gin.Context) {
+func handleNftOwner(c *gin.Context) {
 	q := c.Request.URL.Query()
 
 	classId := q.Get("class_id")

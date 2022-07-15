@@ -98,9 +98,13 @@ type NftClassResponse struct {
 	Classes []NftClass `json:"classes"`
 }
 
-type QueryNftByIscnResponse struct {
-	IscnIdPrefix string                  `json:"iscn_id_prefix"`
-	Classes      []QueryNftClassResponse `json:"classes"`
+type QueryClassRequest struct {
+	IscnIdPrefix string `form:"iscn_id_prefix" binding:"required"`
+	Expand       bool   `form:"expand"`
+}
+
+type QueryClassResponse struct {
+	Classes []QueryNftClassResponse `json:"classes"`
 }
 
 type QueryNftClassResponse struct {
@@ -109,14 +113,14 @@ type QueryNftClassResponse struct {
 	Nfts  []Nft `json:"nfts,omitempty"`
 }
 
-type QueryNftResponse struct {
+type NftResponse struct {
 	Nft
 	ClassParent NftClassParent `json:"class_parent"`
 }
 
 type QueryNftByOwnerResponse struct {
-	Owner string             `json:"owner"`
-	Nfts  []QueryNftResponse `json:"nfts"`
+	Owner string        `json:"owner"`
+	Nfts  []NftResponse `json:"nfts"`
 }
 
 type QueryOwnerByClassIdResponse struct {
