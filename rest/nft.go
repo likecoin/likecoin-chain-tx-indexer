@@ -8,7 +8,7 @@ import (
 func handleNftClass(c *gin.Context) {
 	var q db.QueryClassRequest
 
-	if err := c.BindQuery(&q); err != nil {
+	if err := c.ShouldBindQuery(&q); err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
@@ -26,13 +26,13 @@ func handleNftClass(c *gin.Context) {
 func handleNft(c *gin.Context) {
 	var q db.QueryNftRequest
 
-	if err := c.BindQuery(&q); err != nil {
+	if err := c.ShouldBindQuery(&q); err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
 	conn := getConn(c)
-	res, err := db.GetNftByOwner(conn, q)
+	res, err := db.GetNfts(conn, q)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
@@ -42,16 +42,15 @@ func handleNft(c *gin.Context) {
 }
 
 func handleNftOwner(c *gin.Context) {
-	q := c.Request.URL.Query()
+	var q db.QueryOwnerRequest
 
-	classId := q.Get("class_id")
-	if classId == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "class_id is require"})
+	if err := c.ShouldBindQuery(&q); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
 		return
 	}
 
 	conn := getConn(c)
-	res, err := db.GetOwnerByClassId(conn, classId)
+	res, err := db.GetOwners(conn, q)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
@@ -62,7 +61,10 @@ func handleNftOwner(c *gin.Context) {
 
 func handleNftEvents(c *gin.Context) {
 	var form db.QueryEventsRequest
-	c.BindQuery(&form)
+	if err := c.ShouldBindQuery(&form); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
+		return
+	}
 
 	if form.ClassId == "" && form.IscnIdPrefix == "" {
 		c.AbortWithStatusJSON(400, gin.H{"error": "must provide class_id or iscn_id_prefix"})

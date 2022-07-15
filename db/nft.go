@@ -53,10 +53,11 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest) (QueryClassResponse, er
 		c.Count = len(c.Nfts)
 		res.Classes = append(res.Classes, c)
 	}
+	res.Count = len(res.Classes)
 	return res, nil
 }
 
-func GetNftByOwner(conn *pgxpool.Conn, q QueryNftRequest) (QueryNftResponse, error) {
+func GetNfts(conn *pgxpool.Conn, q QueryNftRequest) (QueryNftResponse, error) {
 	sql := `
 	SELECT n.nft_id, n.class_id, n.uri, n.uri_hash, n.metadata,
 		c.parent_type, c.parent_iscn_id_prefix, c.parent_account
@@ -86,10 +87,11 @@ func GetNftByOwner(conn *pgxpool.Conn, q QueryNftRequest) (QueryNftResponse, err
 		}
 		res.Nfts = append(res.Nfts, n)
 	}
+	res.Count = len(res.Nfts)
 	return res, nil
 }
 
-func GetOwnerByClassId(conn *pgxpool.Conn, classId string) (QueryOwnerByClassIdResponse, error) {
+func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, error) {
 	sql := `
 	SELECT owner, array_agg(nft_id)
 	FROM nft
@@ -98,26 +100,26 @@ func GetOwnerByClassId(conn *pgxpool.Conn, classId string) (QueryOwnerByClassIdR
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, classId)
+	rows, err := conn.Query(ctx, sql, q.ClassId)
 	if err != nil {
 		logger.L.Errorw("Failed to query owner", "error", err)
-		return QueryOwnerByClassIdResponse{}, fmt.Errorf("query owner error: %w", err)
+		return QueryOwnerResponse{}, fmt.Errorf("query owner error: %w", err)
 	}
 
-	res := QueryOwnerByClassIdResponse{
-		ClassId: classId,
-		Owners:  make([]QueryOwnerResponse, 0),
+	res := QueryOwnerResponse{
+		Owners: make([]OwnerResponse, 0),
 	}
 	for rows.Next() {
-		var owner QueryOwnerResponse
+		var owner OwnerResponse
 		if err = rows.Scan(&owner.Owner, &owner.Nfts); err != nil {
 			panic(err)
-			logger.L.Errorw("failed to scan owner", "error", err)
-			return QueryOwnerByClassIdResponse{}, fmt.Errorf("query owner data failed: %w", err)
+			logger.L.Errorw("failed to scan owner", "error", err, "q", q)
+			return QueryOwnerResponse{}, fmt.Errorf("query owner data failed: %w", err)
 		}
 		owner.Count = len(owner.Nfts)
 		res.Owners = append(res.Owners, owner)
 	}
+	res.Count = len(res.Owners)
 	return res, nil
 }
 

@@ -100,6 +100,7 @@ type QueryClassRequest struct {
 }
 
 type QueryClassResponse struct {
+	Count   int                `json:"count"`
 	Classes []NftClassResponse `json:"classes"`
 }
 
@@ -114,7 +115,8 @@ type QueryNftRequest struct {
 }
 
 type QueryNftResponse struct {
-	Nfts []NftResponse `json:"nfts"`
+	Count int           `json:"count"`
+	Nfts  []NftResponse `json:"nfts"`
 }
 
 type NftResponse struct {
@@ -122,12 +124,16 @@ type NftResponse struct {
 	ClassParent NftClassParent `json:"class_parent"`
 }
 
-type QueryOwnerByClassIdResponse struct {
-	ClassId string               `json:"class_id"`
-	Owners  []QueryOwnerResponse `json:"owners"`
+type QueryOwnerRequest struct {
+	ClassId string `form:"class_id" binding:"required"`
 }
 
 type QueryOwnerResponse struct {
+	Count  int             `json:"count"`
+	Owners []OwnerResponse `json:"owners"`
+}
+
+type OwnerResponse struct {
 	Owner string   `json:"owner"`
 	Count int      `json:"count"`
 	Nfts  []string `json:"nfts"`
