@@ -94,33 +94,32 @@ type ISCNResponseData struct {
 	Stakeholders        json.RawMessage `json:"stakeholders,omitempty"`
 }
 
-type NftClassResponse struct {
-	Classes []NftClass `json:"classes"`
-}
-
 type QueryClassRequest struct {
 	IscnIdPrefix string `form:"iscn_id_prefix" binding:"required"`
 	Expand       bool   `form:"expand"`
 }
 
 type QueryClassResponse struct {
-	Classes []QueryNftClassResponse `json:"classes"`
+	Classes []NftClassResponse `json:"classes"`
 }
 
-type QueryNftClassResponse struct {
+type NftClassResponse struct {
 	NftClass
 	Count int   `json:"count"`
 	Nfts  []Nft `json:"nfts,omitempty"`
 }
 
+type QueryNftRequest struct {
+	Owner string `form:"owner" binding="required"`
+}
+
+type QueryNftResponse struct {
+	Nfts []NftResponse `json:"nfts"`
+}
+
 type NftResponse struct {
 	Nft
 	ClassParent NftClassParent `json:"class_parent"`
-}
-
-type QueryNftByOwnerResponse struct {
-	Owner string        `json:"owner"`
-	Nfts  []NftResponse `json:"nfts"`
 }
 
 type QueryOwnerByClassIdResponse struct {

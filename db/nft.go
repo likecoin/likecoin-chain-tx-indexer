@@ -33,10 +33,10 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest) (QueryClassResponse, er
 	}
 
 	res := QueryClassResponse{
-		Classes: make([]QueryNftClassResponse, 0),
+		Classes: make([]NftClassResponse, 0),
 	}
 	for rows.Next() {
-		var c QueryNftClassResponse
+		var c NftClassResponse
 		var nfts pgtype.JSONBArray
 		if err = rows.Scan(
 			&c.Id, &c.Name, &c.Description, &c.Symbol, &c.URI, &c.URIHash,
@@ -56,7 +56,7 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest) (QueryClassResponse, er
 	return res, nil
 }
 
-func GetNftByOwner(conn *pgxpool.Conn, owner string) (QueryNftByOwnerResponse, error) {
+func GetNftByOwner(conn *pgxpool.Conn, q QueryNftRequest) (QueryNftResponse, error) {
 	sql := `
 	SELECT n.nft_id, n.class_id, n.uri, n.uri_hash, n.metadata,
 		c.parent_type, c.parent_iscn_id_prefix, c.parent_account
@@ -67,14 +67,13 @@ func GetNftByOwner(conn *pgxpool.Conn, owner string) (QueryNftByOwnerResponse, e
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, owner)
+	rows, err := conn.Query(ctx, sql, q.Owner)
 	if err != nil {
-		logger.L.Errorw("Failed to query nft by owner", "error", err, "owner", owner)
-		return QueryNftByOwnerResponse{}, fmt.Errorf("query nft class error: %w", err)
+		logger.L.Errorw("Failed to query nft by owner", "error", err, "q", q)
+		return QueryNftResponse{}, fmt.Errorf("query nft class error: %w", err)
 	}
-	res := QueryNftByOwnerResponse{
-		Owner: owner,
-		Nfts:  make([]NftResponse, 0),
+	res := QueryNftResponse{
+		Nfts: make([]NftResponse, 0),
 	}
 	for rows.Next() {
 		var n NftResponse
@@ -82,8 +81,8 @@ func GetNftByOwner(conn *pgxpool.Conn, owner string) (QueryNftByOwnerResponse, e
 			&n.ClassParent.Type, &n.ClassParent.IscnIdPrefix, &n.ClassParent.Account,
 		); err != nil {
 			panic(err)
-			logger.L.Errorw("failed to scan nft", "error", err, "owner", owner)
-			return QueryNftByOwnerResponse{}, fmt.Errorf("query nft failed: %w", err)
+			logger.L.Errorw("failed to scan nft", "error", err, "q", q)
+			return QueryNftResponse{}, fmt.Errorf("query nft failed: %w", err)
 		}
 		res.Nfts = append(res.Nfts, n)
 	}

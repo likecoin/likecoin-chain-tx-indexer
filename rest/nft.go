@@ -8,9 +8,8 @@ import (
 func handleNftClass(c *gin.Context) {
 	var q db.QueryClassRequest
 
-	err := c.BindQuery(&q)
-	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+	if err := c.BindQuery(&q); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -25,18 +24,17 @@ func handleNftClass(c *gin.Context) {
 }
 
 func handleNft(c *gin.Context) {
-	q := c.Request.URL.Query()
+	var q db.QueryNftRequest
 
-	owner := q.Get("owner")
-	if owner == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "owner is require"})
+	if err := c.BindQuery(&q); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
 	conn := getConn(c)
-	res, err := db.GetNftByOwner(conn, owner)
+	res, err := db.GetNftByOwner(conn, q)
 	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err})
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -55,7 +53,7 @@ func handleNftOwner(c *gin.Context) {
 	conn := getConn(c)
 	res, err := db.GetOwnerByClassId(conn, classId)
 	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err})
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
