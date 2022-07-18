@@ -168,9 +168,9 @@ func InitDB(conn *pgxpool.Conn) error {
 		return err
 	}
 	_, err = conn.Exec(ctx, `
-	INSERT INTO meta VALUES ('extractor', 0)
+	INSERT INTO meta VALUES ($1, 0)
 	ON CONFLICT DO NOTHING
-	`)
+	`, META_EXTRACTOR)
 	if err != nil {
 		return err
 	}

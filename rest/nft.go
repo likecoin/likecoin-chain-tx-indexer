@@ -15,6 +15,7 @@ func handleNftClass(c *gin.Context) {
 	p, err := getPagination(c)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err})
+		return
 	}
 
 	conn := getConn(c)
@@ -35,8 +36,14 @@ func handleNft(c *gin.Context) {
 		return
 	}
 
+	p, err := getPagination(c)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
 	conn := getConn(c)
-	res, err := db.GetNfts(conn, q)
+	res, err := db.GetNfts(conn, q, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
@@ -70,13 +77,19 @@ func handleNftEvents(c *gin.Context) {
 		return
 	}
 
+	p, err := getPagination(c)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
 	if form.ClassId == "" && form.IscnIdPrefix == "" {
 		c.AbortWithStatusJSON(400, gin.H{"error": "must provide class_id or iscn_id_prefix"})
 		return
 	}
 	conn := getConn(c)
 
-	res, err := db.GetNftEvents(conn, form)
+	res, err := db.GetNftEvents(conn, form, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

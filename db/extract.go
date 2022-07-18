@@ -14,6 +14,7 @@ import (
 
 // todo: move to config
 const LIMIT = 10000
+const META_EXTRACTOR = "extractor"
 
 type EventPayload struct {
 	Batch     *Batch
@@ -25,7 +26,7 @@ type EventPayload struct {
 type EventHandler func(EventPayload) error
 
 func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished bool, err error) {
-	begin, err := GetMetaHeight(conn, "extractor")
+	begin, err := GetMetaHeight(conn, META_EXTRACTOR)
 	if err != nil {
 		return false, fmt.Errorf("Failed to get extractor synchonized height: %w", err)
 	}
@@ -101,12 +102,12 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 			}
 		}
 	}
-	batch.UpdateISCNHeight(end)
-	logger.L.Infof("ISCN synced height: %d", end)
+	batch.UpdateMetaHeight(META_EXTRACTOR, end)
 	err = batch.Flush()
 	if err != nil {
 		return false, fmt.Errorf("send batch failed: %w", err)
 	}
+	logger.L.Infof("ISCN synced height: %d", end)
 	return finished, nil
 }
 
@@ -133,15 +134,16 @@ func GetMetaHeight(conn *pgxpool.Conn, key string) (int64, error) {
 
 func (batch *Batch) InsertISCN(iscn ISCN) {
 	sql := `
-INSERT INTO iscn (iscn_id, iscn_id_prefix, version, owner, keywords, fingerprints, stakeholders, data, timestamp, ipld) VALUES
-( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-ON CONFLICT DO NOTHING;`
+	INSERT INTO iscn (iscn_id, iscn_id_prefix, version, owner, keywords, fingerprints, stakeholders, data, timestamp, ipld) VALUES
+	( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	ON CONFLICT DO NOTHING;`
 	batch.Batch.Queue(sql, iscn.Iscn, iscn.IscnPrefix, iscn.Version, iscn.Owner,
 		iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders, iscn.Data, iscn.Timestamp, iscn.Ipld)
 }
 
-func (batch *Batch) UpdateISCNHeight(height int64) {
-	batch.Batch.Queue(`UPDATE meta SET height = $1 WHERE id = 'extractor'`, height)
+func (batch *Batch) UpdateMetaHeight(key string, height int64) {
+	logger.L.Debugf("Update %s to %d\n", key, height)
+	batch.Batch.Queue(`UPDATE meta SET height = $2 WHERE id = $1`, key, height)
 }
 
 func (batch *Batch) InsertNftClass(c NftClass) {

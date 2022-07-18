@@ -170,8 +170,8 @@ func TestISCNPagination(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if res.Last != a {
-			t.Error("pagination", p, "expect", a, "got", res.Last)
+		if res.Pagination.NextKey != a {
+			t.Error("pagination", p, "expect", a, "got", res.Pagination.NextKey)
 		}
 	}
 }

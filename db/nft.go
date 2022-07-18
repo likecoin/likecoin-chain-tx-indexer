@@ -11,7 +11,7 @@ import (
 
 func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryClassResponse, error) {
 	sql := fmt.Sprintf(`
-	SELECT c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
+	SELECT c.id, c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
 	c.config, c.metadata, c.price,
 	c.parent_type, c.parent_iscn_id_prefix, c.parent_account,
 	(
@@ -43,6 +43,7 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 		var c NftClassResponse
 		var nfts pgtype.JSONBArray
 		if err = rows.Scan(
+			&res.Pagination.NextKey,
 			&c.Id, &c.Name, &c.Description, &c.Symbol, &c.URI, &c.URIHash,
 			&c.Config, &c.Metadata, &c.Price,
 			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account, &nfts,
@@ -57,22 +58,26 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 		c.Count = len(c.Nfts)
 		res.Classes = append(res.Classes, c)
 	}
-	res.Count = len(res.Classes)
+	res.Pagination.Count = len(res.Classes)
 	return res, nil
 }
 
-func GetNfts(conn *pgxpool.Conn, q QueryNftRequest) (QueryNftResponse, error) {
-	sql := `
-	SELECT n.nft_id, n.class_id, n.uri, n.uri_hash, n.metadata,
+func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResponse, error) {
+	sql := fmt.Sprintf(`
+	SELECT n.id, n.nft_id, n.class_id, n.uri, n.uri_hash, n.metadata,
 		c.parent_type, c.parent_iscn_id_prefix, c.parent_account
 	FROM nft as n
 	JOIN nft_class as c
 	ON n.class_id = c.class_id
-	WHERE owner = $1
-	`
+	WHERE owner = $4
+		AND ($1 = 0 OR n.id > $1)
+		AND ($2 = 0 OR n.id < $2)
+	ORDER BY n.id %s
+	LIMIT $3
+	`, p.Order())
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, q.Owner)
+	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, q.Owner)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft by owner", "error", err, "q", q)
 		return QueryNftResponse{}, fmt.Errorf("query nft class error: %w", err)
@@ -82,7 +87,8 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest) (QueryNftResponse, error) {
 	}
 	for rows.Next() {
 		var n NftResponse
-		if err = rows.Scan(&n.NftId, &n.ClassId, &n.Uri, &n.UriHash, &n.Metadata,
+		if err = rows.Scan(&res.Pagination.NextKey,
+			&n.NftId, &n.ClassId, &n.Uri, &n.UriHash, &n.Metadata,
 			&n.ClassParent.Type, &n.ClassParent.IscnIdPrefix, &n.ClassParent.Account,
 		); err != nil {
 			panic(err)
@@ -91,7 +97,7 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest) (QueryNftResponse, error) {
 		}
 		res.Nfts = append(res.Nfts, n)
 	}
-	res.Count = len(res.Nfts)
+	res.Pagination.Count = len(res.Nfts)
 	return res, nil
 }
 
@@ -100,7 +106,8 @@ func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, err
 	SELECT owner, array_agg(nft_id)
 	FROM nft
 	WHERE class_id = $1
-	GROUP BY owner`
+	GROUP BY owner
+	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
@@ -123,25 +130,29 @@ func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, err
 		owner.Count = len(owner.Nfts)
 		res.Owners = append(res.Owners, owner)
 	}
-	res.Count = len(res.Owners)
+	res.Pagination.Count = len(res.Owners)
 	return res, nil
 }
 
-func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest) (QueryEventsResponse, error) {
-	sql := `
-	SELECT action, e.class_id, e.nft_id, e.sender, e.receiver, e.timestamp, e.tx_hash, e.events
+func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (QueryEventsResponse, error) {
+	sql := fmt.Sprintf(`
+	SELECT e.id, action, e.class_id, e.nft_id, e.sender, e.receiver, e.timestamp, e.tx_hash, e.events
 	FROM nft_event as e
 	JOIN nft_class as c
 	ON e.class_id = c.class_id
-	WHERE ($1 = '' OR e.class_id = $1)
-		AND (nft_id = '' OR $2 = '' OR nft_id = $2)
-		AND ($3 = '' OR c.parent_iscn_id_prefix = $3)
-	ORDER BY e.id`
+	WHERE ($4 = '' OR e.class_id = $4)
+		AND (nft_id = '' OR $5 = '' OR nft_id = $5)
+		AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
+		AND ($1 = 0 OR e.id > $1)
+		AND ($2 = 0 OR e.id < $2)
+	ORDER BY e.id %s
+	LIMIT $3
+	`, p.Order())
 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.ClassId, q.NftId, q.IscnIdPrefix)
+	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, q.ClassId, q.NftId, q.IscnIdPrefix)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft events", "error", err)
 		return QueryEventsResponse{}, fmt.Errorf("query nft events error: %w", err)
@@ -154,6 +165,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest) (QueryEventsResponse
 		var e NftEvent
 		var eventRaw []string
 		if err = rows.Scan(
+			&res.Pagination.NextKey,
 			&e.Action, &e.ClassId, &e.NftId, &e.Sender,
 			&e.Receiver, &e.Timestamp, &e.TxHash, &eventRaw,
 		); err != nil {
@@ -169,6 +181,6 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest) (QueryEventsResponse
 		}
 		res.Events = append(res.Events, e)
 	}
-	res.Count = len(res.Events)
+	res.Pagination.Count = len(res.Events)
 	return res, nil
 }

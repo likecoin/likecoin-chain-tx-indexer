@@ -21,7 +21,7 @@ func createNftClass(payload db.EventPayload) error {
 		return fmt.Errorf("Failed to unmarshal NFT class message: %w", err)
 	}
 	var c db.NftClass = message.Input
-	c.Id = utils.GetEventsValue(payload.Events, "likechain.likenft.EventNewClass", "class_id")
+	c.Id = utils.GetEventsValue(payload.Events, "likechain.likenft.v1.EventNewClass", "class_id")
 	c.Parent = getNftParent(payload.Events)
 	payload.Batch.InsertNftClass(c)
 
@@ -36,8 +36,8 @@ func createNftClass(payload db.EventPayload) error {
 
 func getNftParent(event types.StringEvents) db.NftClassParent {
 	p := db.NftClassParent{
-		IscnIdPrefix: utils.GetEventsValue(event, "likechain.likenft.EventNewClass", "parent_iscn_id_prefix"),
-		Account:      utils.GetEventsValue(event, "likechain.likenft.EventNewClass", "parent_account"),
+		IscnIdPrefix: utils.GetEventsValue(event, "likechain.likenft.v1.EventNewClass", "parent_iscn_id_prefix"),
+		Account:      utils.GetEventsValue(event, "likechain.likenft.v1.EventNewClass", "parent_account"),
 	}
 	if p.IscnIdPrefix != "" {
 		p.Type = "ISCN"
@@ -58,9 +58,9 @@ func mintNft(payload db.EventPayload) error {
 	}
 	events := payload.Events
 	nft := message.Input
-	nft.NftId = utils.GetEventsValue(events, "likechain.likenft.EventMintNFT", "nft_id")
-	nft.Owner = utils.GetEventsValue(events, "likechain.likenft.EventMintNFT", "owner")
-	nft.ClassId = utils.GetEventsValue(events, "likechain.likenft.EventMintNFT", "class_id")
+	nft.NftId = utils.GetEventsValue(events, "likechain.likenft.v1.EventMintNFT", "nft_id")
+	nft.Owner = utils.GetEventsValue(events, "likechain.likenft.v1.EventMintNFT", "owner")
+	nft.ClassId = utils.GetEventsValue(events, "likechain.likenft.v1.EventMintNFT", "class_id")
 	payload.Batch.InsertNft(nft)
 
 	e := db.NftEvent{

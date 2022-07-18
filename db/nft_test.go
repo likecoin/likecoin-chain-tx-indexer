@@ -34,8 +34,11 @@ func TestQueryNftByOwner(t *testing.T) {
 	q := QueryNftRequest{
 		Owner: "like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp",
 	}
+	p := PageRequest{
+		Limit: 1,
+	}
 
-	res, err := GetNfts(conn, q)
+	res, err := GetNfts(conn, q, p)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +75,11 @@ func TestEventsByNftId(t *testing.T) {
 		NftId:   "testing-aurora-86",
 	}
 
-	res, err := GetNftEvents(conn, q)
+	p := PageRequest{
+		Limit: 1,
+	}
+
+	res, err := GetNftEvents(conn, q, p)
 	if err != nil {
 		t.Fatal(err)
 	}

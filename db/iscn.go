@@ -130,5 +130,6 @@ func parseISCN(rows pgx.Rows) (ISCNResponse, error) {
 			Data: iscn,
 		})
 	}
+	res.Pagination.Count = len(res.Records)
 	return res, nil
 }

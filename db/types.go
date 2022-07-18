@@ -95,7 +95,8 @@ func (p *PageRequest) Order() Order {
 }
 
 type PageResponse struct {
-	NextKey uint64 `json:"next_key"`
+	NextKey uint64 `json:"next_key,omitempty"`
+	Count   int    `json:"count,omitempty"`
 }
 
 type ISCNResponse struct {
@@ -124,13 +125,13 @@ type QueryClassRequest struct {
 }
 
 type QueryClassResponse struct {
-	Count   int                `json:"count"`
-	Classes []NftClassResponse `json:"classes"`
+	Classes    []NftClassResponse `json:"classes"`
+	Pagination PageResponse       `json:"pagination"`
 }
 
 type NftClassResponse struct {
 	NftClass
-	Count int   `json:"count"`
+	Count int   `json:"count,omitempty"`
 	Nfts  []Nft `json:"nfts,omitempty"`
 }
 
@@ -139,8 +140,8 @@ type QueryNftRequest struct {
 }
 
 type QueryNftResponse struct {
-	Count int           `json:"count"`
-	Nfts  []NftResponse `json:"nfts"`
+	Pagination PageResponse  `json:"pagination"`
+	Nfts       []NftResponse `json:"nfts"`
 }
 
 type NftResponse struct {
@@ -153,13 +154,13 @@ type QueryOwnerRequest struct {
 }
 
 type QueryOwnerResponse struct {
-	Count  int             `json:"count"`
-	Owners []OwnerResponse `json:"owners"`
+	Pagination PageResponse    `json:"pagination"`
+	Owners     []OwnerResponse `json:"owners"`
 }
 
 type OwnerResponse struct {
 	Owner string   `json:"owner"`
-	Count int      `json:"count"`
+	Count int      `json:"count,omitempty"`
 	Nfts  []string `json:"nfts"`
 }
 
@@ -171,6 +172,6 @@ type QueryEventsRequest struct {
 }
 
 type QueryEventsResponse struct {
-	Count  int        `json:"count"`
-	Events []NftEvent `json:"events"`
+	Pagination PageResponse `json:"pagination"`
+	Events     []NftEvent   `json:"events"`
 }
