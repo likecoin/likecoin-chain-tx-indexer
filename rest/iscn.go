@@ -3,7 +3,6 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
@@ -48,16 +47,13 @@ func handleISCN(c *gin.Context) {
 				hasQuery = true
 				iscn.Stakeholders = []byte(fmt.Sprintf(`[{"name": "%s"}]`, v[0]))
 			}
-		case "limit", "after", "before", "order_by":
-		default:
-			c.AbortWithStatusJSON(400, gin.H{"error": fmt.Sprintf("unknown query %s", k)})
-			return
 		}
 	}
 
-	p, err := getPagination(q)
+	p, err := getPagination(c)
 	if err != nil {
-		c.AbortWithStatusJSON(400, gin.H{"error": err})
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
 	}
 
 	pool := getPool(c)
@@ -77,9 +73,10 @@ func handleISCN(c *gin.Context) {
 
 func handleISCNSearch(c *gin.Context) {
 	q := c.Request.URL.Query()
-	p, err := getPagination(q)
+	p, err := getPagination(c)
 	if err != nil {
-		c.AbortWithStatusJSON(400, gin.H{"error": err})
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
 	}
 	term := q.Get("q")
 	if term == "" {
@@ -96,21 +93,13 @@ func handleISCNSearch(c *gin.Context) {
 	respondRecords(c, res)
 }
 
-func getPagination(q url.Values) (p db.Pagination, err error) {
-	if p.Limit, err = getLimit(q, "limit"); err != nil {
-		return p, err
+func getPagination(c *gin.Context) (p db.PageRequest, err error) {
+	p = db.PageRequest{
+		Limit: 1,
 	}
-	if p.After, err = getUint(q, "after"); err != nil {
-		return p, fmt.Errorf("cannot use %s as begin", q.Get("begin"))
-	}
-	if p.Before, err = getUint(q, "before"); err != nil {
-		return p, fmt.Errorf("cannot use %s as end", q.Get("end"))
-	}
-	if p.Order, err = getQueryOrder(q); err != nil {
-		return p, err
-	}
+	err = c.ShouldBindQuery(&p)
 	logger.L.Debugf("%#v", p)
-	return p, nil
+	return p, err
 }
 
 func respondRecords(c *gin.Context, res db.ISCNResponse) {

@@ -67,16 +67,40 @@ func (n *NftEvent) Attach(payload EventPayload) {
 	n.TxHash = payload.TxHash
 }
 
-type Pagination struct {
-	After  uint64
-	Before uint64
-	Limit  uint64
-	Order  Order
+type PageRequest struct {
+	Key     uint64 `form:"key"`
+	Limit   uint64 `form:"limit" binding:"gte=1,lte=100"`
+	Reverse bool   `form:"reverse"`
+}
+
+func (p *PageRequest) After() uint64 {
+	if p.Reverse {
+		return 0
+	}
+	return p.Key
+}
+
+func (p *PageRequest) Before() uint64 {
+	if p.Reverse {
+		return p.Key
+	}
+	return 0
+}
+
+func (p *PageRequest) Order() Order {
+	if p.Reverse {
+		return ORDER_DESC
+	}
+	return ORDER_ASC
+}
+
+type PageResponse struct {
+	NextKey uint64 `json:"next_key"`
 }
 
 type ISCNResponse struct {
-	Records []ISCNResponseRecord `json:"records"`
-	Last    uint64               `json:"last"`
+	Records    []ISCNResponseRecord `json:"records"`
+	Pagination PageResponse         `json:"pagination"`
 }
 
 type ISCNResponseRecord struct {

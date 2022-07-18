@@ -12,9 +12,13 @@ func handleNftClass(c *gin.Context) {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
+	p, err := getPagination(c)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err})
+	}
 
 	conn := getConn(c)
-	res, err := db.GetClasses(conn, q)
+	res, err := db.GetClasses(conn, q, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

@@ -58,9 +58,9 @@ func TestISCNCombineQuery(t *testing.T) {
 	}
 
 	for i, v := range tables {
-		p := Pagination{
-			Limit: 5,
-			Order: ORDER_DESC,
+		p := PageRequest{
+			Limit:   5,
+			Reverse: true,
 		}
 
 		res, err := QueryISCN(pool, v.ISCN, p)
@@ -74,9 +74,9 @@ func TestISCNCombineQuery(t *testing.T) {
 }
 
 func TestISCNList(t *testing.T) {
-	p := Pagination{
-		Limit: 10,
-		Order: ORDER_DESC,
+	p := PageRequest{
+		Limit:   10,
+		Reverse: true,
 	}
 
 	res, err := QueryISCNList(pool, p)
@@ -137,9 +137,9 @@ func TestISCNQueryAll(t *testing.T) {
 	}
 
 	for _, v := range tables {
-		p := Pagination{
-			Limit: 5,
-			Order: ORDER_DESC,
+		p := PageRequest{
+			Limit:   5,
+			Reverse: true,
 		}
 
 		t.Log(v.term)
@@ -154,16 +154,15 @@ func TestISCNQueryAll(t *testing.T) {
 }
 
 func TestISCNPagination(t *testing.T) {
-	table := map[Pagination]uint64{
+	table := map[PageRequest]uint64{
 		{
-			After: 1300,
+			Key:   1300,
 			Limit: 10,
-			Order: ORDER_ASC,
 		}: 1310,
 		{
-			Before: 1300,
-			Limit:  10,
-			Order:  ORDER_DESC,
+			Key:     1300,
+			Limit:   10,
+			Reverse: true,
 		}: 1290,
 	}
 	for p, a := range table {

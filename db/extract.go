@@ -141,7 +141,7 @@ ON CONFLICT DO NOTHING;`
 }
 
 func (batch *Batch) UpdateISCNHeight(height int64) {
-	batch.Batch.Queue(`UPDATE meta SET height = $1 WHERE id = 'iscn'`, height)
+	batch.Batch.Queue(`UPDATE meta SET height = $1 WHERE id = 'extractor'`, height)
 }
 
 func (batch *Batch) InsertNftClass(c NftClass) {

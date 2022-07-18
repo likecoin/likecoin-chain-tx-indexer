@@ -8,14 +8,9 @@ SELECT c.*, (
 	FROM nft
 	WHERE nft.class_id = c.class_id
 	GROUP BY nft.class_id
-	LIMIT 2
-)
+), COUNT(*) OVER()
 FROM nft_class as c
 WHERE c.parent_iscn_id_prefix = '$ISCN'
+LIMIT 1
 SQL
 
-# psql nftdev <<SQL
-# SELECT nft.* FROM nft_class
-# LEFT JOIN nft ON nft.class_id = nft_class.class_id
-# WHERE nft_class.parent_iscn_id_prefix = '$ISCN'
-# SQL
