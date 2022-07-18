@@ -3,12 +3,12 @@ module github.com/likecoin/likecoin-chain-tx-indexer
 go 1.18
 
 require (
-	github.com/cosmos/cosmos-sdk v0.44.8
+	github.com/cosmos/cosmos-sdk v0.45.6
 	github.com/gin-gonic/gin v1.7.4
 	github.com/jackc/pgtype v1.8.1
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/joho/godotenv v1.4.0
-	github.com/likecoin/likechain v1.0.0
+	github.com/likecoin/likecoin-chain/v3 v3.0.0
 	github.com/spf13/cobra v1.4.0
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tendermint v0.34.19
@@ -31,7 +31,7 @@ require (
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/iavl v0.17.3 // indirect
-	github.com/cosmos/ibc-go/v2 v2.1.0 // indirect
+	github.com/cosmos/ibc-go/v2 v2.3.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
 	github.com/danieljoos/wincred v1.0.2 // indirect
@@ -146,6 +146,5 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/likecoin/cosmos-sdk v0.44.8-dual-prefix
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/likecoin/likechain => github.com/oursky/likecoin-chain v0.0.0-20220617084211-676707e52a40
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )

@@ -25,9 +25,9 @@ type EventPayload struct {
 type EventHandler func(EventPayload) error
 
 func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished bool, err error) {
-	begin, err := GetMetaHeight(conn, "iscn")
+	begin, err := GetMetaHeight(conn, "extractor")
 	if err != nil {
-		return false, fmt.Errorf("Failed to get ISCN synchonized height: %w", err)
+		return false, fmt.Errorf("Failed to get extractor synchonized height: %w", err)
 	}
 
 	end, err := GetLatestHeight(conn)

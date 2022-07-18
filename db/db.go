@@ -10,8 +10,8 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/likecoin/likechain/app"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain/v3/app"
 	"github.com/spf13/cobra"
 )
 
@@ -168,7 +168,7 @@ func InitDB(conn *pgxpool.Conn) error {
 		return err
 	}
 	_, err = conn.Exec(ctx, `
-	INSERT INTO meta VALUES ('iscn', 0), ('nft', 0)
+	INSERT INTO meta VALUES ('extractor', 0)
 	ON CONFLICT DO NOTHING
 	`)
 	if err != nil {
