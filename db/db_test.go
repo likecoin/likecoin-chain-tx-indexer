@@ -5,7 +5,6 @@ import (
 	"log"
 	"testing"
 
-	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
@@ -60,10 +59,4 @@ func debugSQL(conn *pgxpool.Conn, ctx context.Context, sql string, args ...inter
 		log.Println(line)
 	}
 	return err
-}
-
-type DBLogger struct{}
-
-func (logg DBLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]any) {
-	// log.Println(msg, data)
 }
