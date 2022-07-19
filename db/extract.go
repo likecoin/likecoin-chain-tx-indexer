@@ -12,8 +12,8 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
-// todo: move to config
-const LIMIT = 10000
+var LIMIT = int64(utils.EnvInt("EXTRACTOR_LIMIT", 10000))
+
 const META_EXTRACTOR = "extractor"
 
 type EventPayload struct {
@@ -26,6 +26,7 @@ type EventPayload struct {
 type EventHandler func(EventPayload) error
 
 func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished bool, err error) {
+	logger.L.Debug("Extractor Limit", LIMIT)
 	begin, err := GetMetaHeight(conn, META_EXTRACTOR)
 	if err != nil {
 		return false, fmt.Errorf("Failed to get extractor synchonized height: %w", err)
@@ -59,7 +60,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 	rows, err := conn.Query(ctx, sql, begin, end, eventString)
 	defer rows.Close()
 
-	batch := NewBatch(conn, LIMIT)
+	batch := NewBatch(conn, int(LIMIT))
 
 	for rows.Next() {
 		var messageData pgtype.JSONB

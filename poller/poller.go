@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 	"github.com/likecoin/likecoin-chain/v3/app"
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/bytes"
@@ -17,12 +18,12 @@ import (
 	tmTypes "github.com/tendermint/tendermint/types"
 )
 
-const batchSize = 1000
-const batchMaxHeightDiff = 100
+var batchSize = utils.EnvInt("BATCH_SIZE", 1000)
+var batchMaxHeightDiff = int64(utils.EnvInt("BATCH_MAX_HEIGHT_DIFF", 1000))
 
 // TODO: move into config
-const sleepInitial = 5 * time.Second
-const sleepMax = 600 * time.Second
+var sleepInitial = time.Duration(utils.EnvInt("SLEEP_INITIAL", 5)) * time.Second
+var sleepMax = time.Duration(utils.EnvInt("SLEEP_MAX", 600)) * time.Second
 
 var encodingConfig = app.MakeEncodingConfig()
 
