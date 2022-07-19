@@ -108,7 +108,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 	if err != nil {
 		return false, fmt.Errorf("send batch failed: %w", err)
 	}
-	logger.L.Infof("ISCN synced height: %d", end)
+	logger.L.Infof("Extractor synced height: %d", end)
 	return finished, nil
 }
 
