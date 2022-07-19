@@ -1,13 +1,19 @@
 CREATE TEMP TABLE IF NOT EXISTS iscn (
-	id BIGSERIAL PRIMARY KEY,
-	iscn_id VARCHAR(80),
-	iscn_id_prefix VARCHAR(80),
-	owner VARCHAR(50),
-	keywords VARCHAR(64)[],
-	fingerprints VARCHAR(256)[],
-	stakeholders JSONB,
-	data JSONB,
-	UNIQUE(iscn_id),
+	id bigserial primary key,
+	iscn_id text,
+	iscn_id_prefix text,
+	version int,
+	owner text,
+	name text,
+	description text,
+	url text,
+	keywords text[],
+	fingerprints text[],
+	ipld text,
+	timestamp timestamp,
+	stakeholders jsonb,
+	data jsonb,
+	UNIQUE(iscn_id)
 );
 
 CREATE TEMP TABLE IF NOT EXISTS meta (

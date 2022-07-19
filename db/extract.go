@@ -26,7 +26,6 @@ type EventPayload struct {
 type EventHandler func(EventPayload) error
 
 func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished bool, err error) {
-	logger.L.Debug("Extractor Limit", LIMIT)
 	begin, err := GetMetaHeight(conn, META_EXTRACTOR)
 	if err != nil {
 		return false, fmt.Errorf("Failed to get extractor synchonized height: %w", err)
@@ -135,11 +134,12 @@ func GetMetaHeight(conn *pgxpool.Conn, key string) (int64, error) {
 
 func (batch *Batch) InsertISCN(iscn ISCN) {
 	sql := `
-	INSERT INTO iscn (iscn_id, iscn_id_prefix, version, owner, keywords, fingerprints, stakeholders, data, timestamp, ipld) VALUES
-	( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	INSERT INTO iscn (iscn_id, iscn_id_prefix, version, owner, keywords, fingerprints, stakeholders, data, timestamp, ipld, name, description, url) VALUES
+	( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 	ON CONFLICT DO NOTHING;`
 	batch.Batch.Queue(sql, iscn.Iscn, iscn.IscnPrefix, iscn.Version, iscn.Owner,
-		iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders, iscn.Data, iscn.Timestamp, iscn.Ipld)
+		iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders, iscn.Data, iscn.Timestamp, iscn.Ipld,
+		iscn.Name, iscn.Description, iscn.Url)
 }
 
 func (batch *Batch) UpdateMetaHeight(key string, height int64) {

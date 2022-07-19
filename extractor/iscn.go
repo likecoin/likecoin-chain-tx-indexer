@@ -22,7 +22,10 @@ type iscnData struct {
 }
 
 type contentMetadata struct {
-	Keywords string `json:"keywords,omitempty"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Url         string `json:"url"`
+	Keywords    string `json:"keywords,omitempty"`
 }
 
 type stakeholder struct {
@@ -75,6 +78,9 @@ func insertISCN(payload db.EventPayload) error {
 		IscnPrefix:   utils.GetEventsValue(events, "iscn_record", "iscn_id_prefix"),
 		Version:      getIscnVersion(utils.GetEventsValue(events, "iscn_record", "iscn_id")),
 		Owner:        utils.GetEventsValue(events, "iscn_record", "owner"),
+		Name:         record.ContentMetadata.Name,
+		Description:  record.ContentMetadata.Description,
+		Url:          record.ContentMetadata.Url,
 		Keywords:     utils.ParseKeywords(record.ContentMetadata.Keywords),
 		Fingerprints: record.ContentFingerprints,
 		Stakeholders: holders,
