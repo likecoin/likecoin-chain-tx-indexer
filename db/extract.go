@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -93,7 +94,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 					Message:   messages[i],
 					Events:    event.Events,
 					Timestamp: timestamp,
-					TxHash:    txHash,
+					TxHash:    strings.Trim(txHash, "\""),
 				}
 				err = handler(payload)
 				if err != nil {
@@ -155,11 +156,30 @@ func (batch *Batch) InsertNftClass(c NftClass) {
 	metadata, config, price)
 	VALUES
 	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	ON CONFLICT DO NOTHING
 	`
 	batch.Batch.Queue(sql,
 		c.Id, c.Parent.Type, c.Parent.IscnIdPrefix, c.Parent.Account,
 		c.Name, c.Symbol, c.Description, c.URI, c.URIHash,
 		c.Metadata, c.Config, c.Price,
+	)
+}
+
+func (batch *Batch) UpdateNftClass(c NftClass) {
+	sql := `
+	UPDATE nft_class
+	SET name = $1, 
+		symbol = $2,
+		description = $3, 
+		uri = $4,
+		uri_hash = $5,
+		metadata = $6,
+		config = $7
+	WHERE class_id = $8
+	`
+	batch.Batch.Queue(sql,
+		c.Name, c.Symbol, c.Description, c.URI, c.URIHash,
+		c.Metadata, c.Config, c.Id,
 	)
 }
 

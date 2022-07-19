@@ -1,0 +1,12 @@
+{
+        "name": "An Updated Class",
+        "symbol": "UPDATED",
+        "description": "This is an NFT class updated by liked cli",
+        "uri": "",
+        "uri_hash": "",
+        "metadata": {},
+        "config": {
+                "burnable": true,
+                "max_supply": 0
+        }
+}

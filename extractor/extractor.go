@@ -16,6 +16,7 @@ var handlers = map[string]db.EventHandler{
 	"msg_change_iscn_record_ownership":             transferISCN,
 	"/likechain.iscn.MsgChangeIscnRecordOwnership": transferISCN,
 	"new_class":                   createNftClass,
+	"update_class":                updateNftClass,
 	"mint_nft":                    mintNft,
 	"/cosmos.nft.v1beta1.MsgSend": sendNft,
 }

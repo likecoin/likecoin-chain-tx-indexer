@@ -22,7 +22,7 @@ func createNftClass(payload db.EventPayload) error {
 	}
 	var c db.NftClass = message.Input
 	c.Id = utils.GetEventsValue(payload.Events, "likechain.likenft.v1.EventNewClass", "class_id")
-	c.Parent = getNftParent(payload.Events)
+	c.Parent = getNftParent(payload.Events, "likechain.likenft.v1.EventNewClass")
 	payload.Batch.InsertNftClass(c)
 
 	e := db.NftEvent{
@@ -34,10 +34,29 @@ func createNftClass(payload db.EventPayload) error {
 	return nil
 }
 
-func getNftParent(event types.StringEvents) db.NftClassParent {
+func updateNftClass(payload db.EventPayload) error {
+	var message nftClassMessage
+	if err := json.Unmarshal(payload.Message, &message); err != nil {
+		return fmt.Errorf("Failed to unmarshal NFT class message: %w", err)
+	}
+	var c db.NftClass = message.Input
+	c.Id = utils.GetEventsValue(payload.Events, "likechain.likenft.v1.EventUpdateClass", "class_id")
+	logger.L.Debug(c)
+	payload.Batch.UpdateNftClass(c)
+
+	e := db.NftEvent{
+		ClassId: c.Id,
+		Sender:  message.Creator,
+	}
+	e.Attach(payload)
+	payload.Batch.InsertNftEvent(e)
+	return nil
+}
+
+func getNftParent(event types.StringEvents, eventType string) db.NftClassParent {
 	p := db.NftClassParent{
-		IscnIdPrefix: utils.GetEventsValue(event, "likechain.likenft.v1.EventNewClass", "parent_iscn_id_prefix"),
-		Account:      utils.GetEventsValue(event, "likechain.likenft.v1.EventNewClass", "parent_account"),
+		IscnIdPrefix: utils.GetEventsValue(event, eventType, "parent_iscn_id_prefix"),
+		Account:      utils.GetEventsValue(event, eventType, "parent_account"),
 	}
 	if p.IscnIdPrefix != "" {
 		p.Type = "ISCN"
