@@ -9,17 +9,19 @@ import (
 )
 
 type ISCN struct {
-	Iscn                   string
-	IscnPrefix             string
-	Version                int
-	Owner                  string
-	Timestamp              time.Time
-	Ipld                   string
-	Name, Description, Url string
-	Keywords               []string
-	Fingerprints           []string
-	Stakeholders           []byte
-	Data                   []byte
+	Iscn         string
+	IscnPrefix   string
+	Version      int
+	Owner        string
+	Timestamp    time.Time
+	Ipld         string
+	Name         string
+	Description  string
+	Url          string
+	Keywords     []string
+	Fingerprints []string
+	Stakeholders []byte
+	Data         []byte
 }
 
 type NftClass struct {
