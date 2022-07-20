@@ -8,7 +8,7 @@ require (
 	github.com/jackc/pgtype v1.8.1
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/joho/godotenv v1.4.0
-	github.com/likecoin/likecoin-chain/v3 v3.0.1
+	github.com/likecoin/likecoin-chain/v3 v3.0.0
 	github.com/spf13/cobra v1.4.0
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tendermint v0.34.19
@@ -146,6 +146,5 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/likecoin/cosmos-sdk v0.45.6-dual-prefix
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/likecoin/likecoin-chain/v3 => github.com/oursky/likecoin-chain/v3 v3.0.0-rc1
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )

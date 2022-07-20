@@ -596,6 +596,8 @@ github.com/lightstep/lightstep-tracer-common/golang/gogo v0.0.0-20190605223551-b
 github.com/lightstep/lightstep-tracer-go v0.18.1/go.mod h1:jlF1pusYV4pidLvZ+XD0UBX0ZE6WURAspgAczcDHrL4=
 github.com/likecoin/cosmos-sdk v0.45.6-dual-prefix h1:9d+CcWOhVJLqQzlAF+SBsodaq+tCPbVJ6PTg5yOzu/Y=
 github.com/likecoin/cosmos-sdk v0.45.6-dual-prefix/go.mod h1:bPeeVMEtVvH3y3xAGHVbK+/CZlpaazzh77hG8ZrcJpI=
+github.com/likecoin/likecoin-chain/v3 v3.0.0 h1:F+Q5puQkImmi72qjpsf5HJSB29SFA+VS/YOtsnoaq1A=
+github.com/likecoin/likecoin-chain/v3 v3.0.0/go.mod h1:qUoid9Eltx+ku/6jy+a94xjnEwfGbWBwGVf5Fp/YvlA=
 github.com/lyft/protoc-gen-star v0.5.3/go.mod h1:V0xaHgaf5oCCqmcxYcWiDfTiKsZsRc87/1qhoTACD8w=
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/magiconair/properties v1.8.1/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
@@ -734,8 +736,6 @@ github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/openzipkin/zipkin-go v0.2.5/go.mod h1:KpXfKdgRDnnhsxw4pNIH9Md5lyFqKUa4YDFlwRYAMyE=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/otiai10/copy v1.6.0 h1:IinKAryFFuPONZ7cm6T6E2QX/vcJwSnlaA5lfoaXIiQ=
-github.com/oursky/likecoin-chain/v3 v3.0.0-rc1 h1:WcsPX+lSpb6dIePku4BYDC4+QwA5GL5hXpnDLxA5SJ0=
-github.com/oursky/likecoin-chain/v3 v3.0.0-rc1/go.mod h1:qUoid9Eltx+ku/6jy+a94xjnEwfGbWBwGVf5Fp/YvlA=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
