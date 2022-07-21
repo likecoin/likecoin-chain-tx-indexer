@@ -192,7 +192,7 @@ func GetSupporters(conn *pgxpool.Conn, q QuerySupporterRequest, p PageRequest) (
 	JOIN nft AS n ON c.class_id = n.class_id
 	WHERE i.owner = $1
 	GROUP BY n.owner
-	ORDER BY COUNT(*)
+	ORDER BY COUNT(*) DESC
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
@@ -207,7 +207,7 @@ func GetSupporters(conn *pgxpool.Conn, q QuerySupporterRequest, p PageRequest) (
 		// Supporters: make([]supporterResponse, 0),
 	}
 	for rows.Next() {
-		var s supporterResponse
+		var s supportResponse
 		if err = rows.Scan(&s.Account, &s.Count, &s.TotalValue, &s.Collections); err != nil {
 			panic(err)
 		}
@@ -215,5 +215,37 @@ func GetSupporters(conn *pgxpool.Conn, q QuerySupporterRequest, p PageRequest) (
 		res.Supporters = append(res.Supporters, s)
 	}
 	res.Pagination.Count = len(res.Supporters)
+	return res, nil
+}
+
+func GetSupportees(conn *pgxpool.Conn, q QuerySupporteeRequest, p PageRequest) (QuerySupporteeResponse, error) {
+	sql := `
+	SELECT i.owner as author, COUNT(*), SUM(c.price), array_agg(DISTINCT c.class_id) as collections
+	FROM iscn as i
+	JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+	JOIN nft AS n ON c.class_id = n.class_id
+	WHERE n.owner = $1
+	GROUP BY i.owner
+	ORDER BY COUNT(*) DESC
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(ctx, sql, q.Supporter)
+	if err != nil {
+		logger.L.Errorw("Failed to query supporters", "error", err, "q", q)
+		return QuerySupporteeResponse{}, fmt.Errorf("query supporters error: %w", err)
+	}
+
+	res := QuerySupporteeResponse{}
+	for rows.Next() {
+		var s supportResponse
+		if err = rows.Scan(&s.Account, &s.Count, &s.TotalValue, &s.Collections); err != nil {
+			panic(err)
+		}
+		logger.L.Debug(s)
+		res.Supportees = append(res.Supportees, s)
+	}
+	res.Pagination.Count = len(res.Supportees)
 	return res, nil
 }
