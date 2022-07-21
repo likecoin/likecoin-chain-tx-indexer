@@ -8,7 +8,7 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/poller"
 	"github.com/likecoin/likecoin-chain-tx-indexer/rest"
-	"github.com/likecoin/likecoin-chain/v2/app"
+	"github.com/likecoin/likecoin-chain/v3/app"
 	"github.com/spf13/cobra"
 )
 

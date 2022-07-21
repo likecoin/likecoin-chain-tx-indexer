@@ -3,12 +3,12 @@ module github.com/likecoin/likecoin-chain-tx-indexer
 go 1.18
 
 require (
-	github.com/cosmos/cosmos-sdk v0.44.8
+	github.com/cosmos/cosmos-sdk v0.45.6
 	github.com/gin-gonic/gin v1.7.4
 	github.com/jackc/pgtype v1.8.1
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/joho/godotenv v1.4.0
-	github.com/likecoin/likecoin-chain/v2 v2.0.1-0.20220511051305-f3cc9d46a8f1
+	github.com/likecoin/likecoin-chain/v3 v3.0.0
 	github.com/spf13/cobra v1.4.0
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tendermint v0.34.19
@@ -31,7 +31,7 @@ require (
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/iavl v0.17.3 // indirect
-	github.com/cosmos/ibc-go/v2 v2.1.0 // indirect
+	github.com/cosmos/ibc-go/v2 v2.3.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
 	github.com/danieljoos/wincred v1.0.2 // indirect
@@ -132,7 +132,7 @@ require (
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
+	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb // indirect
 	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
@@ -143,7 +143,7 @@ require (
 // point sdk to fork and follow replaces at https://github.com/cosmos/cosmos-sdk/blob/v0.44.8/go.mod
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-	github.com/cosmos/cosmos-sdk => github.com/likecoin/cosmos-sdk v0.44.8-dual-prefix
+	github.com/cosmos/cosmos-sdk => github.com/likecoin/cosmos-sdk v0.45.6-dual-prefix
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2

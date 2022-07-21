@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
-	iscnTypes "github.com/likecoin/likecoin-chain/v2/x/iscn/types"
+	iscnTypes "github.com/likecoin/likecoin-chain/v3/x/iscn/types"
 )
 
 type ISCNResponse struct {
