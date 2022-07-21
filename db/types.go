@@ -185,11 +185,20 @@ type QuerySupporterRequest struct {
 }
 
 type QuerySupporterResponse struct {
-	Supporters []supporterResponse `json:"supporters"`
-	Pagination PageResponse        `json:"pagination"`
+	Supporters []supportResponse `json:"supporters"`
+	Pagination PageResponse      `json:"pagination"`
 }
 
-type supporterResponse struct {
+type QuerySupporteeRequest struct {
+	Supporter string `form:"supporter" binding:"required"`
+}
+
+type QuerySupporteeResponse struct {
+	Supportees []supportResponse `json:"supportees"`
+	Pagination PageResponse      `json:"pagination"`
+}
+
+type supportResponse struct {
 	Account     string   `json:"account"`
 	Count       int      `json:"count"`
 	TotalValue  int      `json:"total_value"`

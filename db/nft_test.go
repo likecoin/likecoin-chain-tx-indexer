@@ -107,3 +107,25 @@ func TestSupporters(t *testing.T) {
 	}
 	t.Log(res)
 }
+
+func TestSupportees(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Release()
+
+	q := QuerySupporteeRequest{
+		Supporter: "like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp",
+	}
+
+	p := PageRequest{
+		Limit: 1,
+	}
+
+	res, err := GetSupportees(conn, q, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(res)
+}
