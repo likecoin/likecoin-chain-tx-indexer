@@ -180,3 +180,19 @@ type QueryEventsResponse struct {
 	Pagination PageResponse `json:"pagination"`
 	Events     []NftEvent   `json:"events"`
 }
+
+type QuerySupporterRequest struct {
+	Author string `form:"author" binding:"required"`
+}
+
+type QuerySupporterResponse struct {
+	Supporters []supporterResponse `json:"supporters"`
+	Pagination PageResponse        `json:"pagination"`
+}
+
+type supporterResponse struct {
+	Account     string   `json:"account"`
+	Count       int      `json:"count"`
+	TotalValue  int      `json:"total_value"`
+	Collections []string `json:"collections"`
+}

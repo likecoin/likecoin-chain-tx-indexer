@@ -85,3 +85,25 @@ func TestEventsByNftId(t *testing.T) {
 	}
 	t.Log(res)
 }
+
+func TestSupporters(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Release()
+
+	q := QuerySupporterRequest{
+		Author: "like1lsagfzrm4gz28he4wunt63sts5xzmczw5a2m42",
+	}
+
+	p := PageRequest{
+		Limit: 1,
+	}
+
+	res, err := GetSupporters(conn, q, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(res)
+}
