@@ -185,3 +185,37 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	res.Pagination.Count = len(res.Events)
 	return res, nil
 }
+
+func GetSupporters(conn *pgxpool.Conn, q QuerySupporterRequest, p PageRequest) (QuerySupporterResponse, error) {
+	sql := `
+	SELECT n.owner, COUNT(*), SUM(c.price), array_agg(DISTINCT c.class_id)
+	FROM iscn as i
+	JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+	JOIN nft AS n ON c.class_id = n.class_id
+	WHERE i.owner = $1
+	GROUP BY n.owner
+	ORDER BY COUNT(*)
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(ctx, sql, q.Author)
+	if err != nil {
+		logger.L.Errorw("Failed to query supporters", "error", err, "q", q)
+		return QuerySupporterResponse{}, fmt.Errorf("query supporters error: %w", err)
+	}
+
+	res := QuerySupporterResponse{
+		// Supporters: make([]supporterResponse, 0),
+	}
+	for rows.Next() {
+		var s supporterResponse
+		if err = rows.Scan(&s.Account, &s.Count, &s.TotalValue, &s.Collections); err != nil {
+			panic(err)
+		}
+		logger.L.Debug(s)
+		res.Supporters = append(res.Supporters, s)
+	}
+	res.Pagination.Count = len(res.Supporters)
+	return res, nil
+}
