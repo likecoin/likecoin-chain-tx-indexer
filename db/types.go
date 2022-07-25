@@ -186,8 +186,8 @@ type QueryCollectorRequest struct {
 }
 
 type QueryCollectorResponse struct {
-	Collectors []accountCollection `json:"collectors"`
-	Pagination PageResponse        `json:"pagination"`
+	Collectors map[string]accountCollection `json:"collectors"`
+	Pagination PageResponse                 `json:"pagination"`
 }
 
 type QueryCreatorRequest struct {
@@ -195,17 +195,15 @@ type QueryCreatorRequest struct {
 }
 
 type QueryCreatorResponse struct {
-	Creators   []accountCollection `json:"creators"`
-	Pagination PageResponse        `json:"pagination"`
+	Creators   map[string]accountCollection `json:"creators"`
+	Pagination PageResponse                 `json:"pagination"`
 }
 
 type accountCollection struct {
-	Account     string       `json:"account"`
-	Count       int          `json:"count"`
-	Collections []collection `json:"collections"`
+	Count       int                   `json:"count"`
+	Collections map[string]collection `json:"collections"`
 }
 
 type collection struct {
-	ClassId string `json:"class_id"`
-	Count   int    `json:"count"`
+	Count int `json:"count"`
 }
