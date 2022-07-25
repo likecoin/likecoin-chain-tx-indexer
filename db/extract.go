@@ -15,8 +15,6 @@ import (
 
 var LIMIT = int64(utils.EnvInt("EXTRACTOR_LIMIT", 10000))
 
-const META_EXTRACTOR = "extractor"
-
 type EventPayload struct {
 	Batch     *Batch
 	Message   []byte

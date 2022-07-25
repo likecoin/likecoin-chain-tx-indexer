@@ -31,6 +31,8 @@ const DefaultDBPassword = "password"
 const DefaultDBPoolMin = 4
 const DefaultDBPoolMax = 32
 
+const META_EXTRACTOR = "extractor_v1"
+
 type Order string
 
 const (
@@ -164,7 +166,7 @@ func InitDB(conn *pgxpool.Conn) error {
 
 	_, err = conn.Exec(ctx, `
 	CREATE TABLE IF NOT EXISTS meta (
-		id VARCHAR(10) PRIMARY KEY,
+		id text PRIMARY KEY,
 		height BIGINT
 	)`)
 	if err != nil {
