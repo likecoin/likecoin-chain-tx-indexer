@@ -93,8 +93,8 @@ func TestSupporters(t *testing.T) {
 	}
 	defer conn.Release()
 
-	q := QuerySupporterRequest{
-		Author: "like1lsagfzrm4gz28he4wunt63sts5xzmczw5a2m42",
+	q := QueryCollectorRequest{
+		Creator: "like1lsagfzrm4gz28he4wunt63sts5xzmczw5a2m42",
 	}
 
 	p := PageRequest{
@@ -115,8 +115,8 @@ func TestSupportees(t *testing.T) {
 	}
 	defer conn.Release()
 
-	q := QuerySupporteeRequest{
-		Supporter: "like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp",
+	q := QueryCreatorRequest{
+		Collector: "like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp",
 	}
 
 	p := PageRequest{

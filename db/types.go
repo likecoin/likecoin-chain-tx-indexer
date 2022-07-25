@@ -180,27 +180,26 @@ type QueryEventsResponse struct {
 	Events     []NftEvent   `json:"events"`
 }
 
-type QuerySupporterRequest struct {
-	Author string `form:"author" binding:"required"`
+type QueryCollectorRequest struct {
+	Creator string `form:"creator" binding:"required"`
 }
 
-type QuerySupporterResponse struct {
-	Supporters []supportResponse `json:"supporters"`
-	Pagination PageResponse      `json:"pagination"`
+type QueryCollectorResponse struct {
+	Collectors []collectionResponse `json:"collectors"`
+	Pagination PageResponse         `json:"pagination"`
 }
 
-type QuerySupporteeRequest struct {
-	Supporter string `form:"supporter" binding:"required"`
+type QueryCreatorRequest struct {
+	Collector string `form:"collector" binding:"required"`
 }
 
-type QuerySupporteeResponse struct {
-	Supportees []supportResponse `json:"supportees"`
-	Pagination PageResponse      `json:"pagination"`
+type QueryCreatorResponse struct {
+	Creators   []collectionResponse `json:"creators"`
+	Pagination PageResponse         `json:"pagination"`
 }
 
-type supportResponse struct {
+type collectionResponse struct {
 	Account     string   `json:"account"`
 	Count       int      `json:"count"`
-	TotalValue  int      `json:"total_value"`
 	Collections []string `json:"collections"`
 }
