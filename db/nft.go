@@ -242,8 +242,8 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func parseAccountCollections(rows pgx.Rows) ([]accountCollection, error) {
-	accounts := make(map[string]*accountCollection)
+func parseAccountCollections(rows pgx.Rows) (map[string]accountCollection, error) {
+	accounts := make(map[string]accountCollection)
 
 	for rows.Next() {
 		var addr string
@@ -254,17 +254,12 @@ func parseAccountCollections(rows pgx.Rows) ([]accountCollection, error) {
 		}
 		account, ok := accounts[addr]
 		if !ok {
-			accounts[addr] = &accountCollection{Account: addr}
-			account = accounts[addr]
+			account = accountCollection{Collections: make(map[string]collection)}
+			accounts[addr] = account
 		}
-		account.Collections = append(
-			account.Collections, collection{ClassId: class, Count: count})
+		account.Collections[class] = collection{Count: count}
 		account.Count += count
-		logger.L.Debug(*account)
+		logger.L.Debug(account)
 	}
-	res := make([]accountCollection, 0, len(accounts))
-	for _, account := range accounts {
-		res = append(res, *account)
-	}
-	return res, nil
+	return accounts, nil
 }
