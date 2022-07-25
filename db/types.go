@@ -72,7 +72,7 @@ func (n *NftEvent) Attach(payload EventPayload) {
 
 type PageRequest struct {
 	Key     uint64 `form:"key"`
-	Limit   uint64 `form:"limit" binding:"gte=1,lte=100"`
+	Limit   uint64 `form:"limit,default=100" binding:"gte=1,lte=100"`
 	Reverse bool   `form:"reverse"`
 }
 

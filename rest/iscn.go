@@ -94,9 +94,7 @@ func handleISCNSearch(c *gin.Context) {
 }
 
 func getPagination(c *gin.Context) (p db.PageRequest, err error) {
-	p = db.PageRequest{
-		Limit: 1,
-	}
+	p = db.PageRequest{}
 	err = c.ShouldBindQuery(&p)
 	logger.L.Debugf("%#v", p)
 	return p, err
