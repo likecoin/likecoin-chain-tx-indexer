@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
-	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
@@ -99,7 +98,6 @@ func sendNft(payload db.EventPayload) error {
 	receiver := utils.GetEventsValue(events, "cosmos.nft.v1beta1.EventSend", "receiver")
 	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
 	payload.Batch.Batch.Queue(sql, receiver, classId, nftId)
-	logger.L.Debugf("transfer nft %s from %s to %s\n", nftId, sender, receiver)
 
 	e := db.NftEvent{
 		ClassId:  classId,

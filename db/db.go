@@ -227,7 +227,8 @@ func InitDB(conn *pgxpool.Conn) error {
 		receiver text,
 		events text[],
 		tx_hash text,
-		timestamp timestamp
+		timestamp timestamp,
+		UNIQUE(action, class_id, nft_id, tx_hash)
 	);`)
 	if err != nil {
 		return err
