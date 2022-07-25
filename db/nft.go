@@ -184,9 +184,9 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func GetSupporters(conn *pgxpool.Conn, q QuerySupporterRequest, p PageRequest) (QuerySupporterResponse, error) {
+func GetSupporters(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (QueryCollectorResponse, error) {
 	sql := `
-	SELECT n.owner, COUNT(*), SUM(c.price), array_agg(DISTINCT c.class_id)
+	SELECT n.owner, COUNT(*), array_agg(DISTINCT c.class_id)
 	FROM iscn as i
 	JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	JOIN nft AS n ON c.class_id = n.class_id
@@ -197,30 +197,30 @@ func GetSupporters(conn *pgxpool.Conn, q QuerySupporterRequest, p PageRequest) (
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.Author)
+	rows, err := conn.Query(ctx, sql, q.Creator)
 	if err != nil {
 		logger.L.Errorw("Failed to query supporters", "error", err, "q", q)
-		return QuerySupporterResponse{}, fmt.Errorf("query supporters error: %w", err)
+		return QueryCollectorResponse{}, fmt.Errorf("query supporters error: %w", err)
 	}
 
-	res := QuerySupporterResponse{
+	res := QueryCollectorResponse{
 		// Supporters: make([]supporterResponse, 0),
 	}
 	for rows.Next() {
-		var s supportResponse
-		if err = rows.Scan(&s.Account, &s.Count, &s.TotalValue, &s.Collections); err != nil {
+		var s collectionResponse
+		if err = rows.Scan(&s.Account, &s.Count, &s.Collections); err != nil {
 			panic(err)
 		}
 		logger.L.Debug(s)
-		res.Supporters = append(res.Supporters, s)
+		res.Collectors = append(res.Collectors, s)
 	}
-	res.Pagination.Count = len(res.Supporters)
+	res.Pagination.Count = len(res.Collectors)
 	return res, nil
 }
 
-func GetSupportees(conn *pgxpool.Conn, q QuerySupporteeRequest, p PageRequest) (QuerySupporteeResponse, error) {
+func GetSupportees(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (QueryCreatorResponse, error) {
 	sql := `
-	SELECT i.owner as author, COUNT(*), SUM(c.price), array_agg(DISTINCT c.class_id) as collections
+	SELECT i.owner as author, COUNT(*), array_agg(DISTINCT c.class_id) as collections
 	FROM iscn as i
 	JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	JOIN nft AS n ON c.class_id = n.class_id
@@ -231,21 +231,21 @@ func GetSupportees(conn *pgxpool.Conn, q QuerySupporteeRequest, p PageRequest) (
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.Supporter)
+	rows, err := conn.Query(ctx, sql, q.Collector)
 	if err != nil {
 		logger.L.Errorw("Failed to query supporters", "error", err, "q", q)
-		return QuerySupporteeResponse{}, fmt.Errorf("query supporters error: %w", err)
+		return QueryCreatorResponse{}, fmt.Errorf("query supporters error: %w", err)
 	}
 
-	res := QuerySupporteeResponse{}
+	res := QueryCreatorResponse{}
 	for rows.Next() {
-		var s supportResponse
-		if err = rows.Scan(&s.Account, &s.Count, &s.TotalValue, &s.Collections); err != nil {
+		var s collectionResponse
+		if err = rows.Scan(&s.Account, &s.Count, &s.Collections); err != nil {
 			panic(err)
 		}
 		logger.L.Debug(s)
-		res.Supportees = append(res.Supportees, s)
+		res.Creators = append(res.Creators, s)
 	}
-	res.Pagination.Count = len(res.Supportees)
+	res.Pagination.Count = len(res.Creators)
 	return res, nil
 }

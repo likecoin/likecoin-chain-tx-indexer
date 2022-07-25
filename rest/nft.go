@@ -103,7 +103,7 @@ func handleNftEvents(c *gin.Context) {
 }
 
 func handleNftSupporters(c *gin.Context) {
-	var form db.QuerySupporterRequest
+	var form db.QueryCollectorRequest
 	if err := c.ShouldBindQuery(&form); err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
 		return
@@ -121,7 +121,7 @@ func handleNftSupporters(c *gin.Context) {
 }
 
 func handleNftSupportees(c *gin.Context) {
-	var form db.QuerySupporteeRequest
+	var form db.QueryCreatorRequest
 	if err := c.ShouldBindQuery(&form); err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
 		return
