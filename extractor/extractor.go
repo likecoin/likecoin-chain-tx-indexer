@@ -10,6 +10,7 @@ import (
 )
 
 var handlers = map[string]db.EventHandler{
+	"create_iscn_record":                           insertISCN,
 	"/likechain.iscn.MsgCreateIscnRecord":          insertISCN,
 	"update_iscn_record":                           insertISCN,
 	"/likechain.iscn.MsgUpdateIscnRecord":          insertISCN,
