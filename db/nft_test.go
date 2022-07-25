@@ -86,7 +86,7 @@ func TestEventsByNftId(t *testing.T) {
 	t.Log(res)
 }
 
-func TestSupporters(t *testing.T) {
+func TestCollectors(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
 		t.Fatal(err)
@@ -101,14 +101,14 @@ func TestSupporters(t *testing.T) {
 		Limit: 1,
 	}
 
-	res, err := GetSupporters(conn, q, p)
+	res, err := GetCollector(conn, q, p)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(res)
 }
 
-func TestSupportees(t *testing.T) {
+func TestCreators(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
 		t.Fatal(err)
@@ -123,7 +123,7 @@ func TestSupportees(t *testing.T) {
 		Limit: 1,
 	}
 
-	res, err := GetSupportees(conn, q, p)
+	res, err := GetCreators(conn, q, p)
 	if err != nil {
 		t.Fatal(err)
 	}
