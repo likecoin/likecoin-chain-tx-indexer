@@ -3,10 +3,10 @@
 
 echo "supporters of $OWNER"
 psql nftdev <<SQL
-SELECT n.owner as collector, COUNT(*), SUM(c.price), array_agg(DISTINCT c.class_id) as collections
+SELECT n.owner as owner, c.class_id as class_id, COUNT(*) as count
 FROM iscn as i
 JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 JOIN nft AS n ON c.class_id = n.class_id
 WHERE i.owner = '$OWNER'
-GROUP BY n.owner
+GROUP BY n.owner, c.class_id
 SQL

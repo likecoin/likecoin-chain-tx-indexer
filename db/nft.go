@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgtype"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
@@ -186,15 +187,14 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func GetSupporters(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (QueryCollectorResponse, error) {
+func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (QueryCollectorResponse, error) {
 	sql := `
-	SELECT n.owner, COUNT(*), array_agg(DISTINCT c.class_id)
+	SELECT n.owner, c.class_id, COUNT(*) 
 	FROM iscn as i
 	JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	JOIN nft AS n ON c.class_id = n.class_id
 	WHERE i.owner = $1
-	GROUP BY n.owner
-	ORDER BY COUNT(*) DESC
+	GROUP BY n.owner, c.class_id
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
@@ -204,31 +204,25 @@ func GetSupporters(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (
 		logger.L.Errorw("Failed to query supporters", "error", err, "q", q)
 		return QueryCollectorResponse{}, fmt.Errorf("query supporters error: %w", err)
 	}
+	defer rows.Close()
 
-	res := QueryCollectorResponse{
-		// Supporters: make([]supporterResponse, 0),
-	}
-	for rows.Next() {
-		var s collectionResponse
-		if err = rows.Scan(&s.Account, &s.Count, &s.Collections); err != nil {
-			panic(err)
-		}
-		logger.L.Debug(s)
-		res.Collectors = append(res.Collectors, s)
+	res := QueryCollectorResponse{}
+	res.Collectors, err = parseAccountCollections(rows)
+	if err != nil {
+		panic(err)
 	}
 	res.Pagination.Count = len(res.Collectors)
 	return res, nil
 }
 
-func GetSupportees(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (QueryCreatorResponse, error) {
+func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (QueryCreatorResponse, error) {
 	sql := `
-	SELECT i.owner as author, COUNT(*), array_agg(DISTINCT c.class_id) as collections
+	SELECT i.owner, c.class_id, COUNT(*)
 	FROM iscn as i
 	JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	JOIN nft AS n ON c.class_id = n.class_id
 	WHERE n.owner = $1
-	GROUP BY i.owner
-	ORDER BY COUNT(*) DESC
+	GROUP BY i.owner, c.class_id
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
@@ -240,14 +234,37 @@ func GetSupportees(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (Qu
 	}
 
 	res := QueryCreatorResponse{}
-	for rows.Next() {
-		var s collectionResponse
-		if err = rows.Scan(&s.Account, &s.Count, &s.Collections); err != nil {
-			panic(err)
-		}
-		logger.L.Debug(s)
-		res.Creators = append(res.Creators, s)
+	res.Creators, err = parseAccountCollections(rows)
+	if err != nil {
+		panic(err)
 	}
 	res.Pagination.Count = len(res.Creators)
+	return res, nil
+}
+
+func parseAccountCollections(rows pgx.Rows) ([]accountCollection, error) {
+	accounts := make(map[string]*accountCollection)
+
+	for rows.Next() {
+		var addr string
+		var class string
+		var count int
+		if err := rows.Scan(&addr, &class, &count); err != nil {
+			panic(err)
+		}
+		account, ok := accounts[addr]
+		if !ok {
+			accounts[addr] = &accountCollection{Account: addr}
+			account = accounts[addr]
+		}
+		account.Collections = append(
+			account.Collections, collection{ClassId: class, Count: count})
+		account.Count += count
+		logger.L.Debug(*account)
+	}
+	res := make([]accountCollection, 0, len(accounts))
+	for _, account := range accounts {
+		res = append(res, *account)
+	}
 	return res, nil
 }
