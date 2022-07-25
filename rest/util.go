@@ -115,3 +115,9 @@ func getConn(c *gin.Context) *pgxpool.Conn {
 func getPool(c *gin.Context) *pgxpool.Pool {
 	return c.MustGet("pool").(*pgxpool.Pool)
 }
+
+func getPagination(c *gin.Context) (p db.PageRequest, err error) {
+	p = db.PageRequest{}
+	err = c.ShouldBindQuery(&p)
+	return p, err
+}

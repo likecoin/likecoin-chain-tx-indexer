@@ -1,12 +1,10 @@
 package rest
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
-	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
 func handleISCN(c *gin.Context) {
@@ -68,7 +66,7 @@ func handleISCN(c *gin.Context) {
 		return
 	}
 
-	respondRecords(c, res)
+	c.JSON(200, res)
 }
 
 func handleISCNSearch(c *gin.Context) {
@@ -90,29 +88,5 @@ func handleISCNSearch(c *gin.Context) {
 		return
 	}
 
-	respondRecords(c, res)
-}
-
-func getPagination(c *gin.Context) (p db.PageRequest, err error) {
-	p = db.PageRequest{}
-	err = c.ShouldBindQuery(&p)
-	logger.L.Debugf("%#v", p)
-	return p, err
-}
-
-func respondRecords(c *gin.Context, res db.ISCNResponse) {
-	if len(res.Records) == 0 {
-		c.AbortWithStatusJSON(404, gin.H{"error": "Record not found"})
-		return
-	}
-
-	resJson, err := json.Marshal(&res)
-	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.Writer.Header().Set("Content-Type", "application/json")
-	c.Writer.WriteHeader(200)
-	c.Writer.Write(resJson)
+	c.JSON(200, res)
 }

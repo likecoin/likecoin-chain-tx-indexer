@@ -41,7 +41,6 @@ func updateNftClass(payload db.EventPayload) error {
 	}
 	var c db.NftClass = message.Input
 	c.Id = utils.GetEventsValue(payload.Events, "likechain.likenft.v1.EventUpdateClass", "class_id")
-	logger.L.Debug(c)
 	payload.Batch.UpdateNftClass(c)
 
 	e := db.NftEvent{
