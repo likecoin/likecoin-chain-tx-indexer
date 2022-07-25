@@ -123,7 +123,8 @@ type ISCNResponseData struct {
 }
 
 type QueryClassRequest struct {
-	IscnIdPrefix string `form:"iscn_id_prefix" binding:"required"`
+	IscnIdPrefix string `form:"iscn_id_prefix"`
+	Account      string `form:"account"`
 	Expand       bool   `form:"expand"`
 }
 

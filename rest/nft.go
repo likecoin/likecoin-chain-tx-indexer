@@ -12,6 +12,10 @@ func handleNftClass(c *gin.Context) {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
+	if q.IscnIdPrefix == "" && q.Account == "" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "iscn_id_prefix or account is required"})
+		return
+	}
 	p, err := getPagination(c)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err})
