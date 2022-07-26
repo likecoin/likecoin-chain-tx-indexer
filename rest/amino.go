@@ -57,21 +57,30 @@ func handleAminoTxsSearch(c *gin.Context) {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
+	shouldCountTotal, err := getBool(q, "count_total")
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
+	}
 
 	conn := getConn(c)
-	totalCount, err := db.QueryCount(conn, events, height)
-	if err != nil {
-		logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	maxPage := (totalCount-1)/limit + 1
-	if maxPage == 0 {
-		maxPage = 1
-	}
-	if page > maxPage {
-		c.AbortWithStatusJSON(400, gin.H{"error": fmt.Sprintf("page should be within [1, %d] range, given %d", maxPage, page)})
-		return
+	totalCount := uint64(0)
+
+	if shouldCountTotal {
+		totalCount, err = db.QueryCount(conn, events, height)
+		if err != nil {
+			logger.L.Errorw("Cannot get total tx count from database", "events", events, "error", err)
+			c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		maxPage := (totalCount-1)/limit + 1
+		if maxPage == 0 {
+			maxPage = 1
+		}
+		if page > maxPage {
+			c.AbortWithStatusJSON(400, gin.H{"error": fmt.Sprintf("page should be within [1, %d] range, given %d", maxPage, page)})
+			return
+		}
 	}
 	offset := limit * (page - 1)
 	txs, err := db.QueryTxs(conn, events, height, limit, offset, db.ORDER_ASC)
