@@ -101,3 +101,27 @@ func handleNftEvents(c *gin.Context) {
 
 	c.JSON(200, res)
 }
+
+func handleNftRanking(c *gin.Context) {
+	var q db.QueryRankingRequest
+	if err := c.ShouldBind(&q); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	p, err := getPagination(c)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	conn := getConn(c)
+
+	res, err := db.GetClassesRanking(conn, q, p)
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, res)
+}
