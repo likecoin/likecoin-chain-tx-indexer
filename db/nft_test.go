@@ -1,6 +1,10 @@
 package db
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+	"time"
+)
 
 func TestQueryNftByIscn(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
@@ -84,4 +88,49 @@ func TestEventsByNftId(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(res)
+}
+
+func TestQueryNftRanking(t *testing.T) {
+	table := []QueryRankingRequest{
+		{
+			Type: "CreativeWork",
+		},
+		{
+			Creator: "like1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmca3huxf",
+		},
+		{
+			Owner: "like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp",
+		},
+		{
+			StakeholderId: "did:like:1shkl5gqzxcs9yh3qjdeggaz3yg5s83754dx2dh",
+		},
+		{
+			StakeholderName: "Author",
+		},
+		{
+			After:  time.Date(2022, 7, 1, 0, 0, 0, 0, time.UTC),
+			Before: time.Date(2022, 7, 15, 0, 0, 0, 0, time.UTC),
+		},
+	}
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Release()
+
+	p := PageRequest{
+		Limit: 100,
+	}
+
+	for _, q := range table {
+		res, err := GetClassesRanking(conn, q, p)
+		if err != nil {
+			t.Error(err)
+		}
+		if len(res.Classes) == 0 {
+			input, _ := json.Marshal(&q)
+			output, _ := json.Marshal(&res)
+			t.Fatal("No response", string(input), string(output))
+		}
+	}
 }

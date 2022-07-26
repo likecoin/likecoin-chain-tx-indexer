@@ -63,6 +63,58 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	return res, nil
 }
 
+func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest) (QueryRankingResponse, error) {
+	sql := fmt.Sprintf(`
+	SELECT c.id, c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
+	c.config, c.metadata, c.price,
+	c.parent_type, c.parent_iscn_id_prefix, c.parent_account
+	FROM nft_class as c
+	JOIN (
+		SELECT c.id
+		FROM iscn as i
+		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN nft as n ON c.class_id = n.class_id
+		JOIN nft_event as e ON c.class_id = e.class_id AND e.action = 'new_class'
+		WHERE ($4 = '' OR i.owner = $4)
+			AND ($5 = '' OR i.data #>> '{"contentMetadata", "@type"}' = $5)
+			AND ($6::jsonb IS NULL OR i.stakeholders @> $6)
+			AND ($7::jsonb IS NULL OR i.stakeholders @> $7)
+			AND ($8 = '' OR n.owner = $8)
+			AND ($9::timestamp = '0001-01-01T00:00:00Z' OR e.timestamp > $9)
+			AND ($10::timestamp = '0001-01-01T00:00:00Z' OR e.timestamp < $10)
+		GROUP BY c.id
+	) AS t ON c.id = t.id
+	WHERE ($1 = 0 OR c.id > $1)
+		AND ($2 = 0 OR c.id < $2)
+	ORDER BY c.id %s
+	LIMIT $3
+	`, p.Order())
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, q.Creator, q.Type, q.stakeholderId(), q.stakeholderName(), q.Owner, q.After, q.Before)
+	if err != nil {
+		logger.L.Errorw("Failed to query nft class ranking", "error", err, "q", q)
+		return QueryRankingResponse{}, fmt.Errorf("query nft class ranking error: %w", err)
+	}
+
+	res := QueryRankingResponse{}
+	for rows.Next() {
+		var c NftClass
+		if err = rows.Scan(
+			&res.Pagination.NextKey,
+			&c.Id, &c.Name, &c.Description, &c.Symbol, &c.URI, &c.URIHash,
+			&c.Config, &c.Metadata, &c.Price,
+			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account,
+		); err != nil {
+			logger.L.Errorw("failed to scan nft class", "error", err)
+			return QueryRankingResponse{}, fmt.Errorf("query nft class data failed: %w", err)
+		}
+		res.Classes = append(res.Classes, c)
+	}
+	res.Pagination.Count = len(res.Classes)
+	return res, nil
+}
+
 func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResponse, error) {
 	sql := fmt.Sprintf(`
 	SELECT n.id, n.nft_id, n.class_id, n.owner, n.uri, n.uri_hash, n.metadata,

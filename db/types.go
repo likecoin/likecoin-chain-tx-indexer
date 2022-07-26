@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -179,4 +180,33 @@ type QueryEventsRequest struct {
 type QueryEventsResponse struct {
 	Pagination PageResponse `json:"pagination"`
 	Events     []NftEvent   `json:"events"`
+}
+
+type QueryRankingRequest struct {
+	StakeholderId   string    `form:"stakeholder_id"`
+	StakeholderName string    `form:"stakeholder_name"`
+	Creator         string    `form:"creator"`
+	Type            string    `form:"type"`
+	Owner           string    `form:"owner"`
+	After           time.Time `form:"after"`
+	Before          time.Time `form:"before"`
+}
+
+func (q *QueryRankingRequest) stakeholderId() string {
+	if q.StakeholderId == "" {
+		return "[]"
+	}
+	return fmt.Sprintf(`[{"id": "%s"}]`, q.StakeholderId)
+}
+
+func (q *QueryRankingRequest) stakeholderName() string {
+	if q.StakeholderName == "" {
+		return "[]"
+	}
+	return fmt.Sprintf(`[{"name": "%s"}]`, q.StakeholderName)
+}
+
+type QueryRankingResponse struct {
+	Classes    []NftClass   `json:"classes"`
+	Pagination PageResponse `json:"pagination"`
 }
