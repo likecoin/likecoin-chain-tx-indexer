@@ -187,12 +187,12 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 
 func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (QueryCollectorResponse, error) {
 	sql := `
-	SELECT n.owner, c.class_id, COUNT(*) 
+	SELECT n.owner, i.iscn_id_prefix, c.class_id, COUNT(*) 
 	FROM iscn as i
 	JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	JOIN nft AS n ON c.class_id = n.class_id
 	WHERE i.owner = $1
-	GROUP BY n.owner, c.class_id
+	GROUP BY n.owner, i.iscn_id_prefix, c.class_id
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
@@ -215,12 +215,12 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (Q
 
 func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (QueryCreatorResponse, error) {
 	sql := `
-	SELECT i.owner, c.class_id, COUNT(*)
+	SELECT i.owner, i.iscn_id_prefix, c.class_id, COUNT(*)
 	FROM iscn as i
 	JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	JOIN nft AS n ON c.class_id = n.class_id
 	WHERE n.owner = $1
-	GROUP BY i.owner, c.class_id
+	GROUP BY i.owner, i.iscn_id_prefix, c.class_id
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
@@ -240,24 +240,22 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func parseAccountCollections(rows pgx.Rows) (map[string]accountCollection, error) {
-	accounts := make(map[string]accountCollection)
+func parseAccountCollections(rows pgx.Rows) (map[string]*accountCollection, error) {
+	accounts := make(map[string]*accountCollection)
 
 	for rows.Next() {
 		var addr string
-		var class string
-		var count int
-		if err := rows.Scan(&addr, &class, &count); err != nil {
+		var c collection
+		if err := rows.Scan(&addr, &c.IscnIdPrefix, &c.ClassId, &c.Count); err != nil {
 			panic(err)
 		}
 		account, ok := accounts[addr]
 		if !ok {
-			account = accountCollection{Collections: make(map[string]collection)}
+			account = new(accountCollection)
 			accounts[addr] = account
 		}
-		account.Collections[class] = collection{Count: count}
-		account.Count += count
-		logger.L.Debug(account)
+		account.Collections = append(account.Collections, c)
+		account.Count += c.Count
 	}
 	return accounts, nil
 }

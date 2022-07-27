@@ -1,6 +1,9 @@
 package db
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
 func TestQueryNftByIscn(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
@@ -94,7 +97,7 @@ func TestCollectors(t *testing.T) {
 	defer conn.Release()
 
 	q := QueryCollectorRequest{
-		Creator: "like1lsagfzrm4gz28he4wunt63sts5xzmczw5a2m42",
+		Creator: "like156gedr03g3ggwktzhygfusax4df46k8dh6w0me",
 	}
 
 	p := PageRequest{
@@ -105,7 +108,8 @@ func TestCollectors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(res)
+	output, _ := json.Marshal(&res)
+	t.Log(string(output))
 }
 
 func TestCreators(t *testing.T) {
@@ -127,5 +131,6 @@ func TestCreators(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(res)
+	output, _ := json.Marshal(&res)
+	t.Log(string(output))
 }
