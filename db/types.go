@@ -183,13 +183,13 @@ type QueryEventsResponse struct {
 }
 
 type QueryRankingRequest struct {
-	StakeholderId   string    `form:"stakeholder_id"`
-	StakeholderName string    `form:"stakeholder_name"`
-	Creator         string    `form:"creator"`
-	Type            string    `form:"type"`
-	Owner           string    `form:"owner"`
-	After           time.Time `form:"after"`
-	Before          time.Time `form:"before"`
+	StakeholderId   string `form:"stakeholder_id"`
+	StakeholderName string `form:"stakeholder_name"`
+	Creator         string `form:"creator"`
+	Type            string `form:"type"`
+	Owner           string `form:"owner"`
+	After           int64  `form:"after"`
+	Before          int64  `form:"before"`
 }
 
 func (q *QueryRankingRequest) stakeholderId() string {

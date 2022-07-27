@@ -67,21 +67,20 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 	sql := fmt.Sprintf(`
 	SELECT c.id, c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
 	c.config, c.metadata, c.price,
-	c.parent_type, c.parent_iscn_id_prefix, c.parent_account
+	c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at
 	FROM nft_class as c
 	JOIN (
 		SELECT c.id
 		FROM iscn as i
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft as n ON c.class_id = n.class_id
-		JOIN nft_event as e ON c.class_id = e.class_id AND e.action = 'new_class'
 		WHERE ($4 = '' OR i.owner = $4)
 			AND ($5 = '' OR i.data #>> '{"contentMetadata", "@type"}' = $5)
 			AND ($6::jsonb IS NULL OR i.stakeholders @> $6)
 			AND ($7::jsonb IS NULL OR i.stakeholders @> $7)
 			AND ($8 = '' OR n.owner = $8)
-			AND ($9::timestamp = '0001-01-01T00:00:00Z' OR e.timestamp > $9)
-			AND ($10::timestamp = '0001-01-01T00:00:00Z' OR e.timestamp < $10)
+			AND ($9 = 0 OR c.created_at > to_timestamp($9))
+			AND ($10 = 0 OR c.created_at < to_timestamp($10))
 		GROUP BY c.id
 	) AS t ON c.id = t.id
 	WHERE ($1 = 0 OR c.id > $1)
@@ -105,6 +104,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 			&c.Id, &c.Name, &c.Description, &c.Symbol, &c.URI, &c.URIHash,
 			&c.Config, &c.Metadata, &c.Price,
 			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account,
+			&c.CreatedAt,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft class", "error", err)
 			return QueryRankingResponse{}, fmt.Errorf("query nft class data failed: %w", err)

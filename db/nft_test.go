@@ -108,8 +108,8 @@ func TestQueryNftRanking(t *testing.T) {
 			StakeholderName: "Author",
 		},
 		{
-			After:  time.Date(2022, 7, 1, 0, 0, 0, 0, time.UTC),
-			Before: time.Date(2022, 7, 15, 0, 0, 0, 0, time.UTC),
+			After:  time.Date(2022, 7, 1, 0, 0, 0, 0, time.UTC).Unix(),
+			Before: time.Date(2022, 7, 15, 0, 0, 0, 0, time.UTC).Unix(),
 		},
 	}
 	conn, err := AcquireFromPool(pool)
