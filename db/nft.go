@@ -65,7 +65,7 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 
 func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResponse, error) {
 	sql := fmt.Sprintf(`
-	SELECT n.id, n.nft_id, n.class_id, n.uri, n.uri_hash, n.metadata,
+	SELECT n.id, n.nft_id, n.class_id, n.owner, n.uri, n.uri_hash, n.metadata,
 		c.parent_type, c.parent_iscn_id_prefix, c.parent_account
 	FROM nft as n
 	JOIN nft_class as c
@@ -89,10 +89,9 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 	for rows.Next() {
 		var n NftResponse
 		if err = rows.Scan(&res.Pagination.NextKey,
-			&n.NftId, &n.ClassId, &n.Uri, &n.UriHash, &n.Metadata,
+			&n.NftId, &n.ClassId, &n.Owner, &n.Uri, &n.UriHash, &n.Metadata,
 			&n.ClassParent.Type, &n.ClassParent.IscnIdPrefix, &n.ClassParent.Account,
 		); err != nil {
-			panic(err)
 			logger.L.Errorw("failed to scan nft", "error", err, "q", q)
 			return QueryNftResponse{}, fmt.Errorf("query nft failed: %w", err)
 		}
@@ -124,7 +123,6 @@ func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, err
 	for rows.Next() {
 		var owner OwnerResponse
 		if err = rows.Scan(&owner.Owner, &owner.Nfts); err != nil {
-			panic(err)
 			logger.L.Errorw("failed to scan owner", "error", err, "q", q)
 			return QueryOwnerResponse{}, fmt.Errorf("query owner data failed: %w", err)
 		}

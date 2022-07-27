@@ -140,7 +140,7 @@ type NftClassResponse struct {
 }
 
 type QueryNftRequest struct {
-	Owner string `form:"owner" binding="required"`
+	Owner string `form:"owner" binding:"required"`
 }
 
 type QueryNftResponse struct {
