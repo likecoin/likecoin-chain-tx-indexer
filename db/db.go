@@ -198,7 +198,8 @@ func InitDB(conn *pgxpool.Conn) error {
 		uri_hash text,
 		metadata jsonb,
 		config jsonb,
-		price int
+		price int,
+		created_at timestamp
 	);`)
 	if err != nil {
 		return err

@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS nft_class (
     uri_hash text,
     metadata jsonb,
     config jsonb,
-    price int
+    price int,
+	created_at timestamp
 );
 
 CREATE TABLE IF NOT EXISTS nft (

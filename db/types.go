@@ -35,6 +35,7 @@ type NftClass struct {
 	Metadata    json.RawMessage `json:"metadata"`
 	Parent      NftClassParent  `json:"parent"`
 	Price       int             `json:"price"`
+	CreatedAt   time.Time       `json:"created_at"`
 }
 
 type NftClassParent struct {

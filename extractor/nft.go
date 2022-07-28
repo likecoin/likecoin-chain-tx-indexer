@@ -22,6 +22,7 @@ func createNftClass(payload db.EventPayload) error {
 	var c db.NftClass = message.Input
 	c.Id = utils.GetEventsValue(payload.Events, "likechain.likenft.v1.EventNewClass", "class_id")
 	c.Parent = getNftParent(payload.Events, "likechain.likenft.v1.EventNewClass")
+	c.CreatedAt = payload.Timestamp
 	payload.Batch.InsertNftClass(c)
 
 	e := db.NftEvent{
