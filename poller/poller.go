@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 	"github.com/likecoin/likecoin-chain/v3/app"
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/bytes"
@@ -17,12 +18,12 @@ import (
 	tmTypes "github.com/tendermint/tendermint/types"
 )
 
-const batchSize = 1000
-const batchMaxHeightDiff = 100000
+var batchSize = utils.EnvInt("BATCH_SIZE", 1000)
+var batchMaxHeightDiff = int64(utils.EnvInt("BATCH_MAX_HEIGHT_DIFF", 1000))
 
 // TODO: move into config
-const sleepInitial = 5 * time.Second
-const sleepMax = 600 * time.Second
+var sleepInitial = time.Duration(utils.EnvInt("SLEEP_INITIAL", 5)) * time.Second
+var sleepMax = time.Duration(utils.EnvInt("SLEEP_MAX", 600)) * time.Second
 
 var encodingConfig = app.MakeEncodingConfig()
 
@@ -142,7 +143,7 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 	return maxHeight, nil
 }
 
-func Run(pool *pgxpool.Pool, ctx *CosmosCallContext) {
+func Run(pool *pgxpool.Pool, ctx *CosmosCallContext, triggers ...chan<- int64) {
 	lastHeight, err := getHeight(pool)
 	logger.L.Infow("Init Height", "lastHeight", lastHeight)
 	if err != nil {
@@ -155,6 +156,11 @@ func Run(pool *pgxpool.Pool, ctx *CosmosCallContext) {
 			// reset sleep time to normal value
 			toSleep = sleepInitial
 			lastHeight = returnedHeight
+			go func() {
+				for _, trigger := range triggers {
+					trigger <- returnedHeight
+				}
+			}()
 		} else {
 			logger.L.Errorw("cannot poll block", "error", err)
 			// exponential back-off with max cap

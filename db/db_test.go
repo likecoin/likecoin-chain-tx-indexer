@@ -3,35 +3,27 @@ package db
 import (
 	"context"
 	"log"
-	"os"
 	"testing"
 
-	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	. "github.com/likecoin/likecoin-chain-tx-indexer/utils"
 	"go.uber.org/zap/zapcore"
 )
 
 var pool *pgxpool.Pool
-
-func env(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
-}
 
 func TestMain(m *testing.M) {
 	godotenv.Load("../.env")
 	logger.SetupLogger(zapcore.DebugLevel, []string{"stdout"}, "console")
 	var err error
 	pool, err = NewConnPool(
-		env("DB_NAME", "postgres"),
-		env("DB_HOST", "localhost"),
-		env("DB_PORT", "5432"),
-		env("DB_USER", "postgres"),
-		env("DB_PASS", "password"),
+		Env("DB_NAME", "postgres"),
+		Env("DB_HOST", "localhost"),
+		Env("DB_PORT", "5432"),
+		Env("DB_USER", "postgres"),
+		Env("DB_PASS", "password"),
 		32,
 		4,
 	)
@@ -45,16 +37,19 @@ func TestMain(m *testing.M) {
 	}
 	defer conn.Release()
 
-	InitDB(conn)
+	err = InitDB(conn)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	m.Run()
 }
 
-func debugSQL(tx pgx.Tx, ctx context.Context, sql string, args ...interface{}) (err error) {
+func debugSQL(conn *pgxpool.Conn, ctx context.Context, sql string, args ...interface{}) (err error) {
 	// add this line to debug SQL (only in test)
 	// debugSQL(tx, ctx, sql, eventStrings, queryString, keywordString, pagination.getOffset(), pagination.Limit)
-	rows, err := tx.Query(ctx, "EXPLAIN "+sql, args...)
+	rows, err := conn.Query(ctx, "EXPLAIN "+sql, args...)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer rows.Close()
 

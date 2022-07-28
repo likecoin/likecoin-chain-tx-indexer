@@ -31,6 +31,8 @@ const DefaultDBPassword = "password"
 const DefaultDBPoolMin = 4
 const DefaultDBPoolMax = 32
 
+const META_EXTRACTOR = "extractor_v1"
+
 type Order string
 
 const (
@@ -140,6 +142,99 @@ func InitDB(conn *pgxpool.Conn) error {
 	if err != nil {
 		return err
 	}
+	_, err = conn.Exec(ctx, `
+	CREATE TABLE IF NOT EXISTS iscn (
+		id bigserial primary key,
+		iscn_id text,
+		iscn_id_prefix text,
+		version int,
+		owner text,
+		name text,
+		description text,
+		url text,
+		keywords text[],
+		fingerprints text[],
+		ipld text,
+		timestamp timestamp,
+		stakeholders jsonb,
+		data jsonb,
+		UNIQUE(iscn_id)
+	)`)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Exec(ctx, `
+	CREATE TABLE IF NOT EXISTS meta (
+		id text PRIMARY KEY,
+		height BIGINT
+	)`)
+	if err != nil {
+		return err
+	}
+	_, err = conn.Exec(ctx, `
+	INSERT INTO meta VALUES ($1, 0)
+	ON CONFLICT DO NOTHING
+	`, META_EXTRACTOR)
+	if err != nil {
+		return err
+	}
+	// ignore error of type alread exists
+	conn.Exec(ctx, `
+	CREATE TYPE class_parent_type AS ENUM ('UNKNOWN', 'ISCN', 'ACCOUNT')
+	`)
+
+	_, err = conn.Exec(ctx, `
+	CREATE TABLE IF NOT EXISTS nft_class (
+		id bigserial primary key,
+		class_id text unique,
+		parent_type class_parent_type,
+		parent_iscn_id_prefix text,
+		parent_account text,
+		name text,
+		symbol text,
+		description text,
+		uri text,
+		uri_hash text,
+		metadata jsonb,
+		config jsonb,
+		price int,
+		created_at timestamp
+	);`)
+	if err != nil {
+		return err
+	}
+	_, err = conn.Exec(ctx, `
+	CREATE TABLE IF NOT EXISTS nft (
+		id bigserial primary key,
+		class_id text,
+		owner text,
+		nft_id text,
+		uri text,
+		uri_hash text,
+		metadata jsonb,
+		UNIQUE(class_id, nft_id)
+	);`)
+	if err != nil {
+		return err
+	}
+	_, err = conn.Exec(ctx, `
+	CREATE TABLE IF NOT EXISTS nft_event (
+		id bigserial primary key,
+		action text,
+		class_id text,
+		nft_id text,
+		sender text,
+		receiver text,
+		events text[],
+		tx_hash text,
+		timestamp timestamp,
+		UNIQUE(action, class_id, nft_id, tx_hash)
+	);`)
+	if err != nil {
+		return err
+	}
+
 	ctx, cancel = GetTimeoutContext()
 	defer cancel()
 	_, err = conn.Exec(ctx, "CREATE INDEX IF NOT EXISTS idx_txs_txhash ON txs USING hash ((tx->>'txhash'))")

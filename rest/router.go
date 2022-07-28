@@ -13,6 +13,7 @@ import (
 const STARGATE_ENDPOINT = "/cosmos/tx/v1beta1/txs"
 const ISCN_ENDPOINT = "/iscn/records"
 const LATEST_HEIGHT_ENDPOINT = "/indexer/height/latest"
+const NFT_ENDPOINT = "/likechain/likenft/v1"
 
 func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 	lcdURL, err := url.Parse(lcdEndpoint)
@@ -31,6 +32,10 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 
 func getRouter(pool *pgxpool.Pool) *gin.Engine {
 	router := gin.New()
+	router.GET(NFT_ENDPOINT+"/class", withConn(pool), handleNftClass)
+	router.GET(NFT_ENDPOINT+"/nft", withConn(pool), handleNft)
+	router.GET(NFT_ENDPOINT+"/owner", withConn(pool), handleNftOwner)
+	router.GET(NFT_ENDPOINT+"/event", withConn(pool), handleNftEvents)
 	router.GET(ISCN_ENDPOINT, withPool(pool), handleISCN)
 	router.GET("/txs", withConn(pool), handleAminoTxsSearch)
 	router.GET(STARGATE_ENDPOINT, withConn(pool), handleStargateTxsSearch)

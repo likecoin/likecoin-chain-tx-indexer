@@ -2,127 +2,88 @@ package db
 
 import (
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestISCNCombineQuery(t *testing.T) {
 	tables := []struct {
-		query    ISCNRecordQuery
-		events   types.StringEvents
-		keywords Keywords
-		length   int
+		ISCN
+		length int
 	}{
 		{
-			events: []types.StringEvent{
-				{
-					Type: "iscn_record",
-					Attributes: []types.Attribute{
-						{
-							Key:   "iscn_id",
-							Value: "iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Iscn: "iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
 			},
 			length: 1,
 		},
 		{
-			query: ISCNRecordQuery{
-				Stakeholders: []Stakeholder{
-					{
-						Entity: &Entity{
-							Name: "kin ko",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Stakeholders: []byte(`[{"name": "kin"}]`),
+			},
+			length: 5,
+		},
+		{
+			ISCN: ISCN{
+				Keywords: []string{"DAO"},
 			},
 		},
 		{
-			keywords: Keywords{"DAO"},
+			ISCN: ISCN{
+				Keywords: []string{"Cyberspace", "EFF"},
+			},
 		},
 		{
-			keywords: Keywords{"Cyberspace", "EFF"},
-		},
-		{
-			query: ISCNRecordQuery{
-				Stakeholders: []Stakeholder{
-					{
-						Entity: &Entity{
-							Name: "John Perry Barlow",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Stakeholders: []byte(`[{"name": "John Perry Barlow"}]`),
 			},
 			length: 1,
 		},
 		{
-			query: ISCNRecordQuery{
-				Stakeholders: []Stakeholder{
-					{
-						Entity: &Entity{
-							Name: "Apple Daily",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Stakeholders: []byte(`[{"name": "Apple Daily"}]`),
 			},
 			length: 5,
 		},
 		{
-			query: ISCNRecordQuery{
-				Stakeholders: []Stakeholder{
-					{
-						Entity: &Entity{
-							Name: "《明報》",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Stakeholders: []byte(`[{"name": "《明報》"}]`),
 			},
 			length: 5,
 		},
 		{
-			query: ISCNRecordQuery{
-				Stakeholders: []Stakeholder{
-					{
-						Entity: &Entity{
-							Name: "depub.SPACE",
-						},
-					},
-				},
+			ISCN: ISCN{
+				Stakeholders: []byte(`[{"name": "depub.SPACE"}]`),
 			},
 			length: 5,
 		},
 	}
 
 	for i, v := range tables {
-		p := Pagination{
-			Limit: 5,
-			Page:  1,
-			Order: ORDER_DESC,
+		p := PageRequest{
+			Limit:   5,
+			Reverse: true,
 		}
 
-		records, err := QueryISCN(pool, v.events, v.query, v.keywords, p)
+		res, err := QueryISCN(pool, v.ISCN, p)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if v.length != 0 && v.length != len(records) {
-			t.Errorf("%d: There should be %d records, got %d.\n", i, v.length, len(records))
+		if v.length != 0 && v.length != len(res.Records) {
+			t.Fatalf("%d: There should be %d records, got %d.\n", i, v.length, len(res.Records))
 		}
 	}
 }
 
 func TestISCNList(t *testing.T) {
-	p := Pagination{
-		Limit: 10,
-		Order: ORDER_DESC,
-		Page:  1,
+	p := PageRequest{
+		Limit:   10,
+		Reverse: true,
 	}
 
-	records, err := QueryISCNList(pool, p)
+	res, err := QueryISCNList(pool, p)
 	if err != nil {
 		t.Error(err)
 	}
-	t.Log(len(records))
+	t.Log(len(res.Records))
 }
 
 func TestISCNQueryAll(t *testing.T) {
@@ -169,26 +130,48 @@ func TestISCNQueryAll(t *testing.T) {
 			term:   "depub.SPACE",
 			length: 5,
 		},
-		// {
-		// 	term: "Apple Daily",
-		// 	length: 5,
-		// },
+		{
+			term:   "Apple Daily",
+			length: 5,
+		},
 	}
 
 	for _, v := range tables {
-		p := Pagination{
-			Limit: 5,
-			Page:  1,
-			Order: ORDER_DESC,
+		p := PageRequest{
+			Limit:   5,
+			Reverse: true,
 		}
 
 		t.Log(v.term)
-		records, err := QueryISCNAll(pool, v.term, p)
+		res, err := QueryISCNAll(pool, v.term, p)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if v.length != 0 && v.length != len(records) {
-			t.Errorf("There should be %d records, got %d.", v.length, len(records))
+		if v.length != 0 && v.length != len(res.Records) {
+			t.Errorf("There should be %d records, got %d.", v.length, len(res.Records))
+		}
+	}
+}
+
+func TestISCNPagination(t *testing.T) {
+	table := map[PageRequest]uint64{
+		{
+			Key:   1300,
+			Limit: 10,
+		}: 1310,
+		{
+			Key:     1300,
+			Limit:   10,
+			Reverse: true,
+		}: 1290,
+	}
+	for p, a := range table {
+		res, err := QueryISCNList(pool, p)
+		if err != nil {
+			t.Error(err)
+		}
+		if res.Pagination.NextKey != a {
+			t.Error("pagination", p, "expect", a, "got", res.Pagination.NextKey)
 		}
 	}
 }

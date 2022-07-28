@@ -5,34 +5,27 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	. "github.com/likecoin/likecoin-chain-tx-indexer/utils"
 	"go.uber.org/zap/zapcore"
 )
 
 var router *gin.Engine
 
-func env(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
-}
-
 func TestMain(m *testing.M) {
 	godotenv.Load("../.env")
 	logger.SetupLogger(zapcore.DebugLevel, []string{"stdout"}, "console")
 	pool, err := db.NewConnPool(
-		env("DB_NAME", "postgres"),
-		env("DB_HOST", "localhost"),
-		env("DB_PORT", "5432"),
-		env("DB_USER", "postgres"),
-		env("DB_PASS", "password"),
+		Env("DB_NAME", "postgres"),
+		Env("DB_HOST", "localhost"),
+		Env("DB_PORT", "5432"),
+		Env("DB_USER", "postgres"),
+		Env("DB_PASS", "password"),
 		32,
 		4,
 	)
