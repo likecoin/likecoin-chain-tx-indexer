@@ -99,7 +99,11 @@ func TestQueryNftRanking(t *testing.T) {
 			Creator: "like1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmca3huxf",
 		},
 		{
-			Owner: "like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp",
+			Owner:      "like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp",
+			IgnoreList: []string{"like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp"},
+		},
+		{
+			Owner: "like13v8qtt0jz6y2304559v7l29sy7prz50jqwdewn",
 		},
 		{
 			StakeholderId: "did:like:1shkl5gqzxcs9yh3qjdeggaz3yg5s83754dx2dh",
@@ -123,14 +127,17 @@ func TestQueryNftRanking(t *testing.T) {
 	}
 
 	for _, q := range table {
-		res, err := GetClassesRanking(conn, q, p)
+		q.PageRequest = p
+		res, err := GetClassesRanking(conn, q)
 		if err != nil {
 			t.Error(err)
 		}
+		input, _ := json.MarshalIndent(&q, "", "  ")
+		output, _ := json.MarshalIndent(&res, "", "  ")
 		if len(res.Classes) == 0 {
-			input, _ := json.Marshal(&q)
-			output, _ := json.Marshal(&res)
-			t.Fatal("No response", string(input), string(output))
+			t.Error("No response", string(input), string(output))
+			continue
 		}
+		// t.Log(string(input), string(output))
 	}
 }

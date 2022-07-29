@@ -109,15 +109,9 @@ func handleNftRanking(c *gin.Context) {
 		return
 	}
 
-	p, err := getPagination(c)
-	if err != nil {
-		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
 	conn := getConn(c)
 
-	res, err := db.GetClassesRanking(conn, q, p)
+	res, err := db.GetClassesRanking(conn, q)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

@@ -74,8 +74,9 @@ func (n *NftEvent) Attach(payload EventPayload) {
 
 type PageRequest struct {
 	Key     uint64 `form:"key"`
-	Limit   uint64 `form:"limit,default=100" binding:"gte=1,lte=100"`
+	Limit   int    `form:"limit,default=100" binding:"gte=1,lte=100"`
 	Reverse bool   `form:"reverse"`
+	Offset  uint64 `form:"offset"`
 }
 
 func (p *PageRequest) After() uint64 {
@@ -183,13 +184,16 @@ type QueryEventsResponse struct {
 }
 
 type QueryRankingRequest struct {
-	StakeholderId   string `form:"stakeholder_id"`
-	StakeholderName string `form:"stakeholder_name"`
-	Creator         string `form:"creator"`
-	Type            string `form:"type"`
-	Owner           string `form:"owner"`
-	After           int64  `form:"after"`
-	Before          int64  `form:"before"`
+	StakeholderId   string   `form:"stakeholder_id"`
+	StakeholderName string   `form:"stakeholder_name"`
+	Creator         string   `form:"creator"`
+	Type            string   `form:"type"`
+	Owner           string   `form:"owner"`
+	After           int64    `form:"after"`
+	Before          int64    `form:"before"`
+	IncludeOwner    bool     `form:"include_owner"`
+	IgnoreList      []string `form:"ignore_list"`
+	PageRequest
 }
 
 func (q *QueryRankingRequest) stakeholderId() string {
@@ -207,6 +211,11 @@ func (q *QueryRankingRequest) stakeholderName() string {
 }
 
 type QueryRankingResponse struct {
-	Classes    []NftClass   `json:"classes"`
-	Pagination PageResponse `json:"pagination"`
+	Classes    []NftClassRankingResponse `json:"classes"`
+	Pagination PageResponse              `json:"pagination"`
+}
+
+type NftClassRankingResponse struct {
+	NftClass
+	SoldCount int `json:"sold_count"`
 }

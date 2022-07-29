@@ -63,34 +63,35 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	return res, nil
 }
 
-func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest) (QueryRankingResponse, error) {
+func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest) (QueryRankingResponse, error) {
 	sql := fmt.Sprintf(`
 	SELECT c.id, c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
 	c.config, c.metadata, c.price,
-	c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at
+	c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at, count
 	FROM nft_class as c
 	JOIN (
-		SELECT c.id
+		SELECT c.id, count(n.id), array_agg(n.owner) as owners
 		FROM iscn as i
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
-		JOIN nft as n ON c.class_id = n.class_id
+		LEFT JOIN nft as n ON c.class_id = n.class_id
+			AND ($1 = true OR n.owner != i.owner)
+			AND ($11::text[] IS NULL OR ARRAY[n.owner] <@ $11)
 		WHERE ($4 = '' OR i.owner = $4)
 			AND ($5 = '' OR i.data #>> '{"contentMetadata", "@type"}' = $5)
 			AND ($6::jsonb IS NULL OR i.stakeholders @> $6)
 			AND ($7::jsonb IS NULL OR i.stakeholders @> $7)
-			AND ($8 = '' OR n.owner = $8)
 			AND ($9 = 0 OR c.created_at > to_timestamp($9))
 			AND ($10 = 0 OR c.created_at < to_timestamp($10))
 		GROUP BY c.id
 	) AS t ON c.id = t.id
-	WHERE ($1 = 0 OR c.id > $1)
-		AND ($2 = 0 OR c.id < $2)
-	ORDER BY c.id %s
+	WHERE ($8 = '' OR $8 = ANY(t.owners))
+	ORDER BY count %s
+	OFFSET $2
 	LIMIT $3
-	`, p.Order())
+	`, q.Order())
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, q.Creator, q.Type, q.stakeholderId(), q.stakeholderName(), q.Owner, q.After, q.Before)
+	rows, err := conn.Query(ctx, sql, q.IncludeOwner, q.Offset, q.Limit, q.Creator, q.Type, q.stakeholderId(), q.stakeholderName(), q.Owner, q.After, q.Before, q.IgnoreList)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft class ranking", "error", err, "q", q)
 		return QueryRankingResponse{}, fmt.Errorf("query nft class ranking error: %w", err)
@@ -98,13 +99,13 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 
 	res := QueryRankingResponse{}
 	for rows.Next() {
-		var c NftClass
+		var c NftClassRankingResponse
 		if err = rows.Scan(
 			&res.Pagination.NextKey,
 			&c.Id, &c.Name, &c.Description, &c.Symbol, &c.URI, &c.URIHash,
 			&c.Config, &c.Metadata, &c.Price,
 			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account,
-			&c.CreatedAt,
+			&c.CreatedAt, &c.SoldCount,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft class", "error", err)
 			return QueryRankingResponse{}, fmt.Errorf("query nft class data failed: %w", err)
