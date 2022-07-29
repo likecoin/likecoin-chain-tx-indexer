@@ -99,8 +99,9 @@ func TestCollectors(t *testing.T) {
 	q := QueryCollectorRequest{
 		Creator: "like1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmca3huxf",
 		PageRequest: PageRequest{
-			Offset: 0,
-			Limit:  5,
+			Offset:  0,
+			Limit:   5,
+			Reverse: true,
 		},
 	}
 
@@ -108,7 +109,7 @@ func TestCollectors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	output, _ := json.Marshal(&res)
+	output, _ := json.MarshalIndent(&res, "", "  ")
 	t.Log(string(output))
 }
 
@@ -131,6 +132,6 @@ func TestCreators(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	output, _ := json.Marshal(&res)
+	output, _ := json.MarshalIndent(&res, "", "  ")
 	t.Log(string(output))
 }

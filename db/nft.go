@@ -185,7 +185,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (QueryCollectorResponse, error) {
+func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollectorResponse, err error) {
 	sql := fmt.Sprintf(`
 	SELECT owner, sum(count) as total,
 		array_agg(json_build_object(
@@ -210,21 +210,22 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (QueryCollectorRe
 
 	rows, err := conn.Query(ctx, sql, q.Creator, q.Offset, q.Limit)
 	if err != nil {
-		logger.L.Errorw("Failed to query supporters", "error", err, "q", q)
-		return QueryCollectorResponse{}, fmt.Errorf("query supporters error: %w", err)
+		logger.L.Errorw("Failed to query collectors", "error", err, "q", q)
+		err = fmt.Errorf("query supporters error: %w", err)
+		return
 	}
 	defer rows.Close()
 
-	res := QueryCollectorResponse{}
 	res.Collectors, err = parseAccountCollections(rows)
 	if err != nil {
-		panic(err)
+		err = fmt.Errorf("Scan collectors error: %w", err)
+		return
 	}
 	res.Pagination.Count = len(res.Collectors)
-	return res, nil
+	return
 }
 
-func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (QueryCreatorResponse, error) {
+func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorResponse, err error) {
 	sql := fmt.Sprintf(`
 	SELECT owner, sum(count) as total,
 		array_agg(json_build_object(
@@ -249,17 +250,18 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (QueryCreatorRespons
 
 	rows, err := conn.Query(ctx, sql, q.Collector, q.Offset, q.Limit)
 	if err != nil {
-		logger.L.Errorw("Failed to query supporters", "error", err, "q", q)
-		return QueryCreatorResponse{}, fmt.Errorf("query supporters error: %w", err)
+		logger.L.Errorw("Failed to query creators", "error", err, "q", q)
+		err = fmt.Errorf("query creators error: %w", err)
+		return
 	}
 
-	res := QueryCreatorResponse{}
 	res.Creators, err = parseAccountCollections(rows)
 	if err != nil {
-		panic(err)
+		err = fmt.Errorf("Scan creators error: %w", err)
+		return
 	}
 	res.Pagination.Count = len(res.Creators)
-	return res, nil
+	return
 }
 
 func parseAccountCollections(rows pgx.Rows) (accounts []accountCollection, err error) {
@@ -267,10 +269,10 @@ func parseAccountCollections(rows pgx.Rows) (accounts []accountCollection, err e
 		var account accountCollection
 		var collections pgtype.JSONBArray
 		if err = rows.Scan(&account.Account, &account.Count, &collections); err != nil {
-			panic(err)
+			return
 		}
 		if err = collections.AssignTo(&account.Collections); err != nil {
-			panic(err)
+			return
 		}
 		accounts = append(accounts, account)
 	}
