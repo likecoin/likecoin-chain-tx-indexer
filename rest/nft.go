@@ -109,15 +109,9 @@ func handleNftCollectors(c *gin.Context) {
 		return
 	}
 
-	var p db.PageRequest
-	if err := c.ShouldBindQuery(&p); err != nil {
-		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
-		return
-	}
-
 	conn := getConn(c)
 
-	res, err := db.GetCollector(conn, form, p)
+	res, err := db.GetCollector(conn, form)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
@@ -133,15 +127,9 @@ func handleNftCreators(c *gin.Context) {
 		return
 	}
 
-	var p db.PageRequest
-	if err := c.ShouldBindQuery(&p); err != nil {
-		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
-		return
-	}
-
 	conn := getConn(c)
 
-	res, err := db.GetCreators(conn, form, p)
+	res, err := db.GetCreators(conn, form)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

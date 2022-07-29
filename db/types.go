@@ -184,6 +184,7 @@ type QueryEventsResponse struct {
 
 type QueryCollectorRequest struct {
 	Creator string `form:"creator" binding:"required"`
+	PageRequest
 }
 
 type QueryCollectorResponse struct {
@@ -193,6 +194,7 @@ type QueryCollectorResponse struct {
 
 type QueryCreatorRequest struct {
 	Collector string `form:"collector" binding:"required"`
+	PageRequest
 }
 
 type QueryCreatorResponse struct {

@@ -98,14 +98,13 @@ func TestCollectors(t *testing.T) {
 
 	q := QueryCollectorRequest{
 		Creator: "like1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmca3huxf",
+		PageRequest: PageRequest{
+			Offset: 0,
+			Limit:  5,
+		},
 	}
 
-	p := PageRequest{
-		Offset: 0,
-		Limit:  100,
-	}
-
-	res, err := GetCollector(conn, q, p)
+	res, err := GetCollector(conn, q)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,13 +121,13 @@ func TestCreators(t *testing.T) {
 
 	q := QueryCreatorRequest{
 		Collector: "like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp",
+		PageRequest: PageRequest{
+			Offset: 0,
+			Limit:  5,
+		},
 	}
 
-	p := PageRequest{
-		Limit: 5,
-	}
-
-	res, err := GetCreators(conn, q, p)
+	res, err := GetCreators(conn, q)
 	if err != nil {
 		t.Fatal(err)
 	}

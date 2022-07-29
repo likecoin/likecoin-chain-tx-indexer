@@ -185,7 +185,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (QueryCollectorResponse, error) {
+func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (QueryCollectorResponse, error) {
 	sql := fmt.Sprintf(`
 	SELECT owner, sum(count) as total,
 		array_agg(json_build_object(
@@ -204,12 +204,11 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (Q
 	ORDER BY total %s
 	OFFSET $2
 	LIMIT $3
-	`, p.Order())
+	`, q.Order())
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	logger.L.Debug(p)
-	rows, err := conn.Query(ctx, sql, q.Creator, p.Offset, p.Limit)
+	rows, err := conn.Query(ctx, sql, q.Creator, q.Offset, q.Limit)
 	if err != nil {
 		logger.L.Errorw("Failed to query supporters", "error", err, "q", q)
 		return QueryCollectorResponse{}, fmt.Errorf("query supporters error: %w", err)
@@ -225,7 +224,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (Q
 	return res, nil
 }
 
-func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (QueryCreatorResponse, error) {
+func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (QueryCreatorResponse, error) {
 	sql := fmt.Sprintf(`
 	SELECT owner, sum(count) as total,
 		array_agg(json_build_object(
@@ -244,11 +243,11 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (Quer
 	ORDER BY total %s
 	OFFSET $2
 	LIMIT $3
-	`, p.Order())
+	`, q.Order())
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.Collector, p.Offset, p.Limit)
+	rows, err := conn.Query(ctx, sql, q.Collector, q.Offset, q.Limit)
 	if err != nil {
 		logger.L.Errorw("Failed to query supporters", "error", err, "q", q)
 		return QueryCreatorResponse{}, fmt.Errorf("query supporters error: %w", err)
