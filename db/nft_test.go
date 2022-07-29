@@ -99,10 +99,6 @@ func TestQueryNftRanking(t *testing.T) {
 			Creator: "like1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmca3huxf",
 		},
 		{
-			Owner:      "like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp",
-			IgnoreList: []string{"like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp"},
-		},
-		{
 			Owner: "like13v8qtt0jz6y2304559v7l29sy7prz50jqwdewn",
 		},
 		{
@@ -128,6 +124,7 @@ func TestQueryNftRanking(t *testing.T) {
 
 	for _, q := range table {
 		q.PageRequest = p
+		q.IgnoreList = []string{"like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp"}
 		res, err := GetClassesRanking(conn, q)
 		if err != nil {
 			t.Error(err)
