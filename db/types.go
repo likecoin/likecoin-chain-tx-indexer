@@ -73,8 +73,9 @@ func (n *NftEvent) Attach(payload EventPayload) {
 
 type PageRequest struct {
 	Key     uint64 `form:"key"`
-	Limit   uint64 `form:"limit,default=100" binding:"gte=1,lte=100"`
+	Limit   int    `form:"limit,default=100" binding:"gte=1,lte=100"`
 	Reverse bool   `form:"reverse"`
+	Offset  uint64 `form:"offset"`
 }
 
 func (p *PageRequest) After() uint64 {
@@ -186,8 +187,8 @@ type QueryCollectorRequest struct {
 }
 
 type QueryCollectorResponse struct {
-	Collectors map[string]*accountCollection `json:"collectors"`
-	Pagination PageResponse                  `json:"pagination"`
+	Collectors []accountCollection `json:"collectors"`
+	Pagination PageResponse        `json:"pagination"`
 }
 
 type QueryCreatorRequest struct {
@@ -195,11 +196,12 @@ type QueryCreatorRequest struct {
 }
 
 type QueryCreatorResponse struct {
-	Creators   map[string]*accountCollection `json:"creators"`
-	Pagination PageResponse                  `json:"pagination"`
+	Creators   []accountCollection `json:"creators"`
+	Pagination PageResponse        `json:"pagination"`
 }
 
 type accountCollection struct {
+	Account     string       `json:"account"`
 	Count       int          `json:"count"`
 	Collections []collection `json:"collections"`
 }

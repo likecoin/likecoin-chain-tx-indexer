@@ -97,11 +97,12 @@ func TestCollectors(t *testing.T) {
 	defer conn.Release()
 
 	q := QueryCollectorRequest{
-		Creator: "like156gedr03g3ggwktzhygfusax4df46k8dh6w0me",
+		Creator: "like1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmca3huxf",
 	}
 
 	p := PageRequest{
-		Limit: 1,
+		Offset: 0,
+		Limit:  100,
 	}
 
 	res, err := GetCollector(conn, q, p)
@@ -124,7 +125,7 @@ func TestCreators(t *testing.T) {
 	}
 
 	p := PageRequest{
-		Limit: 1,
+		Limit: 5,
 	}
 
 	res, err := GetCreators(conn, q, p)

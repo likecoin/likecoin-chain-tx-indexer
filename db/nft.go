@@ -186,18 +186,30 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 }
 
 func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (QueryCollectorResponse, error) {
-	sql := `
-	SELECT n.owner, i.iscn_id_prefix, c.class_id, COUNT(*) 
-	FROM iscn as i
-	JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
-	JOIN nft AS n ON c.class_id = n.class_id
-	WHERE i.owner = $1
-	GROUP BY n.owner, i.iscn_id_prefix, c.class_id
-	`
+	sql := fmt.Sprintf(`
+	SELECT owner, sum(count) as total,
+		array_agg(json_build_object(
+			'iscn_id_prefix', iscn_id_prefix,
+			'class_id', class_id,
+			'count', count))
+	FROM (
+		SELECT n.owner, i.iscn_id_prefix, c.class_id, COUNT(*) as count
+		FROM iscn as i
+		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN nft AS n ON c.class_id = n.class_id
+		WHERE i.owner = $1
+		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
+	) as r
+	GROUP BY owner
+	ORDER BY total %s
+	OFFSET $2
+	LIMIT $3
+	`, p.Order())
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.Creator)
+	logger.L.Debug(p)
+	rows, err := conn.Query(ctx, sql, q.Creator, p.Offset, p.Limit)
 	if err != nil {
 		logger.L.Errorw("Failed to query supporters", "error", err, "q", q)
 		return QueryCollectorResponse{}, fmt.Errorf("query supporters error: %w", err)
@@ -214,18 +226,29 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (Q
 }
 
 func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (QueryCreatorResponse, error) {
-	sql := `
-	SELECT i.owner, i.iscn_id_prefix, c.class_id, COUNT(*)
-	FROM iscn as i
-	JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
-	JOIN nft AS n ON c.class_id = n.class_id
-	WHERE n.owner = $1
-	GROUP BY i.owner, i.iscn_id_prefix, c.class_id
-	`
+	sql := fmt.Sprintf(`
+	SELECT owner, sum(count) as total,
+		array_agg(json_build_object(
+			'iscn_id_prefix', iscn_id_prefix,
+			'class_id', class_id,
+			'count', count))
+	FROM (
+		SELECT i.owner, i.iscn_id_prefix, c.class_id, COUNT(*) as count
+		FROM iscn as i
+		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN nft AS n ON c.class_id = n.class_id
+		WHERE n.owner = $1
+		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
+	) as r
+	GROUP BY owner
+	ORDER BY total %s
+	OFFSET $2
+	LIMIT $3
+	`, p.Order())
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.Collector)
+	rows, err := conn.Query(ctx, sql, q.Collector, p.Offset, p.Limit)
 	if err != nil {
 		logger.L.Errorw("Failed to query supporters", "error", err, "q", q)
 		return QueryCreatorResponse{}, fmt.Errorf("query supporters error: %w", err)
@@ -240,22 +263,17 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func parseAccountCollections(rows pgx.Rows) (map[string]*accountCollection, error) {
-	accounts := make(map[string]*accountCollection)
-
+func parseAccountCollections(rows pgx.Rows) (accounts []accountCollection, err error) {
 	for rows.Next() {
-		var addr string
-		var c collection
-		if err := rows.Scan(&addr, &c.IscnIdPrefix, &c.ClassId, &c.Count); err != nil {
+		var account accountCollection
+		var collections pgtype.JSONBArray
+		if err = rows.Scan(&account.Account, &account.Count, &collections); err != nil {
 			panic(err)
 		}
-		account, ok := accounts[addr]
-		if !ok {
-			account = new(accountCollection)
-			accounts[addr] = account
+		if err = collections.AssignTo(&account.Collections); err != nil {
+			panic(err)
 		}
-		account.Collections = append(account.Collections, c)
-		account.Count += c.Count
+		accounts = append(accounts, account)
 	}
-	return accounts, nil
+	return
 }
