@@ -219,3 +219,35 @@ type NftClassRankingResponse struct {
 	NftClass
 	SoldCount int `json:"sold_count"`
 }
+
+type QueryCollectorRequest struct {
+	Creator string `form:"creator" binding:"required"`
+	PageRequest
+}
+
+type QueryCollectorResponse struct {
+	Collectors []accountCollection `json:"collectors"`
+	Pagination PageResponse        `json:"pagination"`
+}
+
+type QueryCreatorRequest struct {
+	Collector string `form:"collector" binding:"required"`
+	PageRequest
+}
+
+type QueryCreatorResponse struct {
+	Creators   []accountCollection `json:"creators"`
+	Pagination PageResponse        `json:"pagination"`
+}
+
+type accountCollection struct {
+	Account     string       `json:"account"`
+	Count       int          `json:"count"`
+	Collections []collection `json:"collections"`
+}
+
+type collection struct {
+	IscnIdPrefix string `json:"iscn_id_prefix"`
+	ClassId      string `json:"class_id"`
+	Count        int    `json:"count"`
+}

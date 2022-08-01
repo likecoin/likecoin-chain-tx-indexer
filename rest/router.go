@@ -37,6 +37,8 @@ func getRouter(pool *pgxpool.Pool) *gin.Engine {
 	router.GET(NFT_ENDPOINT+"/owner", withConn(pool), handleNftOwner)
 	router.GET(NFT_ENDPOINT+"/event", withConn(pool), handleNftEvents)
 	router.GET(NFT_ENDPOINT+"/ranking", withConn(pool), handleNftRanking)
+	router.GET(NFT_ENDPOINT+"/collector", withConn(pool), handleNftCollectors)
+	router.GET(NFT_ENDPOINT+"/creator", withConn(pool), handleNftCreators)
 	router.GET(ISCN_ENDPOINT, withPool(pool), handleISCN)
 	router.GET("/txs", withConn(pool), handleAminoTxsSearch)
 	router.GET(STARGATE_ENDPOINT, withConn(pool), handleStargateTxsSearch)

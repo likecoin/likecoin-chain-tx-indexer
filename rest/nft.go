@@ -110,8 +110,43 @@ func handleNftRanking(c *gin.Context) {
 	}
 
 	conn := getConn(c)
-
 	res, err := db.GetClassesRanking(conn, q)
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, res)
+}
+
+func handleNftCollectors(c *gin.Context) {
+	var form db.QueryCollectorRequest
+	if err := c.ShouldBindQuery(&form); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
+		return
+	}
+
+	conn := getConn(c)
+
+	res, err := db.GetCollector(conn, form)
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, res)
+}
+
+func handleNftCreators(c *gin.Context) {
+	var form db.QueryCreatorRequest
+	if err := c.ShouldBindQuery(&form); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
+		return
+	}
+
+	conn := getConn(c)
+
+	res, err := db.GetCreators(conn, form)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
