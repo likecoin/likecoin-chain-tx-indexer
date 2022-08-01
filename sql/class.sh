@@ -6,9 +6,10 @@
 AFTER=0 # '2022/07/15'
 BEFORE=0 # '2022/07/26'
 STAKEHOLDERS='[]'
-IGNORELIST="{\"like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp\"}"
+IGNORELIST="{}" # "{\"like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp\"}"
 ALLOWOWNER=false
 # OWNER=like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp # like13v8qtt0jz6y2304559v7l29sy7prz50jqwdewn
+OWNER=like13v8qtt0jz6y2304559v7l29sy7prz50jqwdewn
 # STAKEHOLDERS='[{"name": "Carlos Cuesta"}]'
 
 psql testnet5 << SQL
@@ -20,7 +21,7 @@ JOIN (
     JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
     LEFT JOIN nft as n ON c.class_id = n.class_id
         AND ('$ALLOWOWNER' = true OR n.owner != i.owner)
-        AND NOT ('$IGNORELIST'::text[] IS NULL OR ARRAY[n.owner] <@ '$IGNORELIST') 
+		AND (n.owner != ALL('$IGNORELIST'::text[]))
     JOIN nft_event as e ON c.class_id = e.class_id AND e.action = 'new_class'
     WHERE ('$CREATOR' = '' OR i.owner = '$CREATOR')
         AND ('$TYPE' = '' OR i.data #>> '{"contentMetadata", "@type"}' = '$TYPE')
@@ -33,3 +34,5 @@ ON c.id = t.id
 WHERE ('$OWNER' = '' OR '$OWNER' = ANY(owners))
 ORDER BY count DESC
 SQL
+
+# AND NOT ('$IGNORELIST'::text[] IS NULL OR ARRAY[n.owner] <@ '$IGNORELIST') 

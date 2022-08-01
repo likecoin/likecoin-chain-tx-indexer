@@ -188,7 +188,7 @@ type QueryRankingRequest struct {
 	StakeholderName string   `form:"stakeholder_name"`
 	Creator         string   `form:"creator"`
 	Type            string   `form:"type"`
-	Owner           string   `form:"owner"`
+	Collector       string   `form:"collector"`
 	After           int64    `form:"after"`
 	Before          int64    `form:"before"`
 	IncludeOwner    bool     `form:"include_owner"`

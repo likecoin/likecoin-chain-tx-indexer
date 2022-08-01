@@ -91,25 +91,60 @@ func TestEventsByNftId(t *testing.T) {
 }
 
 func TestQueryNftRanking(t *testing.T) {
-	table := []QueryRankingRequest{
+	table := []struct {
+		name string
+		QueryRankingRequest
+	}{
 		{
-			Type: "CreativeWork",
+			"type",
+			QueryRankingRequest{
+				Type: "CreativeWork",
+			},
 		},
 		{
-			Creator: "like1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmca3huxf",
+			"creator_with_ignore",
+			QueryRankingRequest{
+				Creator:    "like1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmca3huxf",
+				IgnoreList: []string{"like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp"},
+			},
 		},
 		{
-			Owner: "like13v8qtt0jz6y2304559v7l29sy7prz50jqwdewn",
+			"collector_with_ignore",
+			QueryRankingRequest{
+				Collector:  "like13v8qtt0jz6y2304559v7l29sy7prz50jqwdewn",
+				IgnoreList: []string{"like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp"},
+			},
 		},
 		{
-			StakeholderId: "did:like:1shkl5gqzxcs9yh3qjdeggaz3yg5s83754dx2dh",
+			"creator",
+			QueryRankingRequest{
+				Creator: "like1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmca3huxf",
+			},
 		},
 		{
-			StakeholderName: "Author",
+			"collector",
+			QueryRankingRequest{
+				Collector: "like13v8qtt0jz6y2304559v7l29sy7prz50jqwdewn",
+			},
 		},
 		{
-			After:  time.Date(2022, 7, 1, 0, 0, 0, 0, time.UTC).Unix(),
-			Before: time.Date(2022, 7, 15, 0, 0, 0, 0, time.UTC).Unix(),
+			"stakeholder_id",
+			QueryRankingRequest{
+				StakeholderId: "did:like:1shkl5gqzxcs9yh3qjdeggaz3yg5s83754dx2dh",
+			},
+		},
+		{
+			"stakeholder_name",
+			QueryRankingRequest{
+				StakeholderName: "Author",
+			},
+		},
+		{
+			"creation_date",
+			QueryRankingRequest{
+				After:  time.Date(2022, 7, 1, 0, 0, 0, 0, time.UTC).Unix(),
+				Before: time.Date(2022, 7, 15, 0, 0, 0, 0, time.UTC).Unix(),
+			},
 		},
 	}
 	conn, err := AcquireFromPool(pool)
@@ -123,18 +158,20 @@ func TestQueryNftRanking(t *testing.T) {
 	}
 
 	for _, q := range table {
-		q.PageRequest = p
-		q.IgnoreList = []string{"like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp"}
-		res, err := GetClassesRanking(conn, q)
-		if err != nil {
-			t.Error(err)
-		}
-		input, _ := json.MarshalIndent(&q, "", "  ")
-		output, _ := json.MarshalIndent(&res, "", "  ")
-		if len(res.Classes) == 0 {
-			t.Error("No response", string(input), string(output))
-			continue
-		}
-		// t.Log(string(input), string(output))
+		t.Run(q.name, func(t *testing.T) {
+			q.PageRequest = p
+			// q.IgnoreList = []string{"like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp"}
+			res, err := GetClassesRanking(conn, q.QueryRankingRequest)
+			if err != nil {
+				t.Error(err)
+			}
+			input, _ := json.MarshalIndent(&q, "", "  ")
+			output, _ := json.MarshalIndent(&res, "", "  ")
+			if len(res.Classes) == 0 {
+				t.Error("No response", string(input), string(output))
+				return
+			}
+			// t.Log(string(input), string(output))
+		})
 	}
 }
