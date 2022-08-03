@@ -244,7 +244,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollect
 			'class_id', class_id,
 			'count', count))
 	FROM (
-		SELECT n.owner, i.iscn_id_prefix, c.class_id, COUNT(*) as count
+		SELECT n.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
 		FROM iscn as i
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
@@ -284,7 +284,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorRes
 			'class_id', class_id,
 			'count', count))
 	FROM (
-		SELECT i.owner, i.iscn_id_prefix, c.class_id, COUNT(*) as count
+		SELECT i.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
 		FROM iscn as i
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
