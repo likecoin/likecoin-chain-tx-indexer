@@ -237,7 +237,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 }
 
 func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollectorResponse, err error) {
-	sql := fmt.Sprintf(`
+	sql := `
 	SELECT owner, sum(count) as total,
 		array_agg(json_build_object(
 			'iscn_id_prefix', iscn_id_prefix,
@@ -252,10 +252,10 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollect
 		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
 	) as r
 	GROUP BY owner
-	ORDER BY total %s
+	ORDER BY total DESC
 	OFFSET $2
 	LIMIT $3
-	`, q.Order())
+	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
@@ -277,7 +277,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollect
 }
 
 func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorResponse, err error) {
-	sql := fmt.Sprintf(`
+	sql := `
 	SELECT owner, sum(count) as total,
 		array_agg(json_build_object(
 			'iscn_id_prefix', iscn_id_prefix,
@@ -292,10 +292,10 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorRes
 		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
 	) as r
 	GROUP BY owner
-	ORDER BY total %s
+	ORDER BY total DESC
 	OFFSET $2
 	LIMIT $3
-	`, q.Order())
+	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
