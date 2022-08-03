@@ -56,7 +56,7 @@ func InitDB(conn *pgxpool.Conn) error {
 			return err
 		}
 		for version := dbSchemaVersion + 1; version <= codeSchemaVersion; version++ {
-			logger.L.Infow("Running SQL migration", "schema_version", version)
+			logger.L.Infow("Running SQL migration", "from_schema_version", version-1, "to_schema_version", version)
 			sql := versionSqlMap[version]
 			_, err := dbTx.Exec(context.Background(), sql)
 			if err != nil {
