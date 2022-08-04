@@ -1,8 +1,6 @@
 package rest
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 )
@@ -14,7 +12,7 @@ func handleISCN(c *gin.Context) {
 		return
 	}
 
-	var iscn db.ISCN
+	var query db.ISCNQuery
 	hasQuery := false
 
 	for k, v := range q {
@@ -22,28 +20,28 @@ func handleISCN(c *gin.Context) {
 		case "iscn_id":
 			if len(v) > 0 {
 				hasQuery = true
-				iscn.Iscn = v[0]
+				query.IscnID = v[0]
 			}
 		case "owner":
 			if len(v) > 0 {
 				hasQuery = true
-				iscn.Owner = v[0]
+				query.Owner = v[0]
 			}
 		case "fingerprint", "fingerprints":
 			hasQuery = true
-			iscn.Fingerprints = v
+			query.Fingerprints = v
 		case "keywords":
 			hasQuery = true
-			iscn.Keywords = v
+			query.Keywords = v
 		case "stakeholders.entity.id", "stakeholders.id":
 			if len(v) > 0 {
 				hasQuery = true
-				iscn.Stakeholders = []byte(fmt.Sprintf(`[{"id": "%s"}]`, v[0]))
+				query.StakeholderID = v[0]
 			}
 		case "stakeholders.entity.name", "stakeholders.name":
 			if len(v) > 0 {
 				hasQuery = true
-				iscn.Stakeholders = []byte(fmt.Sprintf(`[{"name": "%s"}]`, v[0]))
+				query.StakeholderName = v[0]
 			}
 		}
 	}
@@ -57,7 +55,7 @@ func handleISCN(c *gin.Context) {
 	pool := getPool(c)
 	var res db.ISCNResponse
 	if hasQuery {
-		res, err = db.QueryISCN(pool, iscn, p)
+		res, err = db.QueryISCN(pool, query, p)
 	} else {
 		res, err = db.QueryISCNList(pool, p)
 	}

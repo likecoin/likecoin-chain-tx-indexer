@@ -29,29 +29,7 @@ type contentMetadata struct {
 }
 
 type stakeholder struct {
-	Entity *entity `json:"entity,omitempty"`
-}
-
-type entity struct {
-	Id   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
-
-func (e *entity) UnmarshalJSON(data []byte) (err error) {
-	dict := make(map[string]interface{})
-	if err = json.Unmarshal(data, &dict); err != nil {
-		return
-	}
-	if v, ok := dict["id"].(string); ok {
-		e.Id = v
-	}
-	if v, ok := dict["@id"].(string); ok {
-		e.Id = v
-	}
-	if v, ok := dict["name"].(string); ok {
-		e.Name = v
-	}
-	return nil
+	Entity db.Entity `json:"entity,omitempty"`
 }
 
 func (q iscnData) Marshal() ([]byte, error) {
@@ -69,24 +47,30 @@ func insertISCN(payload db.EventPayload) error {
 	if err := json.Unmarshal(data.Record, &record); err != nil {
 		return fmt.Errorf("Failed to unmarshal iscn: %w", err)
 	}
-	holders, err := formatStakeholders(record.Stakeholders)
-	if err != nil {
-		return fmt.Errorf("Failed to format stakeholder, %w", err)
+	stakeholdersEntities := []db.Entity{}
+	for _, stakeholder := range record.Stakeholders {
+		stakeholdersEntities = append(stakeholdersEntities, stakeholder.Entity)
 	}
-	iscn := db.ISCN{
-		Iscn:         utils.GetEventsValue(events, "iscn_record", "iscn_id"),
-		IscnPrefix:   utils.GetEventsValue(events, "iscn_record", "iscn_id_prefix"),
-		Version:      getIscnVersion(utils.GetEventsValue(events, "iscn_record", "iscn_id")),
-		Owner:        utils.GetEventsValue(events, "iscn_record", "owner"),
-		Name:         record.ContentMetadata.Name,
-		Description:  record.ContentMetadata.Description,
-		Url:          record.ContentMetadata.Url,
-		Keywords:     utils.ParseKeywords(record.ContentMetadata.Keywords),
-		Fingerprints: record.ContentFingerprints,
-		Stakeholders: holders,
-		Timestamp:    payload.Timestamp,
-		Ipld:         utils.GetEventsValue(events, "iscn_record", "ipld"),
-		Data:         data.Record,
+	stakeholdersJSON, err := json.Marshal(stakeholdersEntities)
+	if err != nil {
+		return fmt.Errorf("Failed to marshal sktaeholders: %w", err)
+	}
+	logger.L.Debugw("Prepared data for insert ISCN", "raw_record", string(data.Record), "record", record, "stakeholders_json", string(stakeholdersJSON), "stakeholders_entities", stakeholdersEntities)
+	iscn := db.ISCNInsert{
+		Iscn:                 utils.GetEventsValue(events, "iscn_record", "iscn_id"),
+		IscnPrefix:           utils.GetEventsValue(events, "iscn_record", "iscn_id_prefix"),
+		Version:              getIscnVersion(utils.GetEventsValue(events, "iscn_record", "iscn_id")),
+		Owner:                utils.GetEventsValue(events, "iscn_record", "owner"),
+		Name:                 record.ContentMetadata.Name,
+		Description:          record.ContentMetadata.Description,
+		Url:                  record.ContentMetadata.Url,
+		Keywords:             utils.ParseKeywords(record.ContentMetadata.Keywords),
+		Fingerprints:         record.ContentFingerprints,
+		Stakeholders:         stakeholdersJSON,
+		StakeholdersEntities: stakeholdersEntities,
+		Timestamp:            payload.Timestamp,
+		Ipld:                 utils.GetEventsValue(events, "iscn_record", "ipld"),
+		Data:                 data.Record,
 	}
 	payload.Batch.InsertISCN(iscn)
 	return nil
@@ -110,12 +94,4 @@ func getIscnVersion(iscn string) int {
 		return 0
 	}
 	return result
-}
-
-func formatStakeholders(stakeholders []stakeholder) ([]byte, error) {
-	body := make([]*entity, len(stakeholders))
-	for i, v := range stakeholders {
-		body[i] = v.Entity
-	}
-	return json.Marshal(body)
 }

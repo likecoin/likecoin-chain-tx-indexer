@@ -10,19 +10,23 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
-func QueryISCN(pool *pgxpool.Pool, iscn ISCN, page PageRequest) (ISCNResponse, error) {
+func QueryISCN(pool *pgxpool.Pool, query ISCNQuery, page PageRequest) (ISCNResponse, error) {
 	sql := fmt.Sprintf(`
-			SELECT id, iscn_id, owner, timestamp, ipld, data
+			SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
 			FROM iscn
-			WHERE	($6 = 0 OR id > $6)
-				AND ($7 = 0 OR id < $7)
-				AND ($1 = '' OR iscn_id = $1)
+			JOIN iscn_stakeholders
+			ON id = iscn_pid
+			WHERE
+				($1 = '' OR iscn_id = $1)
 				AND ($2 = '' OR owner = $2)
 				AND ($3::text[] IS NULL OR keywords @> $3)
 				AND ($4::text[] IS NULL OR fingerprints @> $4)
-				AND ($5::jsonb IS NULL OR stakeholders @> $5)
+				AND ($5 = '' OR sid = $5)
+				AND ($6 = '' OR sname = $6)
+				AND ($7 = 0 OR id > $7)
+				AND ($8 = 0 OR id < $8)
 			ORDER BY id %s
-			LIMIT $8;
+			LIMIT $9;
 		`, page.Order())
 
 	conn, err := AcquireFromPool(pool)
@@ -34,10 +38,13 @@ func QueryISCN(pool *pgxpool.Pool, iscn ISCN, page PageRequest) (ISCNResponse, e
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, iscn.Iscn, iscn.Owner, iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders,
-		page.After(), page.Before(), page.Limit)
+	rows, err := conn.Query(
+		ctx, sql,
+		query.IscnID, query.Owner, query.Keywords, query.Fingerprints, query.StakeholderID, query.StakeholderID,
+		page.After(), page.Before(), page.Limit,
+	)
 	if err != nil {
-		logger.L.Errorw("Query ISCN failed", "error", err, "iscn query", iscn)
+		logger.L.Errorw("Query ISCN failed", "error", err, "iscn_query", query)
 		return ISCNResponse{}, fmt.Errorf("Query ISCN failed: %w", err)
 	}
 	defer rows.Close()
@@ -73,22 +80,47 @@ func QueryISCNList(pool *pgxpool.Pool, pagination PageRequest) (ISCNResponse, er
 }
 
 func QueryISCNAll(pool *pgxpool.Pool, term string, pagination PageRequest) (ISCNResponse, error) {
-	stakeholderId := fmt.Sprintf(`[{"id": "%s"}]`, term)
-	stakeholderName := fmt.Sprintf(`[{"name": "%s"}]`, term)
+	order := pagination.Order()
 	sql := fmt.Sprintf(`
-		SELECT id, iscn_id, owner, timestamp, ipld, data
-		FROM iscn
-		WHERE (iscn_id = $1
-			OR owner = $1
-			OR keywords @> $2
-			OR fingerprints @> $2
-			OR stakeholders @> $3
-			OR stakeholders @> $4)
-			AND ($5 = 0 OR id > $5)
-			AND ($6 = 0 OR id < $6)
+		SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
+		FROM (
+			(
+				SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
+				FROM iscn
+				JOIN iscn_stakeholders
+				ON id = iscn_pid
+				WHERE
+					(
+						sid = $1
+						OR sname = $1
+					)
+					AND ($3 = 0 OR id > $3)
+					AND ($4 = 0 OR id < $4)
+				ORDER BY id %s
+				LIMIT $5
+			)
+			UNION ALL
+			(
+				SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
+				FROM iscn
+				JOIN iscn_stakeholders
+				ON id = iscn_pid
+				WHERE
+					(
+						iscn_id = $1
+						OR owner = $1
+						OR keywords @> $2::text[]
+						OR fingerprints @> $2::text[]
+					)
+					AND ($3 = 0 OR id > $3)
+					AND ($4 = 0 OR id < $4)
+				ORDER BY id %s
+				LIMIT $5
+			)
+		) t
 		ORDER BY id %s
-		LIMIT $7
-		`, pagination.Order())
+		LIMIT $5
+	`, order, order, order) // mayday, mayday, mayday
 
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
@@ -99,7 +131,10 @@ func QueryISCNAll(pool *pgxpool.Pool, term string, pagination PageRequest) (ISCN
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, term, []string{term}, stakeholderId, stakeholderName, pagination.After(), pagination.Before(), pagination.Limit)
+	rows, err := conn.Query(ctx, sql,
+		term, []string{term},
+		pagination.After(), pagination.Before(), pagination.Limit,
+	)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "term", term)
 		return ISCNResponse{}, fmt.Errorf("Query ISCN failed: %w", err)

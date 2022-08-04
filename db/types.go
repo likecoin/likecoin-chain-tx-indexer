@@ -8,20 +8,52 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
-type ISCN struct {
-	Iscn         string
-	IscnPrefix   string
-	Version      int
-	Owner        string
-	Timestamp    time.Time
-	Ipld         string
-	Name         string
-	Description  string
-	Url          string
-	Keywords     []string
-	Fingerprints []string
-	Stakeholders []byte
-	Data         []byte
+type Entity struct {
+	Id   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+func (e *Entity) UnmarshalJSON(data []byte) (err error) {
+	dict := make(map[string]interface{})
+	if err = json.Unmarshal(data, &dict); err != nil {
+		return
+	}
+	if v, ok := dict["id"].(string); ok {
+		e.Id = v
+	}
+	if v, ok := dict["@id"].(string); ok {
+		e.Id = v
+	}
+	if v, ok := dict["name"].(string); ok {
+		e.Name = v
+	}
+	return nil
+}
+
+type ISCNInsert struct {
+	Iscn                 string
+	IscnPrefix           string
+	Version              int
+	Owner                string
+	Timestamp            time.Time
+	Ipld                 string
+	Name                 string
+	Description          string
+	Url                  string
+	Keywords             []string
+	Fingerprints         []string
+	Stakeholders         []byte
+	StakeholdersEntities []Entity
+	Data                 []byte
+}
+
+type ISCNQuery struct {
+	IscnID          string
+	Owner           string
+	Keywords        []string
+	Fingerprints    []string
+	StakeholderID   string
+	StakeholderName string
 }
 
 type NftClass struct {

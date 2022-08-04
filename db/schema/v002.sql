@@ -1,22 +1,24 @@
-CREATE INDEX idx_iscn_owner ON iscn (owner);
-CREATE INDEX idx_iscn_keywords ON iscn USING GIN (keywords);
-CREATE INDEX idx_iscn_fingerprints ON iscn USING GIN (fingerprints);
+CREATE INDEX idx_iscn_owner ON iscn (owner); -- 28s, 6.6s
+CREATE INDEX idx_iscn_keywords ON iscn USING GIN (keywords); -- 1.7s, 2.4s
+CREATE INDEX idx_iscn_fingerprints ON iscn USING GIN (fingerprints); -- 27s, 31s
 
 CREATE TABLE iscn_stakeholders (
- iscn_pid BIGINT REFERENCES iscn (id),
- id TEXT,
- name TEXT
-);
+  -- pid means primary key ID, which is the auto-increment ID assigned by database in `iscn` table
+  iscn_pid BIGINT REFERENCES iscn (id),
+  -- stakeholder's ID, `sid` so not to be ambiguous with `id` column in `iscn` table
+  sid TEXT,
+  -- stakeholder's name, `sname` so not to be ambiguous with `name` column in `iscn` table
+  sname TEXT
+); -- 0.14s, 0.029s
 
 -- since this is a separate table, and we are usually using id field from iscn table for sorting, iscn_pid is added for the B-tree indexes
-CREATE INDEX idx_iscn_stakeholders_id ON iscn_stakeholders (id, iscn_pid);
-CREATE INDEX idx_iscn_stakeholders_name ON iscn_stakeholders (name, iscn_pid);
+CREATE INDEX idx_iscn_stakeholders_sid ON iscn_stakeholders (sid, iscn_pid); -- 0.053s, 0.048s
+CREATE INDEX idx_iscn_stakeholders_sname ON iscn_stakeholders (sname, iscn_pid); -- 0.049s, 0.039s
 
 -- migration for building the iscn_stakeholders table from iscn table
 INSERT INTO iscn_stakeholders (
   SELECT iscn_pid, s->>'id', s->>'name' FROM
     (SELECT id iscn_pid, jsonb_array_elements(stakeholders) s FROM iscn) t
-);
+); -- 67s, 69s
 
-INSERT INTO meta VALUES ('schema_version', 2)
-ON CONFLICT (id) DO UPDATE SET height = 2;
+UPDATE meta SET height = 2 WHERE id = 'schema_version';
