@@ -40,7 +40,7 @@ func QueryISCN(pool *pgxpool.Pool, query ISCNQuery, page PageRequest) (ISCNRespo
 
 	rows, err := conn.Query(
 		ctx, sql,
-		query.IscnID, query.Owner, query.Keywords, query.Fingerprints, query.StakeholderID, query.StakeholderID,
+		query.IscnID, query.Owner, query.Keywords, query.Fingerprints, query.StakeholderID, query.StakeholderName,
 		page.After(), page.Before(), page.Limit,
 	)
 	if err != nil {
