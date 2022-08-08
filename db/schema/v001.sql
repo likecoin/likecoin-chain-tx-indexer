@@ -93,9 +93,9 @@ CREATE INDEX IF NOT EXISTS idx_txs_height_tx_index ON txs (height, tx_index);
 
 CREATE INDEX IF NOT EXISTS idx_tx_events ON txs USING GIN (events);
 
-CREATE INDEX IF NOT EXISTS idx_record ON txs USING GIN((tx #> '{tx, body, messages, 0, record}') jsonb_path_ops);
-
-CREATE INDEX IF NOT EXISTS idx_keywords ON txs USING GIN((string_to_array(tx #>> '{tx, body, messages, 0, record, contentMetadata, keywords}', ',')));
+-- deprecated indexes, replaced by the `iscn` table
+DROP INDEX IF EXISTS idx_record;
+DROP INDEX IF EXISTS idx_keywords;
 
 INSERT INTO meta VALUES ('schema_version', 1)
 ON CONFLICT (id) DO UPDATE SET height = 1;
