@@ -12,7 +12,7 @@ import (
 
 func QueryISCN(pool *pgxpool.Pool, query ISCNQuery, page PageRequest) (ISCNResponse, error) {
 	sql := fmt.Sprintf(`
-			SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
+			SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 			FROM iscn
 			JOIN iscn_stakeholders
 			ON id = iscn_pid
@@ -85,7 +85,7 @@ func QueryISCNAll(pool *pgxpool.Pool, term string, pagination PageRequest) (ISCN
 		SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
 		FROM (
 			(
-				SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
+				SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 				FROM iscn
 				JOIN iscn_stakeholders
 				ON id = iscn_pid
@@ -101,7 +101,7 @@ func QueryISCNAll(pool *pgxpool.Pool, term string, pagination PageRequest) (ISCN
 			)
 			UNION ALL
 			(
-				SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
+				SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 				FROM iscn
 				JOIN iscn_stakeholders
 				ON id = iscn_pid

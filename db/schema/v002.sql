@@ -9,8 +9,6 @@ CREATE TABLE iscn_stakeholders (
   sid TEXT,
   -- stakeholder's name, `sname` so not to be ambiguous with `name` column in `iscn` table
   sname TEXT,
-  contribution_type TEXT,
-  reward_proportion NUMERIC,
   -- raw stakeholder object
   data JSONB
 );
@@ -25,8 +23,6 @@ INSERT INTO iscn_stakeholders (
     iscn_pid,
     s->>'id' AS sid,
     s->>'name' AS sname,
-    obj->>'contributionType' AS contributionType,
-    (obj->>'rewardProportion')::NUMERIC AS rewardProportion,
     obj AS data
   FROM (
     SELECT
@@ -36,7 +32,7 @@ INSERT INTO iscn_stakeholders (
     FROM iscn
   ) AS t
 )
-; -- 118s
+;
 
 ALTER TABLE iscn DROP COLUMN stakeholders;
 

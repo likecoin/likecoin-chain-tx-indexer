@@ -9,10 +9,8 @@ import (
 )
 
 type Stakeholder struct {
-	Entity           Entity  `json:"entity,omitempty"`
-	ContributionType string  `json:"contributionType,omitempty"`
-	RewardProportion float64 `json:"rewardProportion,omitempty"`
-	Data             []byte
+	Entity Entity `json:"entity,omitempty"`
+	Data   []byte
 }
 
 type Entity struct {

@@ -49,7 +49,8 @@ func insertISCN(payload db.EventPayload) error {
 		err := json.Unmarshal(stakeholderRawJSON, &parsedStakeholder)
 		if err != nil {
 			logger.L.Errorw("Error when parsing stakeholder JSON", "error", err, "raw_json", string(stakeholderRawJSON))
-			continue
+			// since the fields and sub-fields in db.Stakeholder are set as omitempty, parsing should not fail
+			// when it does fail, we leave empty parsedStakeholder as default value, fill in stakeholderRawJSON later
 		}
 		parsedStakeholder.Data = stakeholderRawJSON
 		stakeholders = append(stakeholders, parsedStakeholder)

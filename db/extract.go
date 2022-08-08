@@ -134,14 +134,10 @@ func GetMetaHeight(conn *pgxpool.Conn, key string) (int64, error) {
 func (batch *Batch) InsertISCN(insert ISCNInsert) {
 	stakeholderIDs := []string{}
 	stakeholderNames := []string{}
-	stakeholderContributionTypes := []string{}
-	stakeholderRewardProportions := []float64{}
 	stakeholderRawJSONs := [][]byte{}
 	for _, s := range insert.Stakeholders {
 		stakeholderIDs = append(stakeholderIDs, s.Entity.Id)
 		stakeholderNames = append(stakeholderNames, s.Entity.Name)
-		stakeholderContributionTypes = append(stakeholderContributionTypes, s.ContributionType)
-		stakeholderRewardProportions = append(stakeholderRewardProportions, s.RewardProportion)
 		stakeholderRawJSONs = append(stakeholderRawJSONs, s.Data)
 	}
 	sql := `
@@ -157,8 +153,8 @@ func (batch *Batch) InsertISCN(insert ISCNInsert) {
 		ON CONFLICT DO NOTHING
 		RETURNING id
 	)
-	INSERT INTO iscn_stakeholders (iscn_pid, sid, sname, contribution_type, reward_proportion, data)
-	SELECT id, unnest($13::text[]), unnest($14::text[]), unnest($15::text[]), unnest($16::numeric[]), unnest($17::jsonb[])
+	INSERT INTO iscn_stakeholders (iscn_pid, sid, sname, data)
+	SELECT id, unnest($13::text[]), unnest($14::text[]), unnest($15::jsonb[])
 	FROM result;
 	`
 	batch.Batch.Queue(sql,
@@ -167,9 +163,7 @@ func (batch *Batch) InsertISCN(insert ISCNInsert) {
 		// $6 ~ $10
 		insert.Fingerprints, insert.Data, insert.Timestamp, insert.Ipld, insert.Name,
 		// $11 ~ $15
-		insert.Description, insert.Url, stakeholderIDs, stakeholderNames, stakeholderContributionTypes,
-		// $16 ~ $17
-		stakeholderRewardProportions, stakeholderRawJSONs,
+		insert.Description, insert.Url, stakeholderIDs, stakeholderNames, stakeholderRawJSONs,
 	)
 }
 
