@@ -8,8 +8,12 @@ CREATE TABLE iscn_stakeholders (
   -- stakeholder's ID, `sid` so not to be ambiguous with `id` column in `iscn` table
   sid TEXT,
   -- stakeholder's name, `sname` so not to be ambiguous with `name` column in `iscn` table
-  sname TEXT
-); -- 0.14s, 0.029s
+  sname TEXT,
+  contribution_type TEXT,
+  reward_proportion NUMERIC,
+  -- raw stakeholder object
+  data JSONB
+);
 
 -- since this is a separate table, and we are usually using id field from iscn table for sorting, iscn_pid is added for the B-tree indexes
 CREATE INDEX idx_iscn_stakeholders_sid ON iscn_stakeholders (sid, iscn_pid); -- 0.053s, 0.048s
@@ -17,8 +21,23 @@ CREATE INDEX idx_iscn_stakeholders_sname ON iscn_stakeholders (sname, iscn_pid);
 
 -- migration for building the iscn_stakeholders table from iscn table
 INSERT INTO iscn_stakeholders (
-  SELECT iscn_pid, s->>'id', s->>'name' FROM
-    (SELECT id iscn_pid, jsonb_array_elements(stakeholders) s FROM iscn) t
-); -- 67s, 69s
+  SELECT
+    iscn_pid,
+    s->>'id' AS sid,
+    s->>'name' AS sname,
+    obj->>'contributionType' AS contributionType,
+    (obj->>'rewardProportion')::NUMERIC AS rewardProportion,
+    obj AS data
+  FROM (
+    SELECT
+      id AS iscn_pid,
+      jsonb_array_elements(stakeholders) AS s,
+      jsonb_array_elements(data#>'{stakeholders}') AS obj
+    FROM iscn
+  ) AS t
+)
+; -- 118s
+
+ALTER TABLE iscn DROP COLUMN stakeholders;
 
 UPDATE meta SET height = 2 WHERE id = 'schema_version';

@@ -8,6 +8,13 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
+type Stakeholder struct {
+	Entity           Entity  `json:"entity,omitempty"`
+	ContributionType string  `json:"contributionType,omitempty"`
+	RewardProportion float64 `json:"rewardProportion,omitempty"`
+	Data             []byte
+}
+
 type Entity struct {
 	Id   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
@@ -31,20 +38,19 @@ func (e *Entity) UnmarshalJSON(data []byte) (err error) {
 }
 
 type ISCNInsert struct {
-	Iscn                 string
-	IscnPrefix           string
-	Version              int
-	Owner                string
-	Timestamp            time.Time
-	Ipld                 string
-	Name                 string
-	Description          string
-	Url                  string
-	Keywords             []string
-	Fingerprints         []string
-	Stakeholders         []byte
-	StakeholdersEntities []Entity
-	Data                 []byte
+	Iscn         string
+	IscnPrefix   string
+	Version      int
+	Owner        string
+	Timestamp    time.Time
+	Ipld         string
+	Name         string
+	Description  string
+	Url          string
+	Keywords     []string
+	Fingerprints []string
+	Stakeholders []Stakeholder
+	Data         []byte
 }
 
 type ISCNQuery struct {
