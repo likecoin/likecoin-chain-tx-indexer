@@ -6,52 +6,70 @@ import (
 
 func TestISCNCombineQuery(t *testing.T) {
 	tables := []struct {
-		ISCN
+		ISCNQuery
 		length int
 	}{
 		{
-			ISCN: ISCN{
-				Iscn: "iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
+			ISCNQuery: ISCNQuery{
+				IscnID: "iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
 			},
 			length: 1,
 		},
 		{
-			ISCN: ISCN{
-				Stakeholders: []byte(`[{"name": "kin"}]`),
+			ISCNQuery: ISCNQuery{
+				StakeholderName: "kin",
 			},
 			length: 5,
 		},
 		{
-			ISCN: ISCN{
+			ISCNQuery: ISCNQuery{
 				Keywords: []string{"DAO"},
 			},
 		},
 		{
-			ISCN: ISCN{
+			ISCNQuery: ISCNQuery{
 				Keywords: []string{"Cyberspace", "EFF"},
 			},
 		},
 		{
-			ISCN: ISCN{
-				Stakeholders: []byte(`[{"name": "John Perry Barlow"}]`),
+			ISCNQuery: ISCNQuery{
+				StakeholderName: "John Perry Barlow",
 			},
 			length: 1,
 		},
 		{
-			ISCN: ISCN{
-				Stakeholders: []byte(`[{"name": "Apple Daily"}]`),
+			ISCNQuery: ISCNQuery{
+				StakeholderName: "Apple Daily",
 			},
 			length: 5,
 		},
 		{
-			ISCN: ISCN{
-				Stakeholders: []byte(`[{"name": "《明報》"}]`),
+			ISCNQuery: ISCNQuery{
+				StakeholderID: "Apple Daily",
 			},
 			length: 5,
 		},
 		{
-			ISCN: ISCN{
-				Stakeholders: []byte(`[{"name": "depub.SPACE"}]`),
+			ISCNQuery: ISCNQuery{
+				StakeholderID: "Next Digital Ltd",
+			},
+			length: 5,
+		},
+		{
+			ISCNQuery: ISCNQuery{
+				StakeholderName: "《明報》",
+			},
+			length: 5,
+		},
+		{
+			ISCNQuery: ISCNQuery{
+				StakeholderName: "depub.SPACE",
+			},
+			length: 5,
+		},
+		{
+			ISCNQuery: ISCNQuery{
+				StakeholderID: "https://depub.SPACE",
 			},
 			length: 5,
 		},
@@ -63,7 +81,7 @@ func TestISCNCombineQuery(t *testing.T) {
 			Reverse: true,
 		}
 
-		res, err := QueryISCN(pool, v.ISCN, p)
+		res, err := QueryISCN(pool, v.ISCNQuery, p)
 		if err != nil {
 			t.Fatal(err)
 		}
