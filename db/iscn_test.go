@@ -99,7 +99,7 @@ func TestISCNCombineQuery(t *testing.T) {
 	for i, v := range tables {
 		t.Run(v.name, func(t *testing.T) {
 			p := PageRequest{
-				Limit:   100,
+				Limit:   1,
 				Reverse: true,
 			}
 
@@ -191,7 +191,7 @@ func TestISCNQueryAll(t *testing.T) {
 	}
 
 	p := PageRequest{
-		Limit: 100,
+		Limit: 1,
 	}
 	for _, v := range tables {
 		t.Run(v.term, func(t *testing.T) {
