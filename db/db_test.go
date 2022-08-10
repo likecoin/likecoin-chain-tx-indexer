@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 )
 
 var pool *pgxpool.Pool
+var conn *pgxpool.Conn
 
 func TestMain(m *testing.M) {
 	godotenv.Load("../.env")
@@ -31,7 +33,7 @@ func TestMain(m *testing.M) {
 		log.Fatalln(err)
 	}
 	defer pool.Close()
-	conn, err := AcquireFromPool(pool)
+	conn, err = AcquireFromPool(pool)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -56,7 +58,7 @@ func debugSQL(conn *pgxpool.Conn, ctx context.Context, sql string, args ...inter
 	for rows.Next() && err == nil {
 		var line string
 		err = rows.Scan(&line)
-		log.Println(line)
+		fmt.Println(line)
 	}
 	return err
 }

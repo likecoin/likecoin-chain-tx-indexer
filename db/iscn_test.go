@@ -1,103 +1,133 @@
 package db
 
 import (
+	"log"
 	"testing"
 )
 
 func TestISCNCombineQuery(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer conn.Release()
+
 	tables := []struct {
+		name string
 		ISCNQuery
-		length int
+		hasResult bool
 	}{
 		{
-			ISCNQuery: ISCNQuery{
+			"iscn_id",
+			ISCNQuery{
 				IscnID: "iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
 			},
-			length: 1,
+			true,
 		},
 		{
-			ISCNQuery: ISCNQuery{
+			"stakeholder_name",
+			ISCNQuery{
 				StakeholderName: "kin",
 			},
-			length: 5,
+			true,
 		},
 		{
-			ISCNQuery: ISCNQuery{
-				Keywords: []string{"DAO"},
+			"keyword",
+			ISCNQuery{
+				Keywords: []string{"LikeCoin"},
 			},
+			true,
 		},
 		{
-			ISCNQuery: ISCNQuery{
-				Keywords: []string{"Cyberspace", "EFF"},
+			"keywords",
+			ISCNQuery{
+				Keywords: []string{"superlike", "civicliker"},
 			},
+			true,
 		},
 		{
-			ISCNQuery: ISCNQuery{
+			"John Perry Barlow",
+			ISCNQuery{
 				StakeholderName: "John Perry Barlow",
 			},
-			length: 1,
+			true,
 		},
 		{
-			ISCNQuery: ISCNQuery{
+			"Apple Daily",
+			ISCNQuery{
 				StakeholderName: "Apple Daily",
 			},
-			length: 5,
+			true,
 		},
 		{
-			ISCNQuery: ISCNQuery{
+			"Apple Daily ID",
+			ISCNQuery{
 				StakeholderID: "Apple Daily",
 			},
-			length: 5,
+			true,
 		},
 		{
-			ISCNQuery: ISCNQuery{
+			"Next Digital Ltd",
+			ISCNQuery{
 				StakeholderID: "Next Digital Ltd",
 			},
-			length: 5,
+			true,
 		},
 		{
-			ISCNQuery: ISCNQuery{
+			"《明報》",
+			ISCNQuery{
 				StakeholderName: "《明報》",
 			},
-			length: 5,
+			true,
 		},
 		{
-			ISCNQuery: ISCNQuery{
-				StakeholderName: "depub.SPACE",
+			"depub.space",
+			ISCNQuery{
+				StakeholderName: "depub.space",
 			},
-			length: 5,
+			true,
 		},
 		{
-			ISCNQuery: ISCNQuery{
+			"depub.space id",
+			ISCNQuery{
 				StakeholderID: "https://depub.SPACE",
 			},
-			length: 5,
+			true,
 		},
 	}
 
 	for i, v := range tables {
-		p := PageRequest{
-			Limit:   5,
-			Reverse: true,
-		}
+		t.Run(v.name, func(t *testing.T) {
+			p := PageRequest{
+				Limit:   100,
+				Reverse: true,
+			}
 
-		res, err := QueryISCN(pool, v.ISCNQuery, p)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if v.length != 0 && v.length != len(res.Records) {
-			t.Fatalf("%d: There should be %d records, got %d.\n", i, v.length, len(res.Records))
-		}
+			res, err := QueryISCN(conn, v.ISCNQuery, p)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if (len(res.Records) > 0) != v.hasResult {
+				t.Fatalf("%d: There should be %t records, got %d.\n", i, v.hasResult, len(res.Records))
+			}
+
+		})
 	}
 }
 
 func TestISCNList(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer conn.Release()
+
 	p := PageRequest{
 		Limit:   10,
 		Reverse: true,
 	}
 
-	res, err := QueryISCNList(pool, p)
+	res, err := QueryISCNList(conn, p)
 	if err != nil {
 		t.Error(err)
 	}
@@ -105,13 +135,16 @@ func TestISCNList(t *testing.T) {
 }
 
 func TestISCNQueryAll(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer conn.Release()
+
 	tables := []struct {
 		term   string
 		length int
 	}{
-		{
-			term: "",
-		},
 		{
 			term:   "0xNaN",
 			length: 5,
@@ -124,10 +157,12 @@ func TestISCNQueryAll(t *testing.T) {
 			term: "itdoesnotexists",
 		},
 		{
-			term: "kin ko",
+			term:   "kin ko",
+			length: 5,
 		},
 		{
-			term: "LikeCoin",
+			term:   "LikeCoin",
+			length: 5,
 		},
 		{
 			term:   "ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84",
@@ -138,40 +173,47 @@ func TestISCNQueryAll(t *testing.T) {
 			length: 1,
 		},
 		{
-			term: "cosmos1cp3fcmk5ny2c22s0mxut2xefwrdur2t0clgna0",
+			term:   "cosmos1cp3fcmk5ny2c22s0mxut2xefwrdur2t0clgna0",
+			length: 5,
 		},
 		{
 			term:   "《明報》",
 			length: 5,
 		},
 		{
-			term:   "depub.SPACE",
+			term:   "depub.space",
 			length: 5,
 		},
 		{
 			term:   "Apple Daily",
-			length: 5,
+			length: 100,
 		},
 	}
 
+	p := PageRequest{
+		Limit: 100,
+	}
 	for _, v := range tables {
-		p := PageRequest{
-			Limit:   5,
-			Reverse: true,
-		}
-
-		t.Log(v.term)
-		res, err := QueryISCNAll(pool, v.term, p)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if v.length != 0 && v.length != len(res.Records) {
-			t.Errorf("There should be %d records, got %d.", v.length, len(res.Records))
-		}
+		t.Run(v.term, func(t *testing.T) {
+			t.Log(v.term)
+			res, err := QueryISCNAll(conn, v.term, p)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if (len(res.Records) > 0) != (v.length > 0) {
+				t.Errorf("There should be %d records, got %d.", v.length, len(res.Records))
+			}
+		})
 	}
 }
 
 func TestISCNPagination(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer conn.Release()
+
 	table := map[PageRequest]uint64{
 		{
 			Key:   1300,
@@ -184,7 +226,7 @@ func TestISCNPagination(t *testing.T) {
 		}: 1290,
 	}
 	for p, a := range table {
-		res, err := QueryISCNList(pool, p)
+		res, err := QueryISCNList(conn, p)
 		if err != nil {
 			t.Error(err)
 		}

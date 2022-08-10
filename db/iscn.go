@@ -10,7 +10,7 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
-func QueryISCN(pool *pgxpool.Pool, query ISCNQuery, page PageRequest) (ISCNResponse, error) {
+func QueryISCN(conn *pgxpool.Conn, query ISCNQuery, page PageRequest) (ISCNResponse, error) {
 	sql := fmt.Sprintf(`
 			SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 			FROM iscn
@@ -25,15 +25,9 @@ func QueryISCN(pool *pgxpool.Pool, query ISCNQuery, page PageRequest) (ISCNRespo
 				AND ($6 = '' OR sname = $6)
 				AND ($7 = 0 OR id > $7)
 				AND ($8 = 0 OR id < $8)
-			ORDER BY id %s
+			ORDER BY id %s, timestamp
 			LIMIT $9;
 		`, page.Order())
-
-	conn, err := AcquireFromPool(pool)
-	if err != nil {
-		return ISCNResponse{}, err
-	}
-	defer conn.Release()
 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
@@ -52,13 +46,7 @@ func QueryISCN(pool *pgxpool.Pool, query ISCNQuery, page PageRequest) (ISCNRespo
 	return parseISCN(rows)
 }
 
-func QueryISCNList(pool *pgxpool.Pool, pagination PageRequest) (ISCNResponse, error) {
-	conn, err := AcquireFromPool(pool)
-	if err != nil {
-		return ISCNResponse{}, err
-	}
-	defer conn.Release()
-
+func QueryISCNList(conn *pgxpool.Conn, pagination PageRequest) (ISCNResponse, error) {
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
@@ -79,7 +67,7 @@ func QueryISCNList(pool *pgxpool.Pool, pagination PageRequest) (ISCNResponse, er
 	return parseISCN(rows)
 }
 
-func QueryISCNAll(pool *pgxpool.Pool, term string, pagination PageRequest) (ISCNResponse, error) {
+func QueryISCNAll(conn *pgxpool.Conn, term string, pagination PageRequest) (ISCNResponse, error) {
 	order := pagination.Order()
 	sql := fmt.Sprintf(`
 		SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
@@ -96,15 +84,13 @@ func QueryISCNAll(pool *pgxpool.Pool, term string, pagination PageRequest) (ISCN
 					)
 					AND ($3 = 0 OR id > $3)
 					AND ($4 = 0 OR id < $4)
-				ORDER BY id %s
+				ORDER BY id %s, timestamp
 				LIMIT $5
 			)
 			UNION ALL
 			(
 				SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 				FROM iscn
-				JOIN iscn_stakeholders
-				ON id = iscn_pid
 				WHERE
 					(
 						iscn_id = $1
@@ -114,19 +100,13 @@ func QueryISCNAll(pool *pgxpool.Pool, term string, pagination PageRequest) (ISCN
 					)
 					AND ($3 = 0 OR id > $3)
 					AND ($4 = 0 OR id < $4)
-				ORDER BY id %s
+				ORDER BY id %s, timestamp
 				LIMIT $5
 			)
 		) t
-		ORDER BY id %s
+		ORDER BY id %s, timestamp
 		LIMIT $5
 	`, order, order, order) // mayday, mayday, mayday
-
-	conn, err := AcquireFromPool(pool)
-	if err != nil {
-		return ISCNResponse{}, err
-	}
-	defer conn.Release()
 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
