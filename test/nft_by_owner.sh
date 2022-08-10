@@ -1,7 +1,2 @@
-#!/bin/sh
-
-[ -z $HOST ] && HOST="http://localhost:8998"
-[ -z $OWNER ] && OWNER=like1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmca3huxf
-req="$HOST/likechain/likenft/v1/nft?owner=$OWNER"
-echo $req
-curl $req | jq
+[ -z $OWNER ] && OWNER=like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6
+req="likechain/likenft/v1/nft?owner=$OWNER"

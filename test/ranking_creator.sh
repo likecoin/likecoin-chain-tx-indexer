@@ -1,1 +1,3 @@
-req="likechain/likenft/v1/ranking?creator=like1utqnsl38fuz5m0yl0u054ducla9wryltjk83h3"
+CREATOR=like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6
+IGNORELIST=like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs
+req="likechain/likenft/v1/ranking?creator=$CREATOR&ignore_list=$IGNORELIST"

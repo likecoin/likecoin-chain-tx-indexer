@@ -1,3 +1,3 @@
-COLLECTOR=like13v8qtt0jz6y2304559v7l29sy7prz50jqwdewn
-IGNORELIST=like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp
+COLLECTOR=like1xpkwcv48jqdxym26m8f5wjqa3e7dytq3zr733e
+IGNORELIST=like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs
 req="likechain/likenft/v1/ranking?collector=$COLLECTOR&ignore_list=$IGNORELIST"

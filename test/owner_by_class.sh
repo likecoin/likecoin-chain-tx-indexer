@@ -1,7 +1,2 @@
-#!/bin/sh
-
-[ -z $HOST ] && HOST="http://localhost:8998"
-[ -z $CLASS ] && CLASS="likenft1ewcmlx4kq4uwctmz08zs6kh5s9te4g6nghrz8rwdharpd6wsxe4s0zgjlj"
-req="$HOST/likechain/likenft/v1/owner?class_id=$CLASS"
-echo $req
-curl $req | jq
+[ -z $CLASS ] && CLASS="likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc"
+req="likechain/likenft/v1/owner?class_id=$CLASS"

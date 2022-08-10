@@ -2,7 +2,7 @@
 
 # The main file to run tests
 
-[ -z $HOST ] && HOST="http://localhost:8999"
+[ -z $HOST ] && HOST="http://localhost:8997"
 [ -z $LIMIT ] && LIMIT=10
 
 FAILED=""
