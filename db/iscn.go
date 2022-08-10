@@ -60,7 +60,7 @@ func QueryISCNList(conn *pgxpool.Conn, pagination PageRequest) (ISCNResponse, er
 		ORDER BY id %s
 		LIMIT %d;
 	`, pagination.Order(), MAX_LIMIT)
-	rows, err := conn.Query(ctx, sql, pagination.After(), pagination.Before(), pagination.Limit)
+	rows, err := conn.Query(ctx, sql, pagination.After(), pagination.Before())
 	if err != nil {
 		logger.L.Errorw("Query error:", "error", err)
 		return ISCNResponse{}, err

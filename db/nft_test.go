@@ -201,6 +201,20 @@ func TestQueryNftRanking(t *testing.T) {
 			},
 		},
 		{
+			"stakeholder_id_ignore",
+			QueryRankingRequest{
+				StakeholderId: KIN,
+				IgnoreList:    []string{API_WALLET},
+			},
+		},
+		{
+			"stakeholder_name_ignore",
+			QueryRankingRequest{
+				StakeholderName: "kin",
+				IgnoreList:      []string{API_WALLET},
+			},
+		},
+		{
 			"creation_date",
 			QueryRankingRequest{
 				After:  time.Date(2022, 8, 1, 0, 0, 0, 0, time.UTC).Unix(),

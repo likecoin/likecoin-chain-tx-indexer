@@ -72,9 +72,10 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest) (QueryRankingR
 	FROM nft_class as c
 	JOIN (
 		SELECT c.id, count(n.id) as sold_count, array_remove(array_agg(DISTINCT n.owner), NULL) as owners
-		FROM iscn as i
+		FROM nft_class as c
+		JOIN iscn as i
+		ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN iscn_stakeholders ON i.id = iscn_pid
-		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		LEFT JOIN nft as n ON c.class_id = n.class_id
 			AND ($1 = true OR n.owner != i.owner)
 			AND ($2::text[] IS NULL OR n.owner != ALL($2))
@@ -92,7 +93,10 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest) (QueryRankingR
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, q.IncludeOwner, q.IgnoreList, q.Limit, q.Creator, q.Type, q.StakeholderId, q.StakeholderName, q.Collector, q.After, q.Before)
+
+	rows, err := conn.Query(ctx, sql, q.IncludeOwner, q.IgnoreList,
+		q.Limit, q.Creator, q.Type, q.StakeholderId, q.StakeholderName,
+		q.Collector, q.After, q.Before)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft class ranking", "error", err, "q", q)
 		return QueryRankingResponse{}, fmt.Errorf("query nft class ranking error: %w", err)
