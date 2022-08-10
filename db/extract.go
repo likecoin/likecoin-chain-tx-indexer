@@ -131,14 +131,40 @@ func GetMetaHeight(conn *pgxpool.Conn, key string) (int64, error) {
 	return height, err
 }
 
-func (batch *Batch) InsertISCN(iscn ISCN) {
+func (batch *Batch) InsertISCN(insert ISCNInsert) {
+	stakeholderIDs := []string{}
+	stakeholderNames := []string{}
+	stakeholderRawJSONs := [][]byte{}
+	for _, s := range insert.Stakeholders {
+		stakeholderIDs = append(stakeholderIDs, s.Entity.Id)
+		stakeholderNames = append(stakeholderNames, s.Entity.Name)
+		stakeholderRawJSONs = append(stakeholderRawJSONs, s.Data)
+	}
 	sql := `
-	INSERT INTO iscn (iscn_id, iscn_id_prefix, version, owner, keywords, fingerprints, stakeholders, data, timestamp, ipld, name, description, url) VALUES
-	( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-	ON CONFLICT DO NOTHING;`
-	batch.Batch.Queue(sql, iscn.Iscn, iscn.IscnPrefix, iscn.Version, iscn.Owner,
-		iscn.Keywords, iscn.Fingerprints, iscn.Stakeholders, iscn.Data, iscn.Timestamp, iscn.Ipld,
-		iscn.Name, iscn.Description, iscn.Url)
+	WITH result AS (
+		INSERT INTO iscn
+		(
+			iscn_id, iscn_id_prefix, version, owner, keywords,
+			fingerprints, data, timestamp, ipld, name,
+			description, url
+		)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		ON CONFLICT DO NOTHING
+		RETURNING id
+	)
+	INSERT INTO iscn_stakeholders (iscn_pid, sid, sname, data)
+	SELECT id, unnest($13::text[]), unnest($14::text[]), unnest($15::jsonb[])
+	FROM result;
+	`
+	batch.Batch.Queue(sql,
+		// $1 ~ $5
+		insert.Iscn, insert.IscnPrefix, insert.Version, insert.Owner, insert.Keywords,
+		// $6 ~ $10
+		insert.Fingerprints, insert.Data, insert.Timestamp, insert.Ipld, insert.Name,
+		// $11 ~ $15
+		insert.Description, insert.Url, stakeholderIDs, stakeholderNames, stakeholderRawJSONs,
+	)
 }
 
 func (batch *Batch) UpdateMetaHeight(key string, height int64) {
