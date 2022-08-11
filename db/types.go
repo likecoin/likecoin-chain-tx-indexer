@@ -277,3 +277,12 @@ type QueryNftMintCountRequest struct {
 	IncludeOwner bool     `form:"include_owner"`
 	IgnoreList   []string `form:"ignore_list"`
 }
+
+type QueryNftTradeStatsRequest struct {
+	ApiAddress string `form:"api_address" binding:"required"`
+}
+
+type QueryNftTradeStatsResponse struct {
+	Count       uint64 `json:"count"`
+	TotalVolume uint64 `json:"total_volume"`
+}
