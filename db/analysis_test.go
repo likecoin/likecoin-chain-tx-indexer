@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestNftMintCount(t *testing.T) {
+func TestNftCount(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
 		panic(err)
@@ -59,6 +59,23 @@ func TestNftTradeStats(t *testing.T) {
 			t.Log(res)
 		})
 	}
+}
+
+func TestNftCreatorCount(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Release()
+
+	count, err := GetNftCreatorCount(conn)
+	if err != nil {
+		t.Error(err)
+	}
+	if count.Count == 0 {
+		t.Error("should not be 0")
+	}
+	t.Log(count)
 }
 
 func TestNftOwnerCount(t *testing.T) {

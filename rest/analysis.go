@@ -37,6 +37,16 @@ func handleNftTradeStats(c *gin.Context) {
 	c.JSON(200, res)
 }
 
+func handleNftCreatorCount(c *gin.Context) {
+	res, err := db.GetNftCreatorCount(getConn(c))
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, res)
+}
+
 func handleNftOwnerCount(c *gin.Context) {
 	res, err := db.GetNftOwnerCount(getConn(c))
 	if err != nil {

@@ -54,8 +54,16 @@ func GetNftTradeStats(conn *pgxpool.Conn, q QueryNftTradeStatsRequest) (res Quer
 	return
 }
 
-func GetMintNftWalletCount() {
+func GetNftCreatorCount(conn *pgxpool.Conn) (count QueryCountResponse, err error) {
+	sql := `
+	SELECT COUNT(DISTINCT sender) FROM nft_event
+	WHERE action = 'new_class';
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
 
+	err = conn.QueryRow(ctx, sql).Scan(&count.Count)
+	return
 }
 
 func GetNftOwnerCount(conn *pgxpool.Conn) (count QueryCountResponse, err error) {
