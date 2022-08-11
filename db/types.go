@@ -203,7 +203,7 @@ type QueryOwnerResponse struct {
 type OwnerResponse struct {
 	Owner string   `json:"owner"`
 	Count int      `json:"count,omitempty"`
-	Nfts  []string `json:"nfts"`
+	Nfts  []string `json:"nfts,omitempty"`
 }
 
 type QueryEventsRequest struct {
@@ -285,4 +285,9 @@ type QueryNftTradeStatsRequest struct {
 type QueryNftTradeStatsResponse struct {
 	Count       uint64 `json:"count"`
 	TotalVolume uint64 `json:"total_volume"`
+}
+
+type QueryNftOwnerListResponse struct {
+	Owners     []OwnerResponse `json:"owners"`
+	Pagination PageResponse    `json:"pagination"`
 }

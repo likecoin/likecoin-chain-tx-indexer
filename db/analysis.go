@@ -69,6 +69,30 @@ func GetNftOwnerCount(conn *pgxpool.Conn) (count uint64, err error) {
 	return
 }
 
-func GetWalletCollectionList() {
+func GetNftOwnerList(conn *pgxpool.Conn, p PageRequest) (res QueryNftOwnerListResponse, err error) {
+	sql := `
+	SELECT owner, COUNT(id) FROM nft
+	GROUP BY owner
+	ORDER BY COUNT(id) DESC
+	OFFSET $1
+	LIMIT $2
+	`
 
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(ctx, sql, p.Offset, p.Limit)
+	if err != nil {
+		panic(err)
+	}
+
+	for rows.Next() {
+		var owner OwnerResponse
+		if err = rows.Scan(&owner.Owner, &owner.Count); err != nil {
+			panic(err)
+		}
+		res.Owners = append(res.Owners, owner)
+	}
+	res.Pagination.Count = len(res.Owners)
+	return
 }
