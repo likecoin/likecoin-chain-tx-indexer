@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-func GetNftMintCount(conn *pgxpool.Conn, q QueryNftMintCountRequest) (count uint64, err error) {
+func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountResponse, err error) {
 	sql := `
 	SELECT COUNT(n.id)
 	FROM nft as n
@@ -18,7 +18,7 @@ func GetNftMintCount(conn *pgxpool.Conn, q QueryNftMintCountRequest) (count uint
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	err = conn.QueryRow(ctx, sql, q.IncludeOwner, q.IgnoreList).Scan(&count)
+	err = conn.QueryRow(ctx, sql, q.IncludeOwner, q.IgnoreList).Scan(&count.Count)
 	if err != nil {
 		panic(err)
 	}
@@ -58,14 +58,14 @@ func GetMintNftWalletCount() {
 
 }
 
-func GetNftOwnerCount(conn *pgxpool.Conn) (count uint64, err error) {
+func GetNftOwnerCount(conn *pgxpool.Conn) (count QueryCountResponse, err error) {
 	sql := `
 	SELECT COUNT(DISTINCT owner) FROM nft;
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	err = conn.QueryRow(ctx, sql).Scan(&count)
+	err = conn.QueryRow(ctx, sql).Scan(&count.Count)
 	return
 }
 

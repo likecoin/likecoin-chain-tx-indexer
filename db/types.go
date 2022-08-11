@@ -273,7 +273,11 @@ type collection struct {
 	Count        int    `json:"count"`
 }
 
-type QueryNftMintCountRequest struct {
+type QueryCountResponse struct {
+	Count uint64 `json:"count"`
+}
+
+type QueryNftCountRequest struct {
 	IncludeOwner bool     `form:"include_owner"`
 	IgnoreList   []string `form:"ignore_list"`
 }

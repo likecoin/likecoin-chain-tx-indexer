@@ -14,6 +14,7 @@ const STARGATE_ENDPOINT = "/cosmos/tx/v1beta1/txs"
 const ISCN_ENDPOINT = "/iscn/records"
 const LATEST_HEIGHT_ENDPOINT = "/indexer/height/latest"
 const NFT_ENDPOINT = "/likechain/likenft/v1"
+const ANALYSIS_ENDPOINT = "/analysis"
 
 func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 	lcdURL, err := url.Parse(lcdEndpoint)
@@ -32,17 +33,29 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 
 func getRouter(pool *pgxpool.Pool) *gin.Engine {
 	router := gin.New()
-	router.GET(NFT_ENDPOINT+"/class", withConn(pool), handleNftClass)
-	router.GET(NFT_ENDPOINT+"/nft", withConn(pool), handleNft)
-	router.GET(NFT_ENDPOINT+"/owner", withConn(pool), handleNftOwner)
-	router.GET(NFT_ENDPOINT+"/event", withConn(pool), handleNftEvents)
-	router.GET(NFT_ENDPOINT+"/ranking", withConn(pool), handleNftRanking)
-	router.GET(NFT_ENDPOINT+"/collector", withConn(pool), handleNftCollectors)
-	router.GET(NFT_ENDPOINT+"/creator", withConn(pool), handleNftCreators)
-	router.GET(ISCN_ENDPOINT, withConn(pool), handleISCN)
-	router.GET("/txs", withConn(pool), handleAminoTxsSearch)
-	router.GET(STARGATE_ENDPOINT, withConn(pool), handleStargateTxsSearch)
-	router.GET(LATEST_HEIGHT_ENDPOINT, withConn(pool), handleLatestHeight)
+	router.Use(withConn(pool))
+	nft := router.Group(NFT_ENDPOINT)
+	{
+		nft.GET("/class", handleNftClass)
+		nft.GET("/nft", handleNft)
+		nft.GET("/owner", handleNftOwner)
+		nft.GET("/event", handleNftEvents)
+		nft.GET("/ranking", handleNftRanking)
+		nft.GET("/collector", handleNftCollectors)
+		nft.GET("/creator", handleNftCreators)
+	}
+	analysis := router.Group(ANALYSIS_ENDPOINT)
+	{
+		analysis.GET("/nft-count", handleNftCount)
+		analysis.GET("/trade", handleNftCount)
+		analysis.GET("/owner-count", handleNftCount)
+		analysis.GET("/owners", handleNftCount)
+		analysis.GET("/creator-count", handleNftCount)
+	}
+	router.GET(ISCN_ENDPOINT, handleISCN)
+	router.GET("/txs", handleAminoTxsSearch)
+	router.GET(STARGATE_ENDPOINT, handleStargateTxsSearch)
+	router.GET(LATEST_HEIGHT_ENDPOINT, handleLatestHeight)
 	return router
 }
 

@@ -14,22 +14,22 @@ func TestNftMintCount(t *testing.T) {
 
 	table := []struct {
 		name string
-		q    QueryNftMintCountRequest
+		q    QueryNftCountRequest
 	}{
 		{name: "empty request"},
-		{"include_owner", QueryNftMintCountRequest{IncludeOwner: true}},
-		{"ignore_list", QueryNftMintCountRequest{IgnoreList: []string{API_WALLET}}},
-		{"include_owner+ignore_lsit", QueryNftMintCountRequest{
+		{"include_owner", QueryNftCountRequest{IncludeOwner: true}},
+		{"ignore_list", QueryNftCountRequest{IgnoreList: []string{API_WALLET}}},
+		{"include_owner+ignore_lsit", QueryNftCountRequest{
 			IncludeOwner: true, IgnoreList: []string{API_WALLET}},
 		},
 	}
 	for _, v := range table {
 		t.Run(v.name, func(t *testing.T) {
-			count, err := GetNftMintCount(conn, v.q)
+			count, err := GetNftCount(conn, v.q)
 			if err != nil {
 				t.Error(err)
 			}
-			if count == 0 {
+			if count.Count == 0 {
 				t.Error("count should not be 0")
 			}
 			t.Log(count)
@@ -72,7 +72,7 @@ func TestNftOwnerCount(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if count == 0 {
+	if count.Count == 0 {
 		t.Error("should not be 0")
 	}
 	t.Log(count)
