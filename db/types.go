@@ -272,3 +272,8 @@ type collection struct {
 	ClassId      string `json:"class_id"`
 	Count        int    `json:"count"`
 }
+
+type QueryNftMintCountRequest struct {
+	IncludeOwner bool     `form:"include_owner"`
+	IgnoreList   []string `form:"ignore_list"`
+}
