@@ -2,8 +2,10 @@ package db
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
 func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountResponse, err error) {
@@ -20,7 +22,8 @@ func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountRe
 
 	err = conn.QueryRow(ctx, sql, q.IncludeOwner, q.IgnoreList).Scan(&count.Count)
 	if err != nil {
-		panic(err)
+		err = fmt.Errorf("get nft count failed: %w", err)
+		logger.L.Error(err, q)
 	}
 	return
 }
@@ -35,7 +38,9 @@ func GetNftTradeStats(conn *pgxpool.Conn, q QueryNftTradeStatsRequest) (res Quer
 	}
 	payloadJSON, err := json.Marshal(&payload)
 	if err != nil {
-		panic(err)
+		err = fmt.Errorf("marshal nft trade stats payload failed: %w", err)
+		logger.L.Error(err, q)
+		return
 	}
 
 	sql := `
@@ -49,7 +54,8 @@ func GetNftTradeStats(conn *pgxpool.Conn, q QueryNftTradeStatsRequest) (res Quer
 		&res.Count, &res.TotalVolume,
 	)
 	if err != nil {
-		panic(err)
+		err = fmt.Errorf("get nft trade stats failed: %w", err)
+		logger.L.Error(err, q)
 	}
 	return
 }
@@ -63,6 +69,10 @@ func GetNftCreatorCount(conn *pgxpool.Conn) (count QueryCountResponse, err error
 	defer cancel()
 
 	err = conn.QueryRow(ctx, sql).Scan(&count.Count)
+	if err != nil {
+		err = fmt.Errorf("get nft creator count failed: %w", err)
+		logger.L.Error(err)
+	}
 	return
 }
 
@@ -74,6 +84,10 @@ func GetNftOwnerCount(conn *pgxpool.Conn) (count QueryCountResponse, err error) 
 	defer cancel()
 
 	err = conn.QueryRow(ctx, sql).Scan(&count.Count)
+	if err != nil {
+		err = fmt.Errorf("get nft owner count failed: %w", err)
+		logger.L.Error(err)
+	}
 	return
 }
 
@@ -91,15 +105,19 @@ func GetNftOwnerList(conn *pgxpool.Conn, p PageRequest) (res QueryNftOwnerListRe
 
 	rows, err := conn.Query(ctx, sql, p.Offset, p.Limit)
 	if err != nil {
-		panic(err)
+		err = fmt.Errorf("get nft owner list failed: %w", err)
+		logger.L.Error(err)
+		return
 	}
 
-	for rows.Next() {
+	for rows.Next() && err == nil {
 		var owner OwnerResponse
-		if err = rows.Scan(&owner.Owner, &owner.Count); err != nil {
-			panic(err)
-		}
+		err = rows.Scan(&owner.Owner, &owner.Count)
 		res.Owners = append(res.Owners, owner)
+	}
+	if err != nil {
+		err = fmt.Errorf("scan nft owner list failed: %w", err)
+		logger.L.Error(err)
 	}
 	res.Pagination.Count = len(res.Owners)
 	return

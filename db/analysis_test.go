@@ -8,7 +8,7 @@ import (
 func TestNftCount(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	defer conn.Release()
 
@@ -40,7 +40,7 @@ func TestNftCount(t *testing.T) {
 func TestNftTradeStats(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	defer conn.Release()
 
@@ -64,7 +64,7 @@ func TestNftTradeStats(t *testing.T) {
 func TestNftCreatorCount(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	defer conn.Release()
 
@@ -81,7 +81,7 @@ func TestNftCreatorCount(t *testing.T) {
 func TestNftOwnerCount(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	defer conn.Release()
 
@@ -98,7 +98,7 @@ func TestNftOwnerCount(t *testing.T) {
 func TestNftOwnerList(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	defer conn.Release()
 
