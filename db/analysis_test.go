@@ -57,3 +57,20 @@ func TestNftTradeStats(t *testing.T) {
 		})
 	}
 }
+
+func TestNftOwnerCount(t *testing.T) {
+	conn, err := AcquireFromPool(pool)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Release()
+
+	count, err := GetNftOwnerCount(conn)
+	if err != nil {
+		t.Error(err)
+	}
+	if count == 0 {
+		t.Error("should not be 0")
+	}
+	t.Log(count)
+}

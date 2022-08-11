@@ -58,14 +58,17 @@ func GetMintNftWalletCount() {
 
 }
 
-func GetOwnNftWalletCount() {
+func GetNftOwnerCount(conn *pgxpool.Conn) (count uint64, err error) {
+	sql := `
+	SELECT COUNT(DISTINCT owner) FROM nft;
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
 
+	err = conn.QueryRow(ctx, sql).Scan(&count)
+	return
 }
 
 func GetWalletCollectionList() {
-
-}
-
-func GetTransactionValue() {
 
 }
