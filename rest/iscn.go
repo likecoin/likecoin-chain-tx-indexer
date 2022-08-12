@@ -52,12 +52,12 @@ func handleISCN(c *gin.Context) {
 		return
 	}
 
-	pool := getPool(c)
+	conn := getConn(c)
 	var res db.ISCNResponse
 	if hasQuery {
-		res, err = db.QueryISCN(pool, query, p)
+		res, err = db.QueryISCN(conn, query, p)
 	} else {
-		res, err = db.QueryISCNList(pool, p)
+		res, err = db.QueryISCNList(conn, p)
 	}
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
@@ -79,8 +79,8 @@ func handleISCNSearch(c *gin.Context) {
 		c.AbortWithStatusJSON(404, gin.H{"error": "parameter 'q' is required"})
 		return
 	}
-	pool := getPool(c)
-	res, err := db.QueryISCNAll(pool, term, p)
+	conn := getConn(c)
+	res, err := db.QueryISCNAll(conn, term, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

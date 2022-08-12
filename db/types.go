@@ -109,8 +109,9 @@ func (n *NftEvent) Attach(payload EventPayload) {
 
 type PageRequest struct {
 	Key     uint64 `form:"key"`
-	Limit   uint64 `form:"limit,default=100" binding:"gte=1,lte=100"`
+	Limit   int    `form:"limit,default=100" binding:"gte=1,lte=100"`
 	Reverse bool   `form:"reverse"`
+	Offset  uint64 `form:"offset"`
 }
 
 func (p *PageRequest) After() uint64 {
@@ -215,4 +216,59 @@ type QueryEventsRequest struct {
 type QueryEventsResponse struct {
 	Pagination PageResponse `json:"pagination"`
 	Events     []NftEvent   `json:"events"`
+}
+
+type QueryRankingRequest struct {
+	StakeholderId   string   `form:"stakeholder_id"`
+	StakeholderName string   `form:"stakeholder_name"`
+	Creator         string   `form:"creator"`
+	Type            string   `form:"type"`
+	Collector       string   `form:"collector"`
+	After           int64    `form:"after"`
+	Before          int64    `form:"before"`
+	IncludeOwner    bool     `form:"include_owner"`
+	IgnoreList      []string `form:"ignore_list"`
+	PageRequest
+}
+
+type QueryRankingResponse struct {
+	Classes    []NftClassRankingResponse `json:"classes"`
+	Pagination PageResponse              `json:"pagination"`
+}
+
+type NftClassRankingResponse struct {
+	NftClass
+	SoldCount int `json:"sold_count"`
+}
+
+type QueryCollectorRequest struct {
+	Creator string `form:"creator" binding:"required"`
+	PageRequest
+}
+
+type QueryCollectorResponse struct {
+	Collectors []accountCollection `json:"collectors"`
+	Pagination PageResponse        `json:"pagination"`
+}
+
+type QueryCreatorRequest struct {
+	Collector string `form:"collector" binding:"required"`
+	PageRequest
+}
+
+type QueryCreatorResponse struct {
+	Creators   []accountCollection `json:"creators"`
+	Pagination PageResponse        `json:"pagination"`
+}
+
+type accountCollection struct {
+	Account     string       `json:"account"`
+	Count       int          `json:"count"`
+	Collections []collection `json:"collections"`
+}
+
+type collection struct {
+	IscnIdPrefix string `json:"iscn_id_prefix"`
+	ClassId      string `json:"class_id"`
+	Count        int    `json:"count"`
 }

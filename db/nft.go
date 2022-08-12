@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgtype"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
@@ -57,6 +58,62 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 			return QueryClassResponse{}, fmt.Errorf("query nfts failed: %w", err)
 		}
 		c.Count = len(c.Nfts)
+		res.Classes = append(res.Classes, c)
+	}
+	res.Pagination.Count = len(res.Classes)
+	return res, nil
+}
+
+func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest) (QueryRankingResponse, error) {
+	sql := `
+	SELECT c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
+	c.config, c.metadata, c.price,
+	c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at, sold_count
+	FROM nft_class as c
+	JOIN (
+		SELECT c.id, count(n.id) as sold_count, array_remove(array_agg(DISTINCT n.owner), NULL) as owners
+		FROM nft_class as c
+		JOIN iscn as i
+		ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN iscn_stakeholders ON i.id = iscn_pid
+		LEFT JOIN nft as n ON c.class_id = n.class_id
+			AND ($1 = true OR n.owner != i.owner)
+			AND ($2::text[] IS NULL OR n.owner != ALL($2))
+		WHERE ($4 = '' OR i.owner = $4)
+			AND ($5 = '' OR i.data #>> '{"contentMetadata", "@type"}' = $5)
+			AND ($6 = '' OR sid = $6)
+			AND ($7 = '' OR sname = $7)
+			AND ($9 = 0 OR c.created_at > to_timestamp($9))
+			AND ($10 = 0 OR c.created_at < to_timestamp($10))
+		GROUP BY c.id
+	) AS t USING(id)
+	WHERE ($8 = '' OR $8 = ANY(t.owners))
+	ORDER BY sold_count DESC
+	LIMIT $3
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(ctx, sql, q.IncludeOwner, q.IgnoreList,
+		q.Limit, q.Creator, q.Type, q.StakeholderId, q.StakeholderName,
+		q.Collector, q.After, q.Before)
+	if err != nil {
+		logger.L.Errorw("Failed to query nft class ranking", "error", err, "q", q)
+		return QueryRankingResponse{}, fmt.Errorf("query nft class ranking error: %w", err)
+	}
+
+	res := QueryRankingResponse{}
+	for rows.Next() {
+		var c NftClassRankingResponse
+		if err = rows.Scan(
+			&c.Id, &c.Name, &c.Description, &c.Symbol, &c.URI, &c.URIHash,
+			&c.Config, &c.Metadata, &c.Price,
+			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account,
+			&c.CreatedAt, &c.SoldCount,
+		); err != nil {
+			logger.L.Errorw("failed to scan nft class", "error", err)
+			return QueryRankingResponse{}, fmt.Errorf("query nft class data failed: %w", err)
+		}
 		res.Classes = append(res.Classes, c)
 	}
 	res.Pagination.Count = len(res.Classes)
@@ -182,4 +239,98 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	}
 	res.Pagination.Count = len(res.Events)
 	return res, nil
+}
+
+func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollectorResponse, err error) {
+	sql := `
+	SELECT owner, sum(count) as total,
+		array_agg(json_build_object(
+			'iscn_id_prefix', iscn_id_prefix,
+			'class_id', class_id,
+			'count', count))
+	FROM (
+		SELECT n.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
+		FROM iscn as i
+		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN nft AS n ON c.class_id = n.class_id
+		WHERE i.owner = $1
+		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
+	) as r
+	GROUP BY owner
+	ORDER BY total DESC
+	OFFSET $2
+	LIMIT $3
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(ctx, sql, q.Creator, q.Offset, q.Limit)
+	if err != nil {
+		logger.L.Errorw("Failed to query collectors", "error", err, "q", q)
+		err = fmt.Errorf("query supporters error: %w", err)
+		return
+	}
+	defer rows.Close()
+
+	res.Collectors, err = parseAccountCollections(rows)
+	if err != nil {
+		err = fmt.Errorf("Scan collectors error: %w", err)
+		return
+	}
+	res.Pagination.Count = len(res.Collectors)
+	return
+}
+
+func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorResponse, err error) {
+	sql := `
+	SELECT owner, sum(count) as total,
+		array_agg(json_build_object(
+			'iscn_id_prefix', iscn_id_prefix,
+			'class_id', class_id,
+			'count', count))
+	FROM (
+		SELECT i.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
+		FROM iscn as i
+		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN nft AS n ON c.class_id = n.class_id
+		WHERE n.owner = $1
+		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
+	) as r
+	GROUP BY owner
+	ORDER BY total DESC
+	OFFSET $2
+	LIMIT $3
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(ctx, sql, q.Collector, q.Offset, q.Limit)
+	if err != nil {
+		logger.L.Errorw("Failed to query creators", "error", err, "q", q)
+		err = fmt.Errorf("query creators error: %w", err)
+		return
+	}
+
+	res.Creators, err = parseAccountCollections(rows)
+	if err != nil {
+		err = fmt.Errorf("Scan creators error: %w", err)
+		return
+	}
+	res.Pagination.Count = len(res.Creators)
+	return
+}
+
+func parseAccountCollections(rows pgx.Rows) (accounts []accountCollection, err error) {
+	for rows.Next() {
+		var account accountCollection
+		var collections pgtype.JSONBArray
+		if err = rows.Scan(&account.Account, &account.Count, &collections); err != nil {
+			return
+		}
+		if err = collections.AssignTo(&account.Collections); err != nil {
+			return
+		}
+		accounts = append(accounts, account)
+	}
+	return
 }

@@ -10,7 +10,9 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
-func QueryISCN(pool *pgxpool.Pool, query ISCNQuery, page PageRequest) (ISCNResponse, error) {
+const MAX_LIMIT = 100
+
+func QueryISCN(conn *pgxpool.Conn, query ISCNQuery, page PageRequest) (ISCNResponse, error) {
 	sql := fmt.Sprintf(`
 			SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 			FROM iscn
@@ -25,15 +27,9 @@ func QueryISCN(pool *pgxpool.Pool, query ISCNQuery, page PageRequest) (ISCNRespo
 				AND ($6 = '' OR sname = $6)
 				AND ($7 = 0 OR id > $7)
 				AND ($8 = 0 OR id < $8)
-			ORDER BY id %s
-			LIMIT $9;
-		`, page.Order())
-
-	conn, err := AcquireFromPool(pool)
-	if err != nil {
-		return ISCNResponse{}, err
-	}
-	defer conn.Release()
+			ORDER BY id %s, timestamp
+			LIMIT %d;
+		`, page.Order(), MAX_LIMIT)
 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
@@ -41,7 +37,7 @@ func QueryISCN(pool *pgxpool.Pool, query ISCNQuery, page PageRequest) (ISCNRespo
 	rows, err := conn.Query(
 		ctx, sql,
 		query.IscnID, query.Owner, query.Keywords, query.Fingerprints, query.StakeholderID, query.StakeholderName,
-		page.After(), page.Before(), page.Limit,
+		page.After(), page.Before(),
 	)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "iscn_query", query)
@@ -49,16 +45,10 @@ func QueryISCN(pool *pgxpool.Pool, query ISCNQuery, page PageRequest) (ISCNRespo
 	}
 	defer rows.Close()
 
-	return parseISCN(rows)
+	return parseISCN(rows, page.Limit)
 }
 
-func QueryISCNList(pool *pgxpool.Pool, pagination PageRequest) (ISCNResponse, error) {
-	conn, err := AcquireFromPool(pool)
-	if err != nil {
-		return ISCNResponse{}, err
-	}
-	defer conn.Release()
-
+func QueryISCNList(conn *pgxpool.Conn, pagination PageRequest) (ISCNResponse, error) {
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
@@ -68,18 +58,18 @@ func QueryISCNList(pool *pgxpool.Pool, pagination PageRequest) (ISCNResponse, er
 		WHERE ($1 = 0 OR id > $1)
 			AND ($2 = 0 OR id < $2)
 		ORDER BY id %s
-		LIMIT $3;
-	`, pagination.Order())
-	rows, err := conn.Query(ctx, sql, pagination.After(), pagination.Before(), pagination.Limit)
+		LIMIT %d;
+	`, pagination.Order(), MAX_LIMIT)
+	rows, err := conn.Query(ctx, sql, pagination.After(), pagination.Before())
 	if err != nil {
 		logger.L.Errorw("Query error:", "error", err)
 		return ISCNResponse{}, err
 	}
 	defer rows.Close()
-	return parseISCN(rows)
+	return parseISCN(rows, pagination.Limit)
 }
 
-func QueryISCNAll(pool *pgxpool.Pool, term string, pagination PageRequest) (ISCNResponse, error) {
+func QueryISCNAll(conn *pgxpool.Conn, term string, pagination PageRequest) (ISCNResponse, error) {
 	order := pagination.Order()
 	sql := fmt.Sprintf(`
 		SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
@@ -96,15 +86,13 @@ func QueryISCNAll(pool *pgxpool.Pool, term string, pagination PageRequest) (ISCN
 					)
 					AND ($3 = 0 OR id > $3)
 					AND ($4 = 0 OR id < $4)
-				ORDER BY id %s
-				LIMIT $5
+				ORDER BY id, timestamp %[1]s
+				LIMIT %[2]d
 			)
 			UNION ALL
 			(
 				SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 				FROM iscn
-				JOIN iscn_stakeholders
-				ON id = iscn_pid
 				WHERE
 					(
 						iscn_id = $1
@@ -114,38 +102,32 @@ func QueryISCNAll(pool *pgxpool.Pool, term string, pagination PageRequest) (ISCN
 					)
 					AND ($3 = 0 OR id > $3)
 					AND ($4 = 0 OR id < $4)
-				ORDER BY id %s
-				LIMIT $5
+				ORDER BY id, timestamp %[1]s
+				LIMIT %[2]d
 			)
 		) t
-		ORDER BY id %s
-		LIMIT $5
-	`, order, order, order) // mayday, mayday, mayday
-
-	conn, err := AcquireFromPool(pool)
-	if err != nil {
-		return ISCNResponse{}, err
-	}
-	defer conn.Release()
+		ORDER BY id, timestamp %[1]s
+		LIMIT %[2]d
+	`, order, MAX_LIMIT)
 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
 	rows, err := conn.Query(ctx, sql,
 		term, []string{term},
-		pagination.After(), pagination.Before(), pagination.Limit,
+		pagination.After(), pagination.Before(),
 	)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "term", term)
 		return ISCNResponse{}, fmt.Errorf("Query ISCN failed: %w", err)
 	}
 	defer rows.Close()
-	return parseISCN(rows)
+	return parseISCN(rows, pagination.Limit)
 }
 
-func parseISCN(rows pgx.Rows) (ISCNResponse, error) {
+func parseISCN(rows pgx.Rows, limit int) (ISCNResponse, error) {
 	res := ISCNResponse{}
-	for rows.Next() {
+	for rows.Next() && len(res.Records) < limit {
 		var iscn ISCNResponseData
 		var ipld string
 		var data pgtype.JSONB
