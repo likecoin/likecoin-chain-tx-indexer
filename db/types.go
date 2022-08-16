@@ -279,7 +279,7 @@ type QueryCountResponse struct {
 
 type QueryNftCountRequest struct {
 	IncludeOwner bool     `form:"include_owner"`
-	IgnoreList   []string `form:"ignore_list[]"`
+	IgnoreList   []string `form:"ignore_list"`
 }
 
 type QueryNftTradeStatsRequest struct {
