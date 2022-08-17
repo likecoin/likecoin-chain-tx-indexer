@@ -1,7 +1,6 @@
 package db
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -29,28 +28,20 @@ func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountRe
 }
 
 func GetNftTradeStats(conn *pgxpool.Conn, q QueryNftTradeStatsRequest) (res QueryNftTradeStatsResponse, err error) {
-	payload := struct {
-		Type    string `json:"@type"`
-		Grantee string `json:"grantee"`
-	}{
-		"/cosmos.authz.v1beta1.MsgExec",
-		q.ApiAddress,
-	}
-	payloadJSON, err := json.Marshal(&payload)
-	if err != nil {
-		err = fmt.Errorf("marshal nft trade stats payload failed: %w", err)
-		logger.L.Error(err, q)
-		return
-	}
-
 	sql := `
-	SELECT count(*), sum((tx #>> '{"tx", "body", "messages", 0, "msgs", 0, "amount", 0, "amount"}')::bigint)
-	from txs
-	WHERE tx #> '{"tx", "body", "messages", 0}' @> $1
+	SELECT COUNT(*), sum((tx #>> '{"tx", "body", "messages", 0, "msgs", 0, "amount", 0, "amount"}')::bigint)
+	FROM txs
+	JOIN (
+		SELECT DISTINCT tx_hash FROM nft_event
+		WHERE sender = $1
+		AND action = '/cosmos.nft.v1beta1.MsgSend'
+	) t
+	ON tx_hash = tx ->> 'txhash'::text
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	err = conn.QueryRow(ctx, sql, string(payloadJSON)).Scan(
+
+	err = conn.QueryRow(ctx, sql, q.ApiAddress).Scan(
 		&res.Count, &res.TotalVolume,
 	)
 	if err != nil {

@@ -14,7 +14,7 @@ const STARGATE_ENDPOINT = "/cosmos/tx/v1beta1/txs"
 const ISCN_ENDPOINT = "/iscn/records"
 const LATEST_HEIGHT_ENDPOINT = "/indexer/height/latest"
 const NFT_ENDPOINT = "/likechain/likenft/v1"
-const ANALYSIS_ENDPOINT = "/analysis"
+const ANALYSIS_ENDPOINT = "/statistics/nft"
 
 func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 	lcdURL, err := url.Parse(lcdEndpoint)
