@@ -28,6 +28,7 @@ func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountRe
 }
 
 func GetNftTradeStats(conn *pgxpool.Conn, q QueryNftTradeStatsRequest) (res QueryNftTradeStatsResponse, err error) {
+	// Message 0 is authz MsgExec
 	sql := `
 	SELECT COUNT(*), sum((tx #>> '{"tx", "body", "messages", 0, "msgs", 0, "amount", 0, "amount"}')::bigint)
 	FROM txs
