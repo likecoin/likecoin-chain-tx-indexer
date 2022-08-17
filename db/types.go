@@ -203,7 +203,7 @@ type QueryOwnerResponse struct {
 type OwnerResponse struct {
 	Owner string   `json:"owner"`
 	Count int      `json:"count,omitempty"`
-	Nfts  []string `json:"nfts"`
+	Nfts  []string `json:"nfts,omitempty"`
 }
 
 type QueryEventsRequest struct {
@@ -271,4 +271,27 @@ type collection struct {
 	IscnIdPrefix string `json:"iscn_id_prefix"`
 	ClassId      string `json:"class_id"`
 	Count        int    `json:"count"`
+}
+
+type QueryCountResponse struct {
+	Count uint64 `json:"count"`
+}
+
+type QueryNftCountRequest struct {
+	IncludeOwner bool     `form:"include_owner"`
+	IgnoreList   []string `form:"ignore_list"`
+}
+
+type QueryNftTradeStatsRequest struct {
+	ApiAddress string `form:"api_address" binding:"required"`
+}
+
+type QueryNftTradeStatsResponse struct {
+	Count       uint64 `json:"count"`
+	TotalVolume uint64 `json:"total_volume"`
+}
+
+type QueryNftOwnerListResponse struct {
+	Owners     []OwnerResponse `json:"owners"`
+	Pagination PageResponse    `json:"pagination"`
 }
