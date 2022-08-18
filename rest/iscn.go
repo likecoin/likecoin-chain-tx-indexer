@@ -5,45 +5,18 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 )
 
-func handleISCN(c *gin.Context) {
+func handleIscn(c *gin.Context) {
 	q := c.Request.URL.Query()
 	if q.Get("q") != "" {
-		handleISCNSearch(c)
+		handleIscnSearch(c)
 		return
 	}
 
-	var query db.ISCNQuery
-	hasQuery := false
+	var form db.IscnQuery
 
-	for k, v := range q {
-		switch k {
-		case "iscn_id":
-			if len(v) > 0 {
-				hasQuery = true
-				query.IscnID = v[0]
-			}
-		case "owner":
-			if len(v) > 0 {
-				hasQuery = true
-				query.Owner = v[0]
-			}
-		case "fingerprint", "fingerprints":
-			hasQuery = true
-			query.Fingerprints = v
-		case "keywords":
-			hasQuery = true
-			query.Keywords = v
-		case "stakeholders.entity.id", "stakeholders.id":
-			if len(v) > 0 {
-				hasQuery = true
-				query.StakeholderID = v[0]
-			}
-		case "stakeholders.entity.name", "stakeholders.name":
-			if len(v) > 0 {
-				hasQuery = true
-				query.StakeholderName = v[0]
-			}
-		}
+	if err := c.ShouldBindQuery(&form); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
 	}
 
 	p, err := getPagination(c)
@@ -53,11 +26,11 @@ func handleISCN(c *gin.Context) {
 	}
 
 	conn := getConn(c)
-	var res db.ISCNResponse
-	if hasQuery {
-		res, err = db.QueryISCN(conn, query, p)
+	var res db.IscnResponse
+	if form.Empty() {
+		res, err = db.QueryIscnList(conn, p)
 	} else {
-		res, err = db.QueryISCNList(conn, p)
+		res, err = db.QueryIscn(conn, form, p)
 	}
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
@@ -67,7 +40,7 @@ func handleISCN(c *gin.Context) {
 	c.JSON(200, res)
 }
 
-func handleISCNSearch(c *gin.Context) {
+func handleIscnSearch(c *gin.Context) {
 	q := c.Request.URL.Query()
 	p, err := getPagination(c)
 	if err != nil {
@@ -80,7 +53,7 @@ func handleISCNSearch(c *gin.Context) {
 		return
 	}
 	conn := getConn(c)
-	res, err := db.QueryISCNAll(conn, term, p)
+	res, err := db.QueryIscnSearch(conn, term, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

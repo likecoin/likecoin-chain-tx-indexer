@@ -12,7 +12,7 @@ import (
 
 const MAX_LIMIT = 100
 
-func QueryISCN(conn *pgxpool.Conn, query ISCNQuery, page PageRequest) (ISCNResponse, error) {
+func QueryIscn(conn *pgxpool.Conn, query IscnQuery, page PageRequest) (IscnResponse, error) {
 	sql := fmt.Sprintf(`
 			SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 			FROM iscn
@@ -20,13 +20,14 @@ func QueryISCN(conn *pgxpool.Conn, query ISCNQuery, page PageRequest) (ISCNRespo
 			ON id = iscn_pid
 			WHERE
 				($1 = '' OR iscn_id = $1)
-				AND ($2 = '' OR owner = $2)
-				AND ($3::text[] IS NULL OR keywords @> $3)
-				AND ($4::text[] IS NULL OR fingerprints @> $4)
-				AND ($5 = '' OR sid = $5)
-				AND ($6 = '' OR sname = $6)
-				AND ($7 = 0 OR id > $7)
-				AND ($8 = 0 OR id < $8)
+				AND ($2 = '' OR iscn_id_prefix = $2)
+				AND ($3 = '' OR owner = $3)
+				AND ($4::text[] IS NULL OR keywords @> $4)
+				AND ($5::text[] IS NULL OR fingerprints @> $5)
+				AND ($6 = '' OR sid = $6)
+				AND ($7 = '' OR sname = $7)
+				AND ($8 = 0 OR id > $8)
+				AND ($9 = 0 OR id < $9)
 			ORDER BY id %s, timestamp
 			LIMIT %d;
 		`, page.Order(), MAX_LIMIT)
@@ -36,19 +37,20 @@ func QueryISCN(conn *pgxpool.Conn, query ISCNQuery, page PageRequest) (ISCNRespo
 
 	rows, err := conn.Query(
 		ctx, sql,
-		query.IscnID, query.Owner, query.Keywords, query.Fingerprints, query.StakeholderID, query.StakeholderName,
+		query.IscnId, query.IscnIdPrefix, query.Owner, query.Keywords,
+		query.Fingerprints, query.StakeholderId, query.StakeholderName,
 		page.After(), page.Before(),
 	)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "iscn_query", query)
-		return ISCNResponse{}, fmt.Errorf("Query ISCN failed: %w", err)
+		return IscnResponse{}, fmt.Errorf("Query ISCN failed: %w", err)
 	}
 	defer rows.Close()
 
-	return parseISCN(rows, page.Limit)
+	return parseIscn(rows, page.Limit)
 }
 
-func QueryISCNList(conn *pgxpool.Conn, pagination PageRequest) (ISCNResponse, error) {
+func QueryIscnList(conn *pgxpool.Conn, pagination PageRequest) (IscnResponse, error) {
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
@@ -63,13 +65,13 @@ func QueryISCNList(conn *pgxpool.Conn, pagination PageRequest) (ISCNResponse, er
 	rows, err := conn.Query(ctx, sql, pagination.After(), pagination.Before())
 	if err != nil {
 		logger.L.Errorw("Query error:", "error", err)
-		return ISCNResponse{}, err
+		return IscnResponse{}, err
 	}
 	defer rows.Close()
-	return parseISCN(rows, pagination.Limit)
+	return parseIscn(rows, pagination.Limit)
 }
 
-func QueryISCNAll(conn *pgxpool.Conn, term string, pagination PageRequest) (ISCNResponse, error) {
+func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest) (IscnResponse, error) {
 	order := pagination.Order()
 	sql := fmt.Sprintf(`
 		SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
@@ -96,6 +98,7 @@ func QueryISCNAll(conn *pgxpool.Conn, term string, pagination PageRequest) (ISCN
 				WHERE
 					(
 						iscn_id = $1
+						OR iscn_id_prefix = $1
 						OR owner = $1
 						OR keywords @> $2::text[]
 						OR fingerprints @> $2::text[]
@@ -119,16 +122,16 @@ func QueryISCNAll(conn *pgxpool.Conn, term string, pagination PageRequest) (ISCN
 	)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "term", term)
-		return ISCNResponse{}, fmt.Errorf("Query ISCN failed: %w", err)
+		return IscnResponse{}, fmt.Errorf("Query ISCN failed: %w", err)
 	}
 	defer rows.Close()
-	return parseISCN(rows, pagination.Limit)
+	return parseIscn(rows, pagination.Limit)
 }
 
-func parseISCN(rows pgx.Rows, limit int) (ISCNResponse, error) {
-	res := ISCNResponse{}
+func parseIscn(rows pgx.Rows, limit int) (IscnResponse, error) {
+	res := IscnResponse{}
 	for rows.Next() && len(res.Records) < limit {
-		var iscn ISCNResponseData
+		var iscn iscnResponseData
 		var ipld string
 		var data pgtype.JSONB
 		err := rows.Scan(&res.Pagination.NextKey, &iscn.Id, &iscn.Owner, &iscn.RecordTimestamp, &ipld, &data)
@@ -142,7 +145,7 @@ func parseISCN(rows pgx.Rows, limit int) (ISCNResponse, error) {
 			return res, fmt.Errorf("Unmarshal ISCN data failed: %w", err)
 		}
 
-		res.Records = append(res.Records, ISCNResponseRecord{
+		res.Records = append(res.Records, iscnResponseRecord{
 			Ipld: ipld,
 			Data: iscn,
 		})

@@ -10,12 +10,12 @@ import (
 )
 
 var handlers = map[string]db.EventHandler{
-	"create_iscn_record":                           insertISCN,
-	"/likechain.iscn.MsgCreateIscnRecord":          insertISCN,
-	"update_iscn_record":                           insertISCN,
-	"/likechain.iscn.MsgUpdateIscnRecord":          insertISCN,
-	"msg_change_iscn_record_ownership":             transferISCN,
-	"/likechain.iscn.MsgChangeIscnRecordOwnership": transferISCN,
+	"create_iscn_record":                           insertIscn,
+	"/likechain.iscn.MsgCreateIscnRecord":          insertIscn,
+	"update_iscn_record":                           insertIscn,
+	"/likechain.iscn.MsgUpdateIscnRecord":          insertIscn,
+	"msg_change_iscn_record_ownership":             transferIscn,
+	"/likechain.iscn.MsgChangeIscnRecordOwnership": transferIscn,
 	"new_class":                   createNftClass,
 	"update_class":                updateNftClass,
 	"mint_nft":                    mintNft,

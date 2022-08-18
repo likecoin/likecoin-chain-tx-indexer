@@ -52,7 +52,7 @@ func getRouter(pool *pgxpool.Pool) *gin.Engine {
 		analysis.GET("/owner-count", handleNftOwnerCount)
 		analysis.GET("/owners", handleNftOwnerList)
 	}
-	router.GET(ISCN_ENDPOINT, handleISCN)
+	router.GET(ISCN_ENDPOINT, handleIscn)
 	router.GET("/txs", handleAminoTxsSearch)
 	router.GET(STARGATE_ENDPOINT, handleStargateTxsSearch)
 	router.GET(LATEST_HEIGHT_ENDPOINT, handleLatestHeight)

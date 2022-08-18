@@ -32,7 +32,7 @@ func (q iscnData) Marshal() ([]byte, error) {
 	return json.Marshal(q)
 }
 
-func insertISCN(payload db.EventPayload) error {
+func insertIscn(payload db.EventPayload) error {
 	message := payload.Message
 	events := payload.Events
 	var data iscnMessage
@@ -55,7 +55,7 @@ func insertISCN(payload db.EventPayload) error {
 		parsedStakeholder.Data = stakeholderRawJSON
 		stakeholders = append(stakeholders, parsedStakeholder)
 	}
-	iscn := db.ISCNInsert{
+	iscn := db.IscnInsert{
 		Iscn:         utils.GetEventsValue(events, "iscn_record", "iscn_id"),
 		IscnPrefix:   utils.GetEventsValue(events, "iscn_record", "iscn_id_prefix"),
 		Version:      getIscnVersion(utils.GetEventsValue(events, "iscn_record", "iscn_id")),
@@ -70,11 +70,11 @@ func insertISCN(payload db.EventPayload) error {
 		Ipld:         utils.GetEventsValue(events, "iscn_record", "ipld"),
 		Data:         data.Record,
 	}
-	payload.Batch.InsertISCN(iscn)
+	payload.Batch.InsertIscn(iscn)
 	return nil
 }
 
-func transferISCN(payload db.EventPayload) error {
+func transferIscn(payload db.EventPayload) error {
 	events := payload.Events
 	sender := utils.GetEventsValue(events, "message", "sender")
 	iscnId := utils.GetEventsValue(events, "iscn_record", "iscn_id")

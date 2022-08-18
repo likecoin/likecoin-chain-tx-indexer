@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestISCNCombineQuery(t *testing.T) {
+func TestIscnCombineQuery(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
 		log.Fatalln(err)
@@ -14,83 +14,90 @@ func TestISCNCombineQuery(t *testing.T) {
 
 	tables := []struct {
 		name string
-		ISCNQuery
+		IscnQuery
 		hasResult bool
 	}{
 		{
 			"iscn_id",
-			ISCNQuery{
-				IscnID: "iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
+			IscnQuery{
+				IscnId: "iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
+			},
+			true,
+		},
+		{
+			"iscn_id",
+			IscnQuery{
+				IscnIdPrefix: "iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY",
 			},
 			true,
 		},
 		{
 			"stakeholder_name",
-			ISCNQuery{
+			IscnQuery{
 				StakeholderName: "kin",
 			},
 			true,
 		},
 		{
 			"keyword",
-			ISCNQuery{
+			IscnQuery{
 				Keywords: []string{"LikeCoin"},
 			},
 			true,
 		},
 		{
 			"keywords",
-			ISCNQuery{
+			IscnQuery{
 				Keywords: []string{"superlike", "civicliker"},
 			},
 			true,
 		},
 		{
 			"John Perry Barlow",
-			ISCNQuery{
+			IscnQuery{
 				StakeholderName: "John Perry Barlow",
 			},
 			true,
 		},
 		{
 			"Apple Daily",
-			ISCNQuery{
+			IscnQuery{
 				StakeholderName: "Apple Daily",
 			},
 			true,
 		},
 		{
 			"Apple Daily ID",
-			ISCNQuery{
-				StakeholderID: "Apple Daily",
+			IscnQuery{
+				StakeholderId: "Apple Daily",
 			},
 			true,
 		},
 		{
 			"Next Digital Ltd",
-			ISCNQuery{
-				StakeholderID: "Next Digital Ltd",
+			IscnQuery{
+				StakeholderId: "Next Digital Ltd",
 			},
 			true,
 		},
 		{
 			"《明報》",
-			ISCNQuery{
+			IscnQuery{
 				StakeholderName: "《明報》",
 			},
 			true,
 		},
 		{
 			"depub.space",
-			ISCNQuery{
+			IscnQuery{
 				StakeholderName: "depub.space",
 			},
 			true,
 		},
 		{
 			"depub.space id",
-			ISCNQuery{
-				StakeholderID: "https://depub.SPACE",
+			IscnQuery{
+				StakeholderId: "https://depub.SPACE",
 			},
 			true,
 		},
@@ -103,7 +110,7 @@ func TestISCNCombineQuery(t *testing.T) {
 				Reverse: true,
 			}
 
-			res, err := QueryISCN(conn, v.ISCNQuery, p)
+			res, err := QueryIscn(conn, v.IscnQuery, p)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -115,7 +122,7 @@ func TestISCNCombineQuery(t *testing.T) {
 	}
 }
 
-func TestISCNList(t *testing.T) {
+func TestIscnList(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
 		log.Fatalln(err)
@@ -127,14 +134,14 @@ func TestISCNList(t *testing.T) {
 		Reverse: true,
 	}
 
-	res, err := QueryISCNList(conn, p)
+	res, err := QueryIscnList(conn, p)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log(len(res.Records))
 }
 
-func TestISCNQueryAll(t *testing.T) {
+func TestIscnQueryAll(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
 		log.Fatalln(err)
@@ -173,6 +180,10 @@ func TestISCNQueryAll(t *testing.T) {
 			length: 1,
 		},
 		{
+			term:   "iscn://likecoin-chain/zGY8c7obhwx7qa4Ro763kr6lvBCZ4SIMagYRXRXYSnM",
+			length: 1,
+		},
+		{
 			term:   "cosmos1cp3fcmk5ny2c22s0mxut2xefwrdur2t0clgna0",
 			length: 5,
 		},
@@ -196,7 +207,7 @@ func TestISCNQueryAll(t *testing.T) {
 	for _, v := range tables {
 		t.Run(v.term, func(t *testing.T) {
 			t.Log(v.term)
-			res, err := QueryISCNAll(conn, v.term, p)
+			res, err := QueryIscnSearch(conn, v.term, p)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -207,7 +218,7 @@ func TestISCNQueryAll(t *testing.T) {
 	}
 }
 
-func TestISCNPagination(t *testing.T) {
+func TestIscnPagination(t *testing.T) {
 	conn, err := AcquireFromPool(pool)
 	if err != nil {
 		log.Fatalln(err)
@@ -226,7 +237,7 @@ func TestISCNPagination(t *testing.T) {
 		}: 1290,
 	}
 	for p, a := range table {
-		res, err := QueryISCNList(conn, p)
+		res, err := QueryIscnList(conn, p)
 		if err != nil {
 			t.Error(err)
 		}

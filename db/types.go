@@ -35,7 +35,7 @@ func (e *Entity) UnmarshalJSON(data []byte) (err error) {
 	return nil
 }
 
-type ISCNInsert struct {
+type IscnInsert struct {
 	Iscn         string
 	IscnPrefix   string
 	Version      int
@@ -51,13 +51,24 @@ type ISCNInsert struct {
 	Data         []byte
 }
 
-type ISCNQuery struct {
-	IscnID          string
-	Owner           string
-	Keywords        []string
-	Fingerprints    []string
-	StakeholderID   string
-	StakeholderName string
+type IscnQuery struct {
+	IscnId          string   `form:"iscn_id"`
+	IscnIdPrefix    string   `form:"iscn_id_prefix"`
+	Owner           string   `form:"owner"`
+	Keywords        []string `form:"keyword"`
+	Fingerprints    []string `form:"fingerprint"`
+	StakeholderId   string   `form:"stakeholder.id"`
+	StakeholderName string   `form:"stakeholder.name"`
+}
+
+func (q IscnQuery) Empty() bool {
+	return q.IscnId == "" &&
+		q.IscnIdPrefix == "" &&
+		q.Owner == "" &&
+		len(q.Keywords) == 0 &&
+		len(q.Fingerprints) == 0 &&
+		q.StakeholderId == "" &&
+		q.StakeholderName == ""
 }
 
 type NftClass struct {
@@ -140,17 +151,17 @@ type PageResponse struct {
 	Count   int    `json:"count,omitempty"`
 }
 
-type ISCNResponse struct {
-	Records    []ISCNResponseRecord `json:"records"`
+type IscnResponse struct {
+	Records    []iscnResponseRecord `json:"records"`
 	Pagination PageResponse         `json:"pagination"`
 }
 
-type ISCNResponseRecord struct {
+type iscnResponseRecord struct {
 	Ipld string           `json:"ipld,omitempty"`
-	Data ISCNResponseData `json:"data,omitempty"`
+	Data iscnResponseData `json:"data,omitempty"`
 }
 
-type ISCNResponseData struct {
+type iscnResponseData struct {
 	Id                  string          `json:"@id"`
 	RecordTimestamp     time.Time       `json:"recordTimestamp"`
 	Owner               string          `json:"owner"`
