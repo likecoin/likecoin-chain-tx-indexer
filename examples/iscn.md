@@ -11,7 +11,10 @@ export ENDPOINT="http://localhost:8997"
 ## Query by ISCN ID
 
 ```bash
+# By ID
 curl $ENDPOINT/iscn/records?iscn_id=iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1
+# By Prefix
+curl $ENDPOINT/iscn/records?iscn_id_prefix=iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY
 ```
 
 ## Query by owner
@@ -26,28 +29,28 @@ curl $ENDPOINT/iscn/records?owner=cosmos18q3dzavq7c6njw92344rf8ejpyqxqwzvy7ef50&
 curl $ENDPOINT/iscn/records?fingerprint=ipfs://QmRzbij1C7224PNiw4cNBt1NzH7SbArkGjJGVb3y4Xpiw8
 ```
 
-## Query by keywords
+## Query by keyword
 
 ```bash
-curl $ENDPOINT/iscn/records?keywords=decentralizehk&keywords=DAO
+curl $ENDPOINT/iscn/records?keyword=decentralizehk&keyword=DAO
 ```
 
-## Query by stakeholders entity ID
+## Query by stakeholders ID
 
 ```bash
-curl $ENDPOINT/iscn/records?stakeholders.entity.id=did:cosmos:1vvxaklu364sejxe9tdwkg87aanejf8v6mwdu82
+curl $ENDPOINT/iscn/records?stakeholder.id=did:cosmos:1vvxaklu364sejxe9tdwkg87aanejf8v6mwdu82
 ```
 
-## Query by stakeholders entity name
+## Query by stakeholders name
 
 ```bash
-curl $ENDPOINT/iscn/records?stakeholders.entity.name=joshkiu
+curl $ENDPOINT/iscn/records?stakeholder.name=joshkiu
 ```
 
 ## Compound query
 
 ```bash
-curl $ENDPOINT/iscn/records?owner=cosmos1ykkpc0dnetfsya88f5nrdd7p57kplaw8sva6pj&keywords=香港&limit=5&page=2
+curl $ENDPOINT/iscn/records?owner=cosmos1ykkpc0dnetfsya88f5nrdd7p57kplaw8sva6pj&keyword=香港&limit=5&page=2
 ```
 
 ## Example response
@@ -56,78 +59,48 @@ curl $ENDPOINT/iscn/records?owner=cosmos1ykkpc0dnetfsya88f5nrdd7p57kplaw8sva6pj&
 {
   "records": [
     {
-      "ipld": "baguqeeragy7ojsthcjfsqqktqtjpmamrhzrlgtkvglucje3fptqu7thox4qa",
+      "ipld": "baguqeerayhsd7mbhbauudoftlcjqejy2k6zl4xurku3z45sq3hg7ekics5ha",
       "data": {
-        "@context": {
-          "@vocab": "http://iscn.io/",
-          "contentMetadata": {
-            "@context": null
-          },
-          "recordParentIPLD": {
-            "@container": "@index"
-          },
-          "stakeholders": {
-            "@context": {
-              "@vocab": "http://schema.org/",
-              "contributionType": "http://iscn.io/contributionType",
-              "entity": "http://iscn.io/entity",
-              "footprint": "http://iscn.io/footprint",
-              "rewardProportion": "http://iscn.io/rewardProportion"
-            }
-          }
-        },
-        "@id": "iscn://likecoin-chain/cbwJejWH2jUdM4ZsP_Kh5RyN-j_SBovjieroWXY0yRQ/1",
-        "@type": "Record",
+        "@id": "iscn://likecoin-chain/TPtbTpMco5zNmhGCX2U3UCFe4d415eyrXTabYZGm9PE/1",
+        "recordTimestamp": "2021-08-19T04:31:03Z",
+        "owner": "cosmos13f4glvg80zvfrrs7utft5p68pct4mcq7cgpf2p",
+        "recordNotes": "",
         "contentFingerprints": [
-          "hash://sha256/8e6984120afb8ac0f81080cf3e7a38042c472c4deb3e2588480df6e199741c89",
-          "ipfs://QmVpBwQ4J1UY8tThmhRm4HqjiVPZThRyCxcN2iMi1L9rbS",
-          "ar://XbVo9x7qml1-5N1wcbyLzXW-EQcCdWPq7QNmxzn7_-w"
+          "ipfs://QmUnGEozva55C9Z1MLpULh6UXrUDe4Yo3g1K4ZN6ZqzyEs"
         ],
         "contentMetadata": {
+          "@type": "Article",
+          "name": "decentralize：無大台，有共識",
+          "version": 1,
           "@context": "http://schema.org/",
-          "@type": "Photo",
-          "description": "狗，4歲，男性，生性貪吃",
-          "exifInfo": {
-            "ColorSpace": 65535,
-            "ExifImageHeight": 1108,
-            "ExifImageWidth": 1478,
-            "ExifVersion": "2.2",
-            "Format": "image/jpeg",
-            "ImageUniqueID": "4e3fcc68fee70b310000000000000000",
-            "Size": "1108 x 1478 JPEG (191 KB)",
-            "Software": "Picasa"
-          },
-          "keywords": "狗,巴豆",
-          "name": "巴豆",
-          "url": "-",
-          "usageInfo": "-",
-          "version": 1
+          "keywords": "blockchain,DAO,decentralization,decentralizehk",
+          "usageInfo": "ipfs://QmRvpQiiLA8ttSLAXEd5RArmXeG4qWEsKPmrB7KeiLSuE4"
         },
-        "recordNotes": "",
-        "recordTimestamp": "2021-12-06T06:14:26+00:00",
-        "recordVersion": 1,
         "stakeholders": [
           {
-            "contributionType": "http://schema.org/author",
             "entity": {
-              "@id": "did:cosmos:1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmcwdt79j",
-              "description": "",
-              "identifier": [
-                {
-                  "@type": "PropertyValue",
-                  "propertyID": "Cosmos Wallet",
-                  "value": "did:cosmos:1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmcwdt79j"
-                }
-              ],
-              "name": "Auora Huang",
-              "sameAs": [],
-              "url": "https://like.co/aurorahuang22"
+              "id": "https://like.co/undefined",
+              "name": "kin ko"
             },
+            "contributionType": "http://schema.org/author",
+            "rewardProportion": 1
+          },
+          {
+            "entity": {
+              "id": "https://matters.news/",
+              "name": "Matters",
+              "description": "Matters is a decentralized, cryptocurrency driven content creation and discussion platform."
+            },
+            "contributionType": "http://schema.org/publisher",
             "rewardProportion": 1
           }
         ]
       }
     }
-  ]
+  ],
+  "pagination": {
+    "next_key": 2,
+    "count": 1
+  }
 }
 ```
