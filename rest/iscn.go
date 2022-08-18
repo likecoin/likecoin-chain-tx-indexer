@@ -3,6 +3,7 @@ package rest
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
 func handleISCN(c *gin.Context) {
@@ -12,39 +13,14 @@ func handleISCN(c *gin.Context) {
 		return
 	}
 
-	var query db.ISCNQuery
-	hasQuery := false
+	var form db.ISCNQuery
 
-	for k, v := range q {
-		switch k {
-		case "iscn_id":
-			if len(v) > 0 {
-				hasQuery = true
-				query.IscnID = v[0]
-			}
-		case "owner":
-			if len(v) > 0 {
-				hasQuery = true
-				query.Owner = v[0]
-			}
-		case "fingerprint", "fingerprints":
-			hasQuery = true
-			query.Fingerprints = v
-		case "keywords":
-			hasQuery = true
-			query.Keywords = v
-		case "stakeholders.entity.id", "stakeholders.id":
-			if len(v) > 0 {
-				hasQuery = true
-				query.StakeholderID = v[0]
-			}
-		case "stakeholders.entity.name", "stakeholders.name":
-			if len(v) > 0 {
-				hasQuery = true
-				query.StakeholderName = v[0]
-			}
-		}
+	if err := c.ShouldBindQuery(&form); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		return
 	}
+
+	logger.L.Debugw("", "form", form)
 
 	p, err := getPagination(c)
 	if err != nil {
@@ -54,10 +30,10 @@ func handleISCN(c *gin.Context) {
 
 	conn := getConn(c)
 	var res db.ISCNResponse
-	if hasQuery {
-		res, err = db.QueryISCN(conn, query, p)
-	} else {
+	if form.Empty() {
 		res, err = db.QueryISCNList(conn, p)
+	} else {
+		res, err = db.QueryISCN(conn, form, p)
 	}
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})

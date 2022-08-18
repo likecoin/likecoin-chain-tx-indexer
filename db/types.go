@@ -52,12 +52,23 @@ type ISCNInsert struct {
 }
 
 type ISCNQuery struct {
-	IscnID          string
-	Owner           string
-	Keywords        []string
-	Fingerprints    []string
-	StakeholderID   string
-	StakeholderName string
+	IscnID          string   `form:"iscn_id"`
+	IscnIDPrefix    string   `form:"iscn_id_prefix"`
+	Owner           string   `form:"owner"`
+	Keywords        []string `form:"keyword"`
+	Fingerprints    []string `form:"fingerprint"`
+	StakeholderID   string   `form:"stakeholder.id"`
+	StakeholderName string   `form:"stakeholder.name"`
+}
+
+func (q ISCNQuery) Empty() bool {
+	return q.IscnID == "" &&
+		q.IscnIDPrefix == "" &&
+		q.Owner == "" &&
+		len(q.Keywords) == 0 &&
+		len(q.Fingerprints) == 0 &&
+		q.StakeholderID == "" &&
+		q.StakeholderName == ""
 }
 
 type NftClass struct {
