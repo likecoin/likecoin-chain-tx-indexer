@@ -25,6 +25,13 @@ func TestIscnCombineQuery(t *testing.T) {
 			true,
 		},
 		{
+			"iscn_id",
+			IscnQuery{
+				IscnIdPrefix: "iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY",
+			},
+			true,
+		},
+		{
 			"stakeholder_name",
 			IscnQuery{
 				StakeholderName: "kin",
@@ -170,6 +177,10 @@ func TestIscnQueryAll(t *testing.T) {
 		},
 		{
 			term:   "iscn://likecoin-chain/zGY8c7obhwx7qa4Ro763kr6lvBCZ4SIMagYRXRXYSnM/1",
+			length: 1,
+		},
+		{
+			term:   "iscn://likecoin-chain/zGY8c7obhwx7qa4Ro763kr6lvBCZ4SIMagYRXRXYSnM",
 			length: 1,
 		},
 		{

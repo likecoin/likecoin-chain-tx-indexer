@@ -20,13 +20,14 @@ func QueryIscn(conn *pgxpool.Conn, query IscnQuery, page PageRequest) (IscnRespo
 			ON id = iscn_pid
 			WHERE
 				($1 = '' OR iscn_id = $1)
-				AND ($2 = '' OR owner = $2)
-				AND ($3::text[] IS NULL OR keywords @> $3)
-				AND ($4::text[] IS NULL OR fingerprints @> $4)
-				AND ($5 = '' OR sid = $5)
-				AND ($6 = '' OR sname = $6)
-				AND ($7 = 0 OR id > $7)
-				AND ($8 = 0 OR id < $8)
+				AND ($2 = '' OR iscn_id_prefix = $2)
+				AND ($3 = '' OR owner = $3)
+				AND ($4::text[] IS NULL OR keywords @> $4)
+				AND ($5::text[] IS NULL OR fingerprints @> $5)
+				AND ($6 = '' OR sid = $6)
+				AND ($7 = '' OR sname = $7)
+				AND ($8 = 0 OR id > $8)
+				AND ($9 = 0 OR id < $9)
 			ORDER BY id %s, timestamp
 			LIMIT %d;
 		`, page.Order(), MAX_LIMIT)
@@ -36,7 +37,8 @@ func QueryIscn(conn *pgxpool.Conn, query IscnQuery, page PageRequest) (IscnRespo
 
 	rows, err := conn.Query(
 		ctx, sql,
-		query.IscnId, query.Owner, query.Keywords, query.Fingerprints, query.StakeholderId, query.StakeholderName,
+		query.IscnId, query.IscnIdPrefix, query.Owner, query.Keywords,
+		query.Fingerprints, query.StakeholderId, query.StakeholderName,
 		page.After(), page.Before(),
 	)
 	if err != nil {
@@ -96,6 +98,7 @@ func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest) (I
 				WHERE
 					(
 						iscn_id = $1
+						OR iscn_id_prefix = $1
 						OR owner = $1
 						OR keywords @> $2::text[]
 						OR fingerprints @> $2::text[]
