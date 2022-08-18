@@ -3,24 +3,21 @@ package rest
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
-	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
-func handleISCN(c *gin.Context) {
+func handleIscn(c *gin.Context) {
 	q := c.Request.URL.Query()
 	if q.Get("q") != "" {
-		handleISCNSearch(c)
+		handleIscnSearch(c)
 		return
 	}
 
-	var form db.ISCNQuery
+	var form db.IscnQuery
 
 	if err := c.ShouldBindQuery(&form); err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
-
-	logger.L.Debugw("", "form", form)
 
 	p, err := getPagination(c)
 	if err != nil {
@@ -29,11 +26,11 @@ func handleISCN(c *gin.Context) {
 	}
 
 	conn := getConn(c)
-	var res db.ISCNResponse
+	var res db.IscnResponse
 	if form.Empty() {
-		res, err = db.QueryISCNList(conn, p)
+		res, err = db.QueryIscnList(conn, p)
 	} else {
-		res, err = db.QueryISCN(conn, form, p)
+		res, err = db.QueryIscn(conn, form, p)
 	}
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
@@ -43,7 +40,7 @@ func handleISCN(c *gin.Context) {
 	c.JSON(200, res)
 }
 
-func handleISCNSearch(c *gin.Context) {
+func handleIscnSearch(c *gin.Context) {
 	q := c.Request.URL.Query()
 	p, err := getPagination(c)
 	if err != nil {
@@ -56,7 +53,7 @@ func handleISCNSearch(c *gin.Context) {
 		return
 	}
 	conn := getConn(c)
-	res, err := db.QueryISCNAll(conn, term, p)
+	res, err := db.QueryIscnSearch(conn, term, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

@@ -55,7 +55,7 @@ func insertISCN(payload db.EventPayload) error {
 		parsedStakeholder.Data = stakeholderRawJSON
 		stakeholders = append(stakeholders, parsedStakeholder)
 	}
-	iscn := db.ISCNInsert{
+	iscn := db.IscnInsert{
 		Iscn:         utils.GetEventsValue(events, "iscn_record", "iscn_id"),
 		IscnPrefix:   utils.GetEventsValue(events, "iscn_record", "iscn_id_prefix"),
 		Version:      getIscnVersion(utils.GetEventsValue(events, "iscn_record", "iscn_id")),

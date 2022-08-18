@@ -35,7 +35,7 @@ func (e *Entity) UnmarshalJSON(data []byte) (err error) {
 	return nil
 }
 
-type ISCNInsert struct {
+type IscnInsert struct {
 	Iscn         string
 	IscnPrefix   string
 	Version      int
@@ -51,23 +51,23 @@ type ISCNInsert struct {
 	Data         []byte
 }
 
-type ISCNQuery struct {
-	IscnID          string   `form:"iscn_id"`
-	IscnIDPrefix    string   `form:"iscn_id_prefix"`
+type IscnQuery struct {
+	IscnId          string   `form:"iscn_id"`
+	IscnIdPrefix    string   `form:"iscn_id_prefix"`
 	Owner           string   `form:"owner"`
 	Keywords        []string `form:"keyword"`
 	Fingerprints    []string `form:"fingerprint"`
-	StakeholderID   string   `form:"stakeholder.id"`
+	StakeholderId   string   `form:"stakeholder.id"`
 	StakeholderName string   `form:"stakeholder.name"`
 }
 
-func (q ISCNQuery) Empty() bool {
-	return q.IscnID == "" &&
-		q.IscnIDPrefix == "" &&
+func (q IscnQuery) Empty() bool {
+	return q.IscnId == "" &&
+		q.IscnIdPrefix == "" &&
 		q.Owner == "" &&
 		len(q.Keywords) == 0 &&
 		len(q.Fingerprints) == 0 &&
-		q.StakeholderID == "" &&
+		q.StakeholderId == "" &&
 		q.StakeholderName == ""
 }
 
@@ -151,17 +151,17 @@ type PageResponse struct {
 	Count   int    `json:"count,omitempty"`
 }
 
-type ISCNResponse struct {
-	Records    []ISCNResponseRecord `json:"records"`
+type IscnResponse struct {
+	Records    []iscnResponseRecord `json:"records"`
 	Pagination PageResponse         `json:"pagination"`
 }
 
-type ISCNResponseRecord struct {
+type iscnResponseRecord struct {
 	Ipld string           `json:"ipld,omitempty"`
-	Data ISCNResponseData `json:"data,omitempty"`
+	Data iscnResponseData `json:"data,omitempty"`
 }
 
-type ISCNResponseData struct {
+type iscnResponseData struct {
 	Id                  string          `json:"@id"`
 	RecordTimestamp     time.Time       `json:"recordTimestamp"`
 	Owner               string          `json:"owner"`

@@ -131,7 +131,7 @@ func GetMetaHeight(conn *pgxpool.Conn, key string) (int64, error) {
 	return height, err
 }
 
-func (batch *Batch) InsertISCN(insert ISCNInsert) {
+func (batch *Batch) InsertIscn(insert IscnInsert) {
 	stakeholderIDs := []string{}
 	stakeholderNames := []string{}
 	stakeholderRawJSONs := [][]byte{}
