@@ -9,7 +9,7 @@ import (
 
 func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountResponse, err error) {
 	sql := `
-	SELECT COUNT(n.id)
+	SELECT COUNT(DISTINCT n.id)
 	FROM nft as n
 	JOIN nft_class AS c USING (class_id)
 	JOIN iscn as i ON c.parent_iscn_id_prefix = i.iscn_id_prefix
