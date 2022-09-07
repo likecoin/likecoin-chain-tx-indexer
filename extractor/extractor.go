@@ -50,7 +50,7 @@ func Run(pool *pgxpool.Pool) chan<- int64 {
 			}
 			if finished {
 				height := <-trigger
-				logger.L.Infof("Extractor: trigger by poller, sync to %d", height)
+				logger.L.Infof("Extractor: trigger by poller on height %d", height)
 			}
 		}
 	}()

@@ -25,20 +25,20 @@ type EventPayload struct {
 type EventHandler func(EventPayload) error
 
 func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished bool, err error) {
-	begin, err := GetMetaHeight(conn, META_EXTRACTOR)
+	prevSyncedHeight, err := GetMetaHeight(conn, META_EXTRACTOR)
 	if err != nil {
 		return false, fmt.Errorf("Failed to get extractor synchonized height: %w", err)
 	}
 
-	end, err := GetLatestHeight(conn)
+	latestSyncingHeight, err := GetLatestHeight(conn)
 	if err != nil {
 		return false, fmt.Errorf("Failed to get latest height: %w", err)
 	}
-	if begin == end {
+	if prevSyncedHeight == latestSyncingHeight {
 		return true, nil
 	}
-	if begin+LIMIT < end {
-		end = begin + LIMIT
+	if latestSyncingHeight > prevSyncedHeight+LIMIT {
+		latestSyncingHeight = prevSyncedHeight + LIMIT
 	} else {
 		finished = true
 	}
@@ -48,14 +48,14 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 	sql := `
 	SELECT tx #> '{"tx", "body", "messages"}' AS messages, tx -> 'logs' AS logs, tx -> 'timestamp', tx -> 'txhash'
 	FROM txs
-	WHERE height >= $1
-		AND height < $2
+	WHERE height > $1
+		AND height <= $2
 		AND events && $3
 	ORDER BY height ASC;
 	`
 	eventString := getEventStrings(getHandlingEvents(handlers))
 
-	rows, err := conn.Query(ctx, sql, begin, end, eventString)
+	rows, err := conn.Query(ctx, sql, prevSyncedHeight, latestSyncingHeight, eventString)
 	defer rows.Close()
 
 	batch := NewBatch(conn, int(LIMIT))
@@ -101,12 +101,12 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 			}
 		}
 	}
-	batch.UpdateMetaHeight(META_EXTRACTOR, end)
+	batch.UpdateMetaHeight(META_EXTRACTOR, latestSyncingHeight)
 	err = batch.Flush()
 	if err != nil {
 		return false, fmt.Errorf("send batch failed: %w", err)
 	}
-	logger.L.Infof("Extractor synced height: %d", end)
+	logger.L.Infof("Extractor synced height: %d", latestSyncingHeight)
 	return finished, nil
 }
 
