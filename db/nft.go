@@ -75,7 +75,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest) (QueryRankingR
 		FROM nft_class as c
 		JOIN iscn as i
 		ON i.iscn_id_prefix = c.parent_iscn_id_prefix
-		JOIN iscn_stakeholders ON i.id = iscn_pid
+		LEFT JOIN iscn_stakeholders ON i.id = iscn_pid
 		LEFT JOIN nft as n ON c.class_id = n.class_id
 			AND ($1 = true OR n.owner != i.owner)
 			AND ($2::text[] IS NULL OR n.owner != ALL($2))
