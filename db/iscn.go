@@ -16,7 +16,7 @@ func QueryIscn(conn *pgxpool.Conn, query IscnQuery, page PageRequest) (IscnRespo
 	sql := fmt.Sprintf(`
 			SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 			FROM iscn
-			JOIN iscn_stakeholders
+			LEFT JOIN iscn_stakeholders
 			ON id = iscn_pid
 			WHERE
 				($1 = '' OR iscn_id = $1)
@@ -79,7 +79,7 @@ func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest) (I
 			(
 				SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 				FROM iscn
-				JOIN iscn_stakeholders
+				LEFT JOIN iscn_stakeholders
 				ON id = iscn_pid
 				WHERE
 					(
