@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -47,10 +46,8 @@ func serializeTx(txRes *types.TxResponse) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	// "\u0000" is not processible by Postgres
-	// Below is a hotfix, long term solution is to store binary or migrate to Tendermint Postgres indexing backend
-	sanitizedJSON := strings.ReplaceAll(string(txResJSON), "\\u0000", "")
-	return []byte(sanitizedJSON), nil
+	sanitizedJSON := sanitizeJSON(txResJSON)
+	return sanitizedJSON, nil
 }
 
 func ConfigCmd(cmd *cobra.Command) {
@@ -259,12 +256,13 @@ func (batch *Batch) InsertTx(txRes types.TxResponse, height int64, txIndex int) 
 
 func (batch *Batch) Flush() error {
 	if batch.Batch.Len() > 0 {
-		logger.L.Debugw("Inserting transactions into Postgres in batch", "batch_size", batch.Batch.Len())
+		logger.L.Debugw("Flushing Postgres batch", "batch_size", batch.Batch.Len())
 		ctx, cancel := GetTimeoutContext()
 		defer cancel()
 		result := batch.Conn.SendBatch(ctx, &batch.Batch)
 		_, err := result.Exec()
 		if err != nil {
+			logger.L.Debugw("Error when flushing Postgres batch", "err", err, "batch_size", batch.Batch.Len())
 			return err
 		}
 		result.Close()
