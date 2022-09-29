@@ -153,7 +153,7 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 		var n NftResponse
 		if err = rows.Scan(&res.Pagination.NextKey,
 			&n.NftId, &n.ClassId, &n.Owner, &n.Uri, &n.UriHash, &n.Metadata,
-			&n.OwnedAt, &n.ClassParent.Type, &n.ClassParent.IscnIdPrefix, &n.ClassParent.Account,
+			&n.Timestamp, &n.ClassParent.Type, &n.ClassParent.IscnIdPrefix, &n.ClassParent.Account,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft", "error", err, "q", q)
 			return QueryNftResponse{}, fmt.Errorf("query nft failed: %w", err)

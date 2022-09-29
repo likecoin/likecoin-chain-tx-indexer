@@ -92,13 +92,13 @@ type NftClassParent struct {
 }
 
 type Nft struct {
-	NftId    string          `json:"nft_id"`
-	ClassId  string          `json:"class_id"`
-	Owner    string          `json:"owner"`
-	Uri      string          `json:"uri"`
-	UriHash  string          `json:"uri_hash"`
-	Metadata json.RawMessage `json:"metadata"`
-	OwnedAt  time.Time       `json:"owned_at"`
+	NftId     string          `json:"nft_id"`
+	ClassId   string          `json:"class_id"`
+	Owner     string          `json:"owner"`
+	Uri       string          `json:"uri"`
+	UriHash   string          `json:"uri_hash"`
+	Metadata  json.RawMessage `json:"metadata"`
+	Timestamp time.Time       `json:"timestamp"`
 }
 
 type NftEvent struct {
