@@ -98,6 +98,7 @@ type Nft struct {
 	Uri      string          `json:"uri"`
 	UriHash  string          `json:"uri_hash"`
 	Metadata json.RawMessage `json:"metadata"`
+	OwnedAt  time.Time       `json:"owned_at"`
 }
 
 type NftEvent struct {
