@@ -130,6 +130,7 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 	JOIN (
 		SELECT DISTINCT ON (nft_id) nft_id, timestamp
 		FROM nft_event
+		WHERE receiver = $4
 		ORDER BY nft_id, timestamp DESC
 	) e
 	ON n.nft_id = e.nft_id
