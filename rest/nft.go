@@ -124,7 +124,13 @@ func handleNftCollectors(c *gin.Context) {
 
 	conn := getConn(c)
 
-	res, err := db.GetCollector(conn, form)
+	var res db.QueryCollectorResponse
+	var err error
+	if &form.Creator == nil {
+		res, err = db.GetCollectorGlobal(conn, form)
+	} else {
+		res, err = db.GetCollector(conn, form)
+	}
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
@@ -142,7 +148,13 @@ func handleNftCreators(c *gin.Context) {
 
 	conn := getConn(c)
 
-	res, err := db.GetCreators(conn, form)
+	var res db.QueryCreatorResponse
+	var err error
+	if &form.Collector == nil {
+		res, err = db.GetCreatorsGlobal(conn, form)
+	} else {
+		res, err = db.GetCreators(conn, form)
+	}
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

@@ -288,6 +288,45 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollect
 	return
 }
 
+func GetCollectorGlobal(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollectorResponse, err error) {
+	sql := `
+	SELECT owner, sum(count) as total,
+		array_agg(json_build_object(
+			'iscn_id_prefix', iscn_id_prefix,
+			'class_id', class_id,
+			'count', count))
+	FROM (
+		SELECT n.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
+		FROM iscn as i
+		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN nft AS n ON c.class_id = n.class_id
+		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
+	) as r
+	GROUP BY owner
+	ORDER BY total DESC
+	OFFSET $1
+	LIMIT $2
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(ctx, sql, q.Offset, q.Limit)
+	if err != nil {
+		logger.L.Errorw("Failed to query collectors", "error", err, "q", q)
+		err = fmt.Errorf("query supporters error: %w", err)
+		return
+	}
+	defer rows.Close()
+
+	res.Collectors, err = parseAccountCollections(rows)
+	if err != nil {
+		err = fmt.Errorf("Scan collectors error: %w", err)
+		return
+	}
+	res.Pagination.Count = len(res.Collectors)
+	return
+}
+
 func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorResponse, err error) {
 	sql := `
 	SELECT owner, sum(count) as total,
@@ -312,6 +351,44 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorRes
 	defer cancel()
 
 	rows, err := conn.Query(ctx, sql, q.Collector, q.Offset, q.Limit)
+	if err != nil {
+		logger.L.Errorw("Failed to query creators", "error", err, "q", q)
+		err = fmt.Errorf("query creators error: %w", err)
+		return
+	}
+
+	res.Creators, err = parseAccountCollections(rows)
+	if err != nil {
+		err = fmt.Errorf("Scan creators error: %w", err)
+		return
+	}
+	res.Pagination.Count = len(res.Creators)
+	return
+}
+
+func GetCreatorsGlobal(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorResponse, err error) {
+	sql := `
+	SELECT owner, sum(count) as total,
+		array_agg(json_build_object(
+			'iscn_id_prefix', iscn_id_prefix,
+			'class_id', class_id,
+			'count', count))
+	FROM (
+		SELECT i.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
+		FROM iscn as i
+		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN nft AS n ON c.class_id = n.class_id
+		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
+	) as r
+	GROUP BY owner
+	ORDER BY total DESC
+	OFFSET $1
+	LIMIT $2
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(ctx, sql, q.Offset, q.Limit)
 	if err != nil {
 		logger.L.Errorw("Failed to query creators", "error", err, "q", q)
 		err = fmt.Errorf("query creators error: %w", err)
