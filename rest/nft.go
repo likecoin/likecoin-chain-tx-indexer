@@ -126,7 +126,7 @@ func handleNftCollectors(c *gin.Context) {
 
 	var res db.QueryCollectorResponse
 	var err error
-	if &form.Creator == nil {
+	if form.Creator == "" {
 		res, err = db.GetCollectorGlobal(conn, form)
 	} else {
 		res, err = db.GetCollector(conn, form)
@@ -150,7 +150,7 @@ func handleNftCreators(c *gin.Context) {
 
 	var res db.QueryCreatorResponse
 	var err error
-	if &form.Collector == nil {
+	if form.Collector == "" {
 		res, err = db.GetCreatorsGlobal(conn, form)
 	} else {
 		res, err = db.GetCreators(conn, form)
