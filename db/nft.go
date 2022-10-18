@@ -260,7 +260,8 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollect
 		FROM iscn as i
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
-		WHERE i.owner = $1
+			AND ($4::text[] IS NULL OR n.owner != ALL($4))
+		WHERE $1 = '' OR i.owner = $1
 		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
 	) as r
 	GROUP BY owner
@@ -271,7 +272,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollect
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.Creator, q.Offset, q.Limit)
+	rows, err := conn.Query(ctx, sql, q.Creator, q.Offset, q.Limit, q.IgnoreList)
 	if err != nil {
 		logger.L.Errorw("Failed to query collectors", "error", err, "q", q)
 		err = fmt.Errorf("query supporters error: %w", err)
@@ -300,7 +301,8 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorRes
 		FROM iscn as i
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
-		WHERE n.owner = $1
+			AND ($4::text[] IS NULL OR n.owner != ALL($4))
+		WHERE $1 = '' OR i.owner = $1
 		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
 	) as r
 	GROUP BY owner
@@ -311,7 +313,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorRes
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.Collector, q.Offset, q.Limit)
+	rows, err := conn.Query(ctx, sql, q.Collector, q.Offset, q.Limit, q.IgnoreList)
 	if err != nil {
 		logger.L.Errorw("Failed to query creators", "error", err, "q", q)
 		err = fmt.Errorf("query creators error: %w", err)
