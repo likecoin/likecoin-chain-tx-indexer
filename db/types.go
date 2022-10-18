@@ -254,7 +254,8 @@ type NftClassRankingResponse struct {
 }
 
 type QueryCollectorRequest struct {
-	Creator string `form:"creator"`
+	Creator    string   `form:"creator"`
+	IgnoreList []string `form:"ignore_list"`
 	PageRequest
 }
 
@@ -264,7 +265,8 @@ type QueryCollectorResponse struct {
 }
 
 type QueryCreatorRequest struct {
-	Collector string `form:"collector"`
+	Collector  string   `form:"collector"`
+	IgnoreList []string `form:"ignore_list"`
 	PageRequest
 }
 
