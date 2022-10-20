@@ -208,7 +208,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 		AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
 		AND ($1 = 0 OR e.id > $1)
 		AND ($2 = 0 OR e.id < $2)
-		AND ($7 = '' OR e.action = $7)
+		AND ($7::text[] IS NULL OR e.action = ANY($7))
 	ORDER BY e.id %s
 	LIMIT $3
 	`, p.Order())

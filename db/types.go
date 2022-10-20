@@ -219,11 +219,11 @@ type OwnerResponse struct {
 }
 
 type QueryEventsRequest struct {
-	ClassId      string `form:"class_id"`
-	NftId        string `form:"nft_id"`
-	IscnIdPrefix string `form:"iscn_id_prefix"`
-	Verbose      bool   `form:"verbose"`
-	ActionType   string `form:"action_type"`
+	ClassId      string   `form:"class_id"`
+	NftId        string   `form:"nft_id"`
+	IscnIdPrefix string   `form:"iscn_id_prefix"`
+	Verbose      bool     `form:"verbose"`
+	ActionType   []string `form:"action_type"`
 }
 
 type QueryEventsResponse struct {
