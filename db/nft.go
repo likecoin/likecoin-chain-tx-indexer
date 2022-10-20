@@ -208,6 +208,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 		AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
 		AND ($1 = 0 OR e.id > $1)
 		AND ($2 = 0 OR e.id < $2)
+		AND ($7::text[] IS NULL OR e.action = ANY($7))
 	ORDER BY e.id %s
 	LIMIT $3
 	`, p.Order())
@@ -215,7 +216,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, q.ClassId, q.NftId, q.IscnIdPrefix)
+	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, q.ClassId, q.NftId, q.IscnIdPrefix, q.ActionType)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft events", "error", err)
 		return QueryEventsResponse{}, fmt.Errorf("query nft events error: %w", err)
