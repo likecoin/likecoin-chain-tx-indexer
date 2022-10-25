@@ -118,6 +118,19 @@ func getPool(c *gin.Context) *pgxpool.Pool {
 
 func getPagination(c *gin.Context) (p db.PageRequest, err error) {
 	p = db.PageRequest{}
-	err = c.ShouldBindQuery(&p)
+	for _, key := range []string{"pagination.key", "pagination.limit", "pagination.reverse", "pagination.offset"} {
+		if c.Query(key) != "" {
+			err = c.ShouldBindQuery(&p)
+			return p, err
+		}
+	}
+	// there is no `pagination.xxx` query, then we fall back to legacy keys
+	// everything is in deafult, so we scan
+	legacy := db.LegacyPageRequest{}
+	err = c.ShouldBindQuery(&legacy)
+	p.Key = legacy.Key
+	p.Limit = legacy.Limit
+	p.Offset = legacy.Offset
+	p.Reverse = legacy.Reverse
 	return p, err
 }
