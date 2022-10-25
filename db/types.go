@@ -120,10 +120,10 @@ func (n *NftEvent) Attach(payload EventPayload) {
 }
 
 type PageRequest struct {
-	Key     uint64 `form:"key"`
-	Limit   int    `form:"limit,default=100" binding:"gte=1,lte=100"`
-	Reverse bool   `form:"reverse"`
-	Offset  uint64 `form:"offset"`
+	Key     uint64 `form:"pagination.key"`
+	Limit   int    `form:"pagination.limit,default=100" binding:"gte=1,lte=100"`
+	Reverse bool   `form:"pagination.reverse"`
+	Offset  uint64 `form:"pagination.offset"`
 }
 
 func (p *PageRequest) After() uint64 {
