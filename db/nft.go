@@ -64,7 +64,7 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	return res, nil
 }
 
-func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest) (QueryRankingResponse, error) {
+func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest) (QueryRankingResponse, error) {
 	sql := `
 	SELECT c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
 	c.config, c.metadata, c.price,
@@ -95,7 +95,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest) (QueryRankingR
 	defer cancel()
 
 	rows, err := conn.Query(ctx, sql, q.IncludeOwner, q.IgnoreList,
-		q.Limit, q.Creator, q.Type, q.StakeholderId, q.StakeholderName,
+		p.Limit, q.Creator, q.Type, q.StakeholderId, q.StakeholderName,
 		q.Collector, q.After, q.Before)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft class ranking", "error", err, "q", q)
@@ -251,7 +251,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollectorResponse, err error) {
+func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (res QueryCollectorResponse, err error) {
 	sql := `
 	SELECT owner, sum(count) as total,
 		array_agg(json_build_object(
@@ -275,7 +275,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollect
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.Creator, q.Offset, q.Limit, q.IgnoreList)
+	rows, err := conn.Query(ctx, sql, q.Creator, p.Offset, p.Limit, q.IgnoreList)
 	if err != nil {
 		logger.L.Errorw("Failed to query collectors", "error", err, "q", q)
 		err = fmt.Errorf("query supporters error: %w", err)
@@ -292,7 +292,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest) (res QueryCollect
 	return
 }
 
-func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorResponse, err error) {
+func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res QueryCreatorResponse, err error) {
 	sql := `
 	SELECT owner, sum(count) as total,
 		array_agg(json_build_object(
@@ -316,7 +316,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest) (res QueryCreatorRes
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.Collector, q.Offset, q.Limit, q.IgnoreList)
+	rows, err := conn.Query(ctx, sql, q.Collector, p.Offset, p.Limit, q.IgnoreList)
 	if err != nil {
 		logger.L.Errorw("Failed to query creators", "error", err, "q", q)
 		err = fmt.Errorf("query creators error: %w", err)

@@ -119,11 +119,18 @@ func (n *NftEvent) Attach(payload EventPayload) {
 	n.TxHash = payload.TxHash
 }
 
-type PageRequest struct {
+type LegacyPageRequest struct {
 	Key     uint64 `form:"key"`
 	Limit   int    `form:"limit,default=100" binding:"gte=1,lte=100"`
 	Reverse bool   `form:"reverse"`
 	Offset  uint64 `form:"offset"`
+}
+
+type PageRequest struct {
+	Key     uint64 `form:"pagination.key"`
+	Limit   int    `form:"pagination.limit,default=100" binding:"gte=1,lte=100"`
+	Reverse bool   `form:"pagination.reverse"`
+	Offset  uint64 `form:"pagination.offset"`
 }
 
 func (p *PageRequest) After() uint64 {
@@ -243,7 +250,6 @@ type QueryRankingRequest struct {
 	Before          int64    `form:"before"`
 	IncludeOwner    bool     `form:"include_owner"`
 	IgnoreList      []string `form:"ignore_list"`
-	PageRequest
 }
 
 type QueryRankingResponse struct {
@@ -259,7 +265,6 @@ type NftClassRankingResponse struct {
 type QueryCollectorRequest struct {
 	Creator    string   `form:"creator"`
 	IgnoreList []string `form:"ignore_list"`
-	PageRequest
 }
 
 type QueryCollectorResponse struct {
@@ -270,7 +275,6 @@ type QueryCollectorResponse struct {
 type QueryCreatorRequest struct {
 	Collector  string   `form:"collector"`
 	IgnoreList []string `form:"ignore_list"`
-	PageRequest
 }
 
 type QueryCreatorResponse struct {

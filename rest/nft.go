@@ -104,9 +104,14 @@ func handleNftRanking(c *gin.Context) {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
+	p, err := getPagination(c)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err})
+		return
+	}
 
 	conn := getConn(c)
-	res, err := db.GetClassesRanking(conn, q)
+	res, err := db.GetClassesRanking(conn, q, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
@@ -121,10 +126,15 @@ func handleNftCollectors(c *gin.Context) {
 		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
 		return
 	}
+	p, err := getPagination(c)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err})
+		return
+	}
 
 	conn := getConn(c)
 
-	res, err := db.GetCollector(conn, form)
+	res, err := db.GetCollector(conn, form, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
@@ -139,10 +149,15 @@ func handleNftCreators(c *gin.Context) {
 		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
 		return
 	}
+	p, err := getPagination(c)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err})
+		return
+	}
 
 	conn := getConn(c)
 
-	res, err := db.GetCreators(conn, form)
+	res, err := db.GetCreators(conn, form, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
