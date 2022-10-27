@@ -234,9 +234,8 @@ func TestQueryNftRanking(t *testing.T) {
 
 	for _, q := range table {
 		t.Run(q.name, func(t *testing.T) {
-			q.PageRequest = p
 			// q.IgnoreList = []string{"like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp"}
-			res, err := GetClassesRanking(conn, q.QueryRankingRequest)
+			res, err := GetClassesRanking(conn, q.QueryRankingRequest, p)
 			if err != nil {
 				t.Error(err)
 			}
@@ -259,14 +258,14 @@ func TestCollectors(t *testing.T) {
 
 	q := QueryCollectorRequest{
 		Creator: KIN,
-		PageRequest: PageRequest{
-			Offset:  0,
-			Limit:   5,
-			Reverse: true,
-		},
+	}
+	p := PageRequest{
+		Offset:  0,
+		Limit:   5,
+		Reverse: true,
 	}
 
-	res, err := GetCollector(conn, q)
+	res, err := GetCollector(conn, q, p)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,13 +282,13 @@ func TestCreators(t *testing.T) {
 
 	q := QueryCreatorRequest{
 		Collector: COLLECTOR,
-		PageRequest: PageRequest{
-			Offset: 0,
-			Limit:  5,
-		},
+	}
+	p := PageRequest{
+		Offset: 0,
+		Limit:  5,
 	}
 
-	res, err := GetCreators(conn, q)
+	res, err := GetCreators(conn, q, p)
 	if err != nil {
 		t.Fatal(err)
 	}
