@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 	"github.com/likecoin/likecoin-chain/v3/app"
 	"github.com/spf13/cobra"
 )
@@ -46,7 +47,7 @@ func serializeTx(txRes *types.TxResponse) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	sanitizedJSON := sanitizeJSON(txResJSON)
+	sanitizedJSON := utils.SanitizeJSON(txResJSON)
 	return sanitizedJSON, nil
 }
 
