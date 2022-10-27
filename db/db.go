@@ -42,6 +42,8 @@ const (
 
 var encodingConfig = app.MakeEncodingConfig()
 
+var AddressPrefixes = []string{"like", "cosmos"}
+
 func serializeTx(txRes *types.TxResponse) ([]byte, error) {
 	txResJSON, err := encodingConfig.Marshaler.MarshalJSON(txRes)
 	if err != nil {
