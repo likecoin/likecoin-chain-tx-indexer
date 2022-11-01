@@ -165,3 +165,21 @@ func handleNftCreators(c *gin.Context) {
 
 	c.JSON(200, res)
 }
+
+func handleNftUserStat(c *gin.Context) {
+	var form db.QueryUserStatRequest
+	if err := c.ShouldBindQuery(&form); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
+		return
+	}
+
+	conn := getConn(c)
+
+	res, err := db.GetUserStat(conn, form)
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, res)
+}

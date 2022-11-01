@@ -346,3 +346,65 @@ func parseAccountCollections(rows pgx.Rows) (accounts []accountCollection, err e
 	}
 	return
 }
+
+func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatResponse, err error) {
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	sql := `
+	SELECT c.class_id, COUNT(c.id)
+	FROM nft_class as c
+	JOIN nft AS n ON c.class_id = n.class_id
+	WHERE n.owner = $1
+	GROUP BY c.class_id
+	`
+	rows, err := conn.Query(ctx, sql, q.User)
+	if err != nil {
+		logger.L.Errorw("failed to query collected classes", "error", err, "q", q)
+		err = fmt.Errorf("query collected classes error: %w", err)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var c CollectedClass
+		if err = rows.Scan(&c.ClassId, &c.Count); err != nil {
+			err = fmt.Errorf("scan collected classes error: %w", err)
+			return
+		}
+		res.CollectedClasses = append(res.CollectedClasses, c)
+	}
+
+	sql = `
+	SELECT COUNT(DISTINCT(c.class_id))
+	FROM iscn AS i
+	JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+	WHERE i.owner = $1
+	`
+
+	row := conn.QueryRow(ctx, sql, q.User)
+
+	if err = row.Scan(&res.CreatedCount); err != nil {
+		err = fmt.Errorf("scan created count error: %w", err)
+		return
+	}
+
+	sql = `
+	SELECT COUNT(DISTINCT(n.owner))
+	FROM iscn AS i
+	JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+	JOIN nft AS n ON c.class_id = n.class_id
+		AND ($2::text[] IS NULL OR n.owner != ALL($2))
+	WHERE i.owner = $1
+	`
+
+	row = conn.QueryRow(ctx, sql, q.User, q.IgnoreList)
+
+	err = row.Scan(&res.CollectorCount)
+	if err != nil {
+		err = fmt.Errorf("scan collector count error: %w", err)
+		return
+	}
+
+	return
+}
