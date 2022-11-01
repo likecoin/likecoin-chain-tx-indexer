@@ -294,6 +294,22 @@ type collection struct {
 	Count        int    `json:"count"`
 }
 
+type QueryUserStatRequest struct {
+	User       string   `form:"user"`
+	IgnoreList []string `form:"ignore_list"`
+}
+
+type QueryUserStatResponse struct {
+	CollectedClasses []CollectedClass `json:"collected_classes"`
+	CreatedCount     int              `json:"created_count"`
+	CollectorCount   int              `json:"collector_count"`
+}
+
+type CollectedClass struct {
+	ClassId string `json:"class_id"`
+	Count   int    `json:"count"`
+}
+
 type QueryCountResponse struct {
 	Count uint64 `json:"count"`
 }
