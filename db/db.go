@@ -136,12 +136,12 @@ func GetLatestHeight(conn *pgxpool.Conn) (int64, error) {
 	}
 	defer rows.Close()
 	if !rows.Next() {
-		// No record in database, so max height = 0
 		return 0, nil
 	}
 	var height int64
 	err = rows.Scan(&height)
 	if err != nil {
+		// conversion failed, the `max` is NULL, i.e. no records
 		return 0, nil
 	}
 	return height, nil
