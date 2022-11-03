@@ -7,6 +7,7 @@ import (
 	"log"
 	"testing"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
@@ -44,16 +45,16 @@ func TestMain(m *testing.M) {
 	}
 	defer conn.Release()
 
-	err = InitDB(conn)
+	onProduction, err := checkTableExists(conn, "meta")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	originalHeight, err := GetLatestHeight(conn)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	if originalHeight == 0 {
-		err := setupTestDatabase(conn)
+	if !onProduction {
+		err := InitDB(conn)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		err = setupTestDatabase(conn)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -65,12 +66,25 @@ func TestMain(m *testing.M) {
 		}
 	}
 	m.Run()
-	if originalHeight == 0 {
+	if !onProduction {
 		err := cleanupTestDatabase(conn)
 		if err != nil {
 			log.Fatalln(err)
 		}
 	}
+}
+
+func checkTableExists(conn *pgxpool.Conn, tableName string) (bool, error) {
+	row := conn.QueryRow(context.Background(), "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = $1", tableName)
+	var exist int64
+	err := row.Scan(&exist)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func runEmbededSQLFile(conn *pgxpool.Conn, filename string) error {
