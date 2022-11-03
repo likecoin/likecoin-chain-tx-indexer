@@ -348,6 +348,10 @@ func parseAccountCollections(rows pgx.Rows) (accounts []accountCollection, err e
 }
 
 func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatResponse, err error) {
+	res = QueryUserStatResponse{
+		CollectedClasses: make([]CollectedClass, 0),
+	}
+
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
