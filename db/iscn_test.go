@@ -114,8 +114,9 @@ func TestIscnCombineQuery(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if (len(res.Records) > 0) != v.hasResult {
-				t.Fatalf("%d: There should be %t records, got %d.\n", i, v.hasResult, len(res.Records))
+			hasResult := (len(res.Records) > 0)
+			if hasResult != v.hasResult {
+				t.Fatalf("Test %d (%s): hasResult should be %t, got %d results instead.\n", i, v.name, v.hasResult, len(res.Records))
 			}
 
 		})
@@ -130,15 +131,17 @@ func TestIscnList(t *testing.T) {
 	defer conn.Release()
 
 	p := PageRequest{
-		Limit:   10,
+		Limit:   5,
 		Reverse: true,
 	}
 
 	res, err := QueryIscnList(conn, p)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	t.Log(len(res.Records))
+	if (len(res.Records)) != p.Limit {
+		t.Fatalf("QueryIscnList should return %d results, got %d.\n", p.Limit, len(res.Records))
+	}
 }
 
 func TestIscnQueryAll(t *testing.T) {
@@ -149,12 +152,12 @@ func TestIscnQueryAll(t *testing.T) {
 	defer conn.Release()
 
 	tables := []struct {
-		term   string
-		length int
+		term      string
+		hasResult bool
 	}{
 		{
-			term:   "0xNaN",
-			length: 5,
+			term:      "0xNaN",
+			hasResult: true,
 		},
 		{
 			term: `" OR "1"="`,
@@ -164,55 +167,56 @@ func TestIscnQueryAll(t *testing.T) {
 			term: "itdoesnotexists",
 		},
 		{
-			term:   "kin ko",
-			length: 5,
+			term:      "kin ko",
+			hasResult: true,
 		},
 		{
-			term:   "LikeCoin",
-			length: 5,
+			term:      "LikeCoin",
+			hasResult: true,
 		},
 		{
-			term:   "ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84",
-			length: 1,
+			term:      "ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84",
+			hasResult: true,
 		},
 		{
-			term:   "iscn://likecoin-chain/zGY8c7obhwx7qa4Ro763kr6lvBCZ4SIMagYRXRXYSnM/1",
-			length: 1,
+			term:      "iscn://likecoin-chain/vbLIsrIZVEkFRHEoFJX3LXPszH5oqzrMld32XrbxVgU/1",
+			hasResult: true,
 		},
 		{
-			term:   "iscn://likecoin-chain/zGY8c7obhwx7qa4Ro763kr6lvBCZ4SIMagYRXRXYSnM",
-			length: 1,
+			term:      "iscn://likecoin-chain/vbLIsrIZVEkFRHEoFJX3LXPszH5oqzrMld32XrbxVgU",
+			hasResult: true,
 		},
 		{
-			term:   "cosmos1cp3fcmk5ny2c22s0mxut2xefwrdur2t0clgna0",
-			length: 5,
+			term:      "cosmos1ykkpc0dnetfsya88f5nrdd7p57kplaw8sva6pj",
+			hasResult: true,
 		},
 		{
-			term:   "《明報》",
-			length: 5,
+			term:      "《明報》",
+			hasResult: true,
 		},
 		{
-			term:   "depub.space",
-			length: 5,
+			term:      "depub.space",
+			hasResult: true,
 		},
 		{
-			term:   "Apple Daily",
-			length: 100,
+			term:      "Apple Daily",
+			hasResult: true,
 		},
 	}
 
 	p := PageRequest{
 		Limit: 1,
 	}
-	for _, v := range tables {
+	for i, v := range tables {
 		t.Run(v.term, func(t *testing.T) {
 			t.Log(v.term)
 			res, err := QueryIscnSearch(conn, v.term, p)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if (len(res.Records) > 0) != (v.length > 0) {
-				t.Errorf("There should be %d records, got %d.", v.length, len(res.Records))
+			hasResult := (len(res.Records) > 0)
+			if hasResult != v.hasResult {
+				t.Fatalf("Test %d (%s): hasResult should be %t, got %d results instead.\n", i, v.term, v.hasResult, len(res.Records))
 			}
 		})
 	}
@@ -227,22 +231,31 @@ func TestIscnPagination(t *testing.T) {
 
 	table := map[PageRequest]uint64{
 		{
-			Key:   1300,
-			Limit: 10,
-		}: 1310,
+			Key:   2,
+			Limit: 3,
+		}: 5,
 		{
-			Key:     1300,
-			Limit:   10,
+			Key:     3,
+			Limit:   2,
 			Reverse: true,
-		}: 1290,
+		}: 1,
 	}
-	for p, a := range table {
+	for p, expectedNextKey := range table {
 		res, err := QueryIscnList(conn, p)
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
-		if res.Pagination.NextKey != a {
-			t.Error("pagination", p, "expect", a, "got", res.Pagination.NextKey)
+		if res.Pagination.Count != p.Limit {
+			t.Errorf("for pagination %##v, expect count = %d, got %d\n", p, p.Limit, res.Pagination.Count)
+		}
+		if len(res.Records) != res.Pagination.Count {
+			t.Errorf(
+				"for pagination %##v, expect len(res.Records) == res.Pagination.Count, got %d and %d\n",
+				p, len(res.Records), res.Pagination.Count,
+			)
+		}
+		if res.Pagination.NextKey != expectedNextKey {
+			t.Errorf("for pagination %##v, expect next key = %d, got %d\n", p, expectedNextKey, res.Pagination.NextKey)
 		}
 	}
 }

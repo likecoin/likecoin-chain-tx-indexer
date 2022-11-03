@@ -24,8 +24,6 @@ INSERT INTO iscn (
   'baguqeeraegl2ljh6wjgsycivrtphvrzmt3edf3rsnrm75eo3td2y4dp77c3a',to_timestamp(1643584591),
   '{"recordNotes":"","stakeholders":[{"entity":{"@id":"did:cosmos:18q3dzavq7c6njw92344rf8ejpyqxqwzvy7ef50","url":"https://like.co/joshkiu","name":"joshkiu","sameAs":["https://liker.land/joshkiu"],"identifier":[{"@type":"PropertyValue","value":"did:cosmos:18q3dzavq7c6njw92344rf8ejpyqxqwzvy7ef50","propertyID":"Cosmos Wallet"}],"description":"designer"},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"url":"http://www.kalita.us.com/products/waveseries/3269","name":"Kalita Hand Drip Coffee","@type":"Photo","version":1,"@context":"http://schema.org/","exifInfo":{"ISO":1250,"Make":"FUJIFILM","Size":"4000 x 6000 JPEG (9324 KB)","Flash":"Flash did not fire","Gamma":2.2,"Model":"X100F","Format":"image/jpeg","FNumber":5,"PrintIM":{"0":80,"1":114,"2":105,"3":110,"4":116,"5":73,"6":77,"7":0,"8":48,"9":50,"10":53,"11":48,"12":0,"13":0,"14":3,"15":0,"16":2,"17":0,"18":1,"19":0,"20":0,"21":0,"22":3,"23":0,"24":34,"25":0,"26":0,"27":0,"28":1,"29":1,"30":0,"31":0,"32":0,"33":0,"34":210,"35":23,"36":0,"37":0,"38":16,"39":39,"40":0,"41":0,"42":5,"43":8,"44":0,"45":0,"46":16,"47":39,"48":0,"49":0,"50":212,"51":5,"52":0,"53":0,"54":16,"55":39,"56":0,"57":0,"58":39,"59":12,"60":0,"61":0,"62":16,"63":39,"64":0,"65":0,"66":113,"67":24,"68":0,"69":0,"70":16,"71":39,"72":0,"73":0,"74":120,"75":2,"76":0,"77":0,"78":16,"79":39,"80":0,"81":0,"82":194,"83":0,"84":0,"85":0,"86":16,"87":39,"88":0,"89":0,"90":97,"91":2,"92":0,"93":0,"94":16,"95":39,"96":0,"97":0,"98":24,"99":29,"100":0,"101":0,"102":16,"103":39,"104":0,"105":0},"Software":"Digital Camera X100F Ver2.11","Copyright":"","SceneType":"Directly photographed","Sharpness":"Normal","ColorSpace":65535,"CreateDate":"2022-01-11T08:45:34.000Z","FileSource":"Digital Camera","ModifyDate":"2022-01-11T08:45:34.000Z","WhitePoint":[0.313,0.329],"ExifVersion":"2.3","FocalLength":23,"LightSource":"Unknown","Orientation":"Horizontal (normal)","XResolution":72,"YResolution":72,"ExposureMode":"Manual","ExposureTime":0.05,"MeteringMode":"Pattern","SerialNumber":"74N01152","WhiteBalance":"Auto","ApertureValue":4.6,"SensingMethod":"One-chip color area sensor","CustomRendered":"Normal","ExifImageWidth":6000,"ResolutionUnit":"inches","BrightnessValue":0.6,"ExifImageHeight":4000,"ExposureProgram":"Manual","FlashpixVersion":"1.0","SensitivityType":1,"DateTimeOriginal":"2022-01-11T08:45:34.000Z","MaxApertureValue":2,"SceneCaptureType":"Standard","YCbCrPositioning":2,"ShutterSpeedValue":4.33,"YCbCrCoefficients":[0.299,0.587,0.114],"ExposureCompensation":0,"SubjectDistanceRange":"Unknown","FocalPlaneXResolution":2564,"FocalPlaneYResolution":2564,"PrimaryChromaticities":[0.64,0.33,0.21,0.71,0.15,0.06],"CompressedBitsPerPixel":4.8,"ComponentsConfiguration":{"0":1,"1":2,"2":3,"3":0},"FocalPlaneResolutionUnit":"Centimeter"},"keywords":"coffee,photo,gear,handdrip","usageInfo":"Copyrighted","description":"Photo of Kalita HA 155 Dripper, Hario Cloud Sharing Pot 01, Acaia Pearl Scales and Oregonian Camper DELI HEXA POT"},"contentFingerprints":["hash://sha256/a3612b49670ed02567a47dc83c3bff74e9746b86cbacab95b5ba90ccf9e1df1c","ipfs://QmQTKptHHUJ8cQQfm42epks8Ty3wUPKYz8KhhvNT2z32tM","ar://VswRfsJxIJrqDxYcq7iPVi2-fmSNDiCMKEpUDpT8Wa8"]}'::jsonb
 ), (
-'iscn://likecoin-chain/Rc4eNUqS9JralMtFgHzU8oWWGvqIZSVbVqPED_PwPbc/1','iscn://likecoin-chain/Rc4eNUqS9JralMtFgHzU8oWWGvqIZSVbVqPED_PwPbc',1,'cosmos1ku4e49vfa4wez78crges4cml6he23f9tuwa8y8','LikeCoin - Depub ','LikeCoin - Depub Arweave community spotlight ','','{"LikeCoin","DePub"}'::text[],'{"hash://sha256/7132fbd7830ac52d93764438c2cce6743e7547cee21ba182b5d0e2e48eddbfde","ipfs://QmY9tEHDdodcM7mD27aH3DpvpuSnpqPnNSXysC63BPWotd","ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84"}'::text[],'baguqeeragzoaedqiw4xdjrvqmhzu2evh3z7jdo7ikz63gy6ehr4nkdxphbqq',to_timestamp(1636091966),'{"recordNotes":"","stakeholders":[{"entity":{"@id":"phoebe","url":"phoebe","name":"phoebe","sameAs":[],"identifier":[],"description":""},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"url":"","name":"LikeCoin - Depub ","@type":"Image","version":1,"@context":"http://schema.org/","exifInfo":{"Size":"undefined x undefined PNG (2539 KB)","Filter":"Adaptive","Format":"image/png","BitDepth":8,"ColorType":"Palette","Interlace":"Noninterlaced","ImageWidth":3795,"Compression":"Deflate/Inflate","ImageHeight":2134},"keywords":"LikeCoin,DePub","usageInfo":"","description":"LikeCoin - Depub Arweave community spotlight "},"contentFingerprints":["hash://sha256/7132fbd7830ac52d93764438c2cce6743e7547cee21ba182b5d0e2e48eddbfde","ipfs://QmY9tEHDdodcM7mD27aH3DpvpuSnpqPnNSXysC63BPWotd","ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84"]}'::jsonb
-), (
 'iscn://likecoin-chain/TdIgE75iy-_44ZFhKUHLKQ4PgwJ52vwuYtwA8R8UMJg/1','iscn://likecoin-chain/TdIgE75iy-_44ZFhKUHLKQ4PgwJ52vwuYtwA8R8UMJg',1,'like1w4hq98jtjg729ft4um63y7z4l9wdtgrlle0k85','depub.space-2022-06-28T17:48:40.894Z','Recommended good read.
 https://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m
 #civicliker','https://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m','{"superlike","civicliker"}'::text[],'{"https://depub.blog"}'::text[],'baguqeeras656fzlrpmma2aifcvi6de2a42z3ykmhkpz5rpqs33bsk6u4z5ea',to_timestamp(1656409723),'{"recordNotes":"A Message posted on depub.space","stakeholders":[{"entity":{"@id":"like1cqrfrkmh76ju0g79u4tclw5cfkxmp0hjwlv0ks","name":"igbeckbc"},"contributionType":"http://schema.org/author","rewardProportion":0.24375},{"entity":{"@id":"like1cqrfrkmh76ju0g79u4tclw5cfkxmp0hjwlv0ks","name":"igbeckbc"},"contributionType":"http://schema.org/author","rewardProportion":0.73125},{"entity":{"@id":"https://depub.space","name":"depub.space"},"contributionType":"http://schema.org/publisher","rewardProportion":0.025}],"contentMetadata":{"url":"https://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m","name":"depub.space-2022-06-28T17:48:40.894Z","@type":"Record","version":1,"@context":"http://schema.org/","keywords":"superlike,civicliker","usageInfo":"https://creativecommons.org/licenses/by/4.0","description":"Recommended good read.\nhttps://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m\n#civicliker"},"contentFingerprints":["https://depub.blog"]}'::jsonb
@@ -217,5 +215,87 @@ INSERT INTO iscn_stakeholders (
   iscn_pid, sid, sname, data
 ) VALUES (
   (SELECT id FROM result),'https://depub.SPACE','depub.SPACE','{"entity":{"@id":"https://depub.SPACE","name":"depub.SPACE"},"contributionType":"http://schema.org/publisher","rewardProportion":0.025}'::jsonb
+)
+;
+
+WITH result AS (
+  INSERT INTO iscn (
+    iscn_id,
+    iscn_id_prefix,
+    version,
+    owner,
+    name,
+    description,
+    url,
+    keywords,
+    fingerprints,
+    ipld,
+    timestamp,
+    data
+  ) VALUES (
+    'iscn://likecoin-chain/_D-2SVc9cmsoCCaXXYo5Kr2P4kfYI2a2j_0UcxA3zGw/1','iscn://likecoin-chain/_D-2SVc9cmsoCCaXXYo5Kr2P4kfYI2a2j_0UcxA3zGw',1,'cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc','A Message posted on depub.space','Test production','','{}'::text[],'{"https://depub.blog"}'::text[],'baguqeerakjn566t6giritxcek2ywxt6dxk3i4bfsa7r6eke2akcuuf24m5jq',to_timestamp(1642985328),'{"recordNotes":"A Message posted on depub.space","stakeholders":[{"entity":{"@id":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc","name":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc"},"contributionType":"http://schema.org/author","rewardProportion":0.9},{"entity":{"@id":"https://github.com/0xnan-dev","name":"0xNaN"},"contributionType":"http://schema.org/publisher","rewardProportion":0.1}],"contentMetadata":{"name":"A Message posted on depub.space","@type":"Article","author":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc","version":1,"@context":"http://schema.org/","keywords":"","usageInfo":"https://creativecommons.org/licenses/by/4.0","description":"Test production","datePublished":"2022-01-24","recordTimestamp":"2022-01-24T08:48:47.018Z"},"contentFingerprints":["https://depub.blog"]}'::jsonb
+  )
+  RETURNING id
+)
+INSERT INTO iscn_stakeholders (
+  iscn_pid, sid, sname, data
+) VALUES (
+  (SELECT id FROM result),'cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc','cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc','{"entity":{"@id":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc","name":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc"},"contributionType":"http://schema.org/author","rewardProportion":0.9}'::jsonb
+), (
+  (SELECT id FROM result),'https://github.com/0xnan-dev','0xNaN','{"entity":{"@id":"https://github.com/0xnan-dev","name":"0xNaN"},"contributionType":"http://schema.org/publisher","rewardProportion":0.1}'::jsonb
+)
+;
+
+WITH result AS (
+  INSERT INTO iscn (
+    iscn_id,
+    iscn_id_prefix,
+    version,
+    owner,
+    name,
+    description,
+    url,
+    keywords,
+    fingerprints,
+    ipld,
+    timestamp,
+    data
+  ) VALUES (
+    'iscn://likecoin-chain/TPtbTpMco5zNmhGCX2U3UCFe4d415eyrXTabYZGm9PE/1','iscn://likecoin-chain/TPtbTpMco5zNmhGCX2U3UCFe4d415eyrXTabYZGm9PE',1,'cosmos13f4glvg80zvfrrs7utft5p68pct4mcq7cgpf2p','','','','{"blockchain","DAO","decentralization","decentralizehk"}'::text[],'{"ipfs://QmUnGEozva55C9Z1MLpULh6UXrUDe4Yo3g1K4ZN6ZqzyEs"}'::text[],'baguqeerayhsd7mbhbauudoftlcjqejy2k6zl4xurku3z45sq3hg7ekics5ha',to_timestamp(1629318663),'{"recordNotes":"","stakeholders":[{"entity":{"id":"https://like.co/undefined","name":"kin ko"},"contributionType":"http://schema.org/author","rewardProportion":1},{"entity":{"id":"https://matters.news/","name":"Matters","description":"Matters is a decentralized, cryptocurrency driven content creation and discussion platform."},"contributionType":"http://schema.org/publisher","rewardProportion":1}],"contentMetadata":{"@type":"Article","title":"decentralize：無大台，有共識","version":1,"@context":"http://schema.org/","keywords":"blockchain,DAO,decentralization,decentralizehk","usageInfo":"ipfs://QmRvpQiiLA8ttSLAXEd5RArmXeG4qWEsKPmrB7KeiLSuE4"},"contentFingerprints":["ipfs://QmUnGEozva55C9Z1MLpULh6UXrUDe4Yo3g1K4ZN6ZqzyEs"]}'::jsonb
+  )
+  RETURNING id
+)
+INSERT INTO iscn_stakeholders (
+  iscn_pid, sid, sname, data
+) VALUES (
+  (SELECT id FROM result),'https://like.co/undefined','kin ko','{"entity":{"id":"https://like.co/undefined","name":"kin ko"},"contributionType":"http://schema.org/author","rewardProportion":1}'::jsonb
+), (
+  (SELECT id FROM result),'https://matters.news/','Matters','{"entity":{"id":"https://matters.news/","name":"Matters","description":"Matters is a decentralized, cryptocurrency driven content creation and discussion platform."},"contributionType":"http://schema.org/publisher","rewardProportion":1}'::jsonb
+)
+;
+
+WITH result AS (
+  INSERT INTO iscn (
+    iscn_id,
+    iscn_id_prefix,
+    version,
+    owner,
+    name,
+    description,
+    url,
+    keywords,
+    fingerprints,
+    ipld,
+    timestamp,
+    data
+  ) VALUES (
+    'iscn://likecoin-chain/Rc4eNUqS9JralMtFgHzU8oWWGvqIZSVbVqPED_PwPbc/1','iscn://likecoin-chain/Rc4eNUqS9JralMtFgHzU8oWWGvqIZSVbVqPED_PwPbc',1,'cosmos1ku4e49vfa4wez78crges4cml6he23f9tuwa8y8','LikeCoin - Depub ','LikeCoin - Depub Arweave community spotlight ','','{"LikeCoin","DePub"}'::text[],'{"hash://sha256/7132fbd7830ac52d93764438c2cce6743e7547cee21ba182b5d0e2e48eddbfde","ipfs://QmY9tEHDdodcM7mD27aH3DpvpuSnpqPnNSXysC63BPWotd","ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84"}'::text[],'baguqeeragzoaedqiw4xdjrvqmhzu2evh3z7jdo7ikz63gy6ehr4nkdxphbqq',to_timestamp(1636091966),'{"recordNotes":"","stakeholders":[{"entity":{"@id":"phoebe","url":"phoebe","name":"phoebe","sameAs":[],"identifier":[],"description":""},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"url":"","name":"LikeCoin - Depub ","@type":"Image","version":1,"@context":"http://schema.org/","exifInfo":{"Size":"undefined x undefined PNG (2539 KB)","Filter":"Adaptive","Format":"image/png","BitDepth":8,"ColorType":"Palette","Interlace":"Noninterlaced","ImageWidth":3795,"Compression":"Deflate/Inflate","ImageHeight":2134},"keywords":"LikeCoin,DePub","usageInfo":"","description":"LikeCoin - Depub Arweave community spotlight "},"contentFingerprints":["hash://sha256/7132fbd7830ac52d93764438c2cce6743e7547cee21ba182b5d0e2e48eddbfde","ipfs://QmY9tEHDdodcM7mD27aH3DpvpuSnpqPnNSXysC63BPWotd","ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84"]}'::jsonb
+  )
+  RETURNING id
+)
+INSERT INTO iscn_stakeholders (
+  iscn_pid, sid, sname, data
+) VALUES (
+  (SELECT id FROM result),'phoebe','phoebe','{"entity":{"@id":"phoebe","url":"phoebe","name":"phoebe","sameAs":[],"identifier":[],"description":""},"contributionType":"http://schema.org/author","rewardProportion":1}'::jsonb
 )
 ;
