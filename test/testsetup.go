@@ -18,13 +18,12 @@ import (
 )
 
 var Pool *pgxpool.Pool
-var Conn *pgxpool.Conn
 
 //go:embed test_data.sql
 //go:embed test_cleanup.sql
 var EmbedFS embed.FS
 
-func SetupTest(m *testing.M) {
+func SetupDbAndRunTest(m *testing.M, preRun func(pool *pgxpool.Pool)) {
 	logger.SetupLogger(zapcore.DebugLevel, []string{"stdout"}, "console")
 	var err error
 	Pool, err = db.NewConnPool(
@@ -40,22 +39,22 @@ func SetupTest(m *testing.M) {
 		log.Fatalln(err)
 	}
 	defer Pool.Close()
-	Conn, err = db.AcquireFromPool(Pool)
+	conn, err := db.AcquireFromPool(Pool)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	defer Conn.Release()
+	defer conn.Release()
 
-	onProduction, err := checkTableExists(Conn, "meta")
+	onProduction, err := checkTableExists(conn, "meta")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	if !onProduction {
-		err := db.InitDB(Conn)
+		err := db.InitDB(conn)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		err = setupTestDatabase(Conn)
+		err = setupTestDatabase(conn)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -66,9 +65,12 @@ func SetupTest(m *testing.M) {
 			log.Fatalln("Database is not empty testing database, not testing on it unless TEST_ON_PRODUCTION=1 is set.")
 		}
 	}
+	if preRun != nil {
+		preRun(Pool)
+	}
 	m.Run()
 	if !onProduction {
-		err := cleanupTestDatabase(Conn)
+		err = cleanupTestDatabase(conn)
 		if err != nil {
 			log.Fatalln(err)
 		}

@@ -7,5 +7,5 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	SetupTest(m)
+	SetupDbAndRunTest(m, nil)
 }

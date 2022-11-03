@@ -2,46 +2,22 @@ package rest
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"github.com/likecoin/likecoin-chain-tx-indexer/db"
-	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
-	. "github.com/likecoin/likecoin-chain-tx-indexer/utils"
-	"go.uber.org/zap/zapcore"
+	"github.com/jackc/pgx/v4/pgxpool"
+
+	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
 
 var router *gin.Engine
 
 func TestMain(m *testing.M) {
-	godotenv.Load("../.env")
-	logger.SetupLogger(zapcore.DebugLevel, []string{"stdout"}, "console")
-	pool, err := db.NewConnPool(
-		Env("DB_NAME", "postgres"),
-		Env("DB_HOST", "localhost"),
-		Env("DB_PORT", "5432"),
-		Env("DB_USER", "postgres"),
-		Env("DB_PASS", "password"),
-		32,
-		4,
-	)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer pool.Close()
-	conn, err := db.AcquireFromPool(pool)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer conn.Release()
-
-	db.InitDB(conn)
-	router = getRouter(pool)
-	m.Run()
+	SetupDbAndRunTest(m, func(pool *pgxpool.Pool) {
+		router = getRouter(pool)
+	})
 }
 
 func request(req *http.Request) (*http.Response, string) {
