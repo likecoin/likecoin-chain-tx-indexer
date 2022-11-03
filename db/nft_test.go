@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
 const KIN = "like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6"
@@ -81,8 +83,18 @@ func TestQueryNftByOwner(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(res.Nfts) == 0 {
-		t.Error("Empty response")
+		t.Error("Empty response on normal address")
 	}
+
+	q.Owner = utils.ConvertAddressPrefixes(KIN, AddressPrefixes)[1]
+	res, err = GetNfts(conn, q, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Nfts) == 0 {
+		t.Error("Empty response on converted address")
+	}
+
 }
 
 func TestOwnerByClassId(t *testing.T) {
@@ -234,7 +246,6 @@ func TestQueryNftRanking(t *testing.T) {
 
 	for _, q := range table {
 		t.Run(q.name, func(t *testing.T) {
-			// q.IgnoreList = []string{"like1yney2cqn5qdrlc50yr5l53898ufdhxafqz9gxp"}
 			res, err := GetClassesRanking(conn, q.QueryRankingRequest, p)
 			if err != nil {
 				t.Error(err)
@@ -245,7 +256,6 @@ func TestQueryNftRanking(t *testing.T) {
 				t.Error("No response", string(input), string(output))
 				return
 			}
-			// t.Log(string(input), string(output))
 		})
 	}
 }

@@ -1,17 +1,5 @@
-INSERT INTO iscn (
-  iscn_id,
-  iscn_id_prefix,
-  version,
-  owner,
-  name,
-  description,
-  url,
-  keywords,
-  fingerprints,
-  ipld,
-  timestamp,
-  data
-) VALUES (
+INSERT INTO iscn VALUES (
+  DEFAULT,
   'iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1',
   'iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY',
   1,
@@ -24,27 +12,15 @@ INSERT INTO iscn (
   'baguqeeraegl2ljh6wjgsycivrtphvrzmt3edf3rsnrm75eo3td2y4dp77c3a',to_timestamp(1643584591),
   '{"recordNotes":"","stakeholders":[{"entity":{"@id":"did:cosmos:18q3dzavq7c6njw92344rf8ejpyqxqwzvy7ef50","url":"https://like.co/joshkiu","name":"joshkiu","sameAs":["https://liker.land/joshkiu"],"identifier":[{"@type":"PropertyValue","value":"did:cosmos:18q3dzavq7c6njw92344rf8ejpyqxqwzvy7ef50","propertyID":"Cosmos Wallet"}],"description":"designer"},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"url":"http://www.kalita.us.com/products/waveseries/3269","name":"Kalita Hand Drip Coffee","@type":"Photo","version":1,"@context":"http://schema.org/","exifInfo":{"ISO":1250,"Make":"FUJIFILM","Size":"4000 x 6000 JPEG (9324 KB)","Flash":"Flash did not fire","Gamma":2.2,"Model":"X100F","Format":"image/jpeg","FNumber":5,"PrintIM":{"0":80,"1":114,"2":105,"3":110,"4":116,"5":73,"6":77,"7":0,"8":48,"9":50,"10":53,"11":48,"12":0,"13":0,"14":3,"15":0,"16":2,"17":0,"18":1,"19":0,"20":0,"21":0,"22":3,"23":0,"24":34,"25":0,"26":0,"27":0,"28":1,"29":1,"30":0,"31":0,"32":0,"33":0,"34":210,"35":23,"36":0,"37":0,"38":16,"39":39,"40":0,"41":0,"42":5,"43":8,"44":0,"45":0,"46":16,"47":39,"48":0,"49":0,"50":212,"51":5,"52":0,"53":0,"54":16,"55":39,"56":0,"57":0,"58":39,"59":12,"60":0,"61":0,"62":16,"63":39,"64":0,"65":0,"66":113,"67":24,"68":0,"69":0,"70":16,"71":39,"72":0,"73":0,"74":120,"75":2,"76":0,"77":0,"78":16,"79":39,"80":0,"81":0,"82":194,"83":0,"84":0,"85":0,"86":16,"87":39,"88":0,"89":0,"90":97,"91":2,"92":0,"93":0,"94":16,"95":39,"96":0,"97":0,"98":24,"99":29,"100":0,"101":0,"102":16,"103":39,"104":0,"105":0},"Software":"Digital Camera X100F Ver2.11","Copyright":"","SceneType":"Directly photographed","Sharpness":"Normal","ColorSpace":65535,"CreateDate":"2022-01-11T08:45:34.000Z","FileSource":"Digital Camera","ModifyDate":"2022-01-11T08:45:34.000Z","WhitePoint":[0.313,0.329],"ExifVersion":"2.3","FocalLength":23,"LightSource":"Unknown","Orientation":"Horizontal (normal)","XResolution":72,"YResolution":72,"ExposureMode":"Manual","ExposureTime":0.05,"MeteringMode":"Pattern","SerialNumber":"74N01152","WhiteBalance":"Auto","ApertureValue":4.6,"SensingMethod":"One-chip color area sensor","CustomRendered":"Normal","ExifImageWidth":6000,"ResolutionUnit":"inches","BrightnessValue":0.6,"ExifImageHeight":4000,"ExposureProgram":"Manual","FlashpixVersion":"1.0","SensitivityType":1,"DateTimeOriginal":"2022-01-11T08:45:34.000Z","MaxApertureValue":2,"SceneCaptureType":"Standard","YCbCrPositioning":2,"ShutterSpeedValue":4.33,"YCbCrCoefficients":[0.299,0.587,0.114],"ExposureCompensation":0,"SubjectDistanceRange":"Unknown","FocalPlaneXResolution":2564,"FocalPlaneYResolution":2564,"PrimaryChromaticities":[0.64,0.33,0.21,0.71,0.15,0.06],"CompressedBitsPerPixel":4.8,"ComponentsConfiguration":{"0":1,"1":2,"2":3,"3":0},"FocalPlaneResolutionUnit":"Centimeter"},"keywords":"coffee,photo,gear,handdrip","usageInfo":"Copyrighted","description":"Photo of Kalita HA 155 Dripper, Hario Cloud Sharing Pot 01, Acaia Pearl Scales and Oregonian Camper DELI HEXA POT"},"contentFingerprints":["hash://sha256/a3612b49670ed02567a47dc83c3bff74e9746b86cbacab95b5ba90ccf9e1df1c","ipfs://QmQTKptHHUJ8cQQfm42epks8Ty3wUPKYz8KhhvNT2z32tM","ar://VswRfsJxIJrqDxYcq7iPVi2-fmSNDiCMKEpUDpT8Wa8"]}'::jsonb
 ), (
-'iscn://likecoin-chain/TdIgE75iy-_44ZFhKUHLKQ4PgwJ52vwuYtwA8R8UMJg/1','iscn://likecoin-chain/TdIgE75iy-_44ZFhKUHLKQ4PgwJ52vwuYtwA8R8UMJg',1,'like1w4hq98jtjg729ft4um63y7z4l9wdtgrlle0k85','depub.space-2022-06-28T17:48:40.894Z','Recommended good read.
-https://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m
-#civicliker','https://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m','{"superlike","civicliker"}'::text[],'{"https://depub.blog"}'::text[],'baguqeeras656fzlrpmma2aifcvi6de2a42z3ykmhkpz5rpqs33bsk6u4z5ea',to_timestamp(1656409723),'{"recordNotes":"A Message posted on depub.space","stakeholders":[{"entity":{"@id":"like1cqrfrkmh76ju0g79u4tclw5cfkxmp0hjwlv0ks","name":"igbeckbc"},"contributionType":"http://schema.org/author","rewardProportion":0.24375},{"entity":{"@id":"like1cqrfrkmh76ju0g79u4tclw5cfkxmp0hjwlv0ks","name":"igbeckbc"},"contributionType":"http://schema.org/author","rewardProportion":0.73125},{"entity":{"@id":"https://depub.space","name":"depub.space"},"contributionType":"http://schema.org/publisher","rewardProportion":0.025}],"contentMetadata":{"url":"https://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m","name":"depub.space-2022-06-28T17:48:40.894Z","@type":"Record","version":1,"@context":"http://schema.org/","keywords":"superlike,civicliker","usageInfo":"https://creativecommons.org/licenses/by/4.0","description":"Recommended good read.\nhttps://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m\n#civicliker"},"contentFingerprints":["https://depub.blog"]}'::jsonb
+  DEFAULT,'iscn://likecoin-chain/TdIgE75iy-_44ZFhKUHLKQ4PgwJ52vwuYtwA8R8UMJg/1','iscn://likecoin-chain/TdIgE75iy-_44ZFhKUHLKQ4PgwJ52vwuYtwA8R8UMJg',1,'like1w4hq98jtjg729ft4um63y7z4l9wdtgrlle0k85','depub.space-2022-06-28T17:48:40.894Z','Recommended good read.
+  https://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m
+  #civicliker','https://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m','{"superlike","civicliker"}'::text[],'{"https://depub.blog"}'::text[],'baguqeeras656fzlrpmma2aifcvi6de2a42z3ykmhkpz5rpqs33bsk6u4z5ea',to_timestamp(1656409723),'{"recordNotes":"A Message posted on depub.space","stakeholders":[{"entity":{"@id":"like1cqrfrkmh76ju0g79u4tclw5cfkxmp0hjwlv0ks","name":"igbeckbc"},"contributionType":"http://schema.org/author","rewardProportion":0.24375},{"entity":{"@id":"like1cqrfrkmh76ju0g79u4tclw5cfkxmp0hjwlv0ks","name":"igbeckbc"},"contributionType":"http://schema.org/author","rewardProportion":0.73125},{"entity":{"@id":"https://depub.space","name":"depub.space"},"contributionType":"http://schema.org/publisher","rewardProportion":0.025}],"contentMetadata":{"url":"https://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m","name":"depub.space-2022-06-28T17:48:40.894Z","@type":"Record","version":1,"@context":"http://schema.org/","keywords":"superlike,civicliker","usageInfo":"https://creativecommons.org/licenses/by/4.0","description":"Recommended good read.\nhttps://matters.news/@cicoblluff/%E7%94%9F%E6%B4%BB%E6%91%98%E8%AA%9E-bafyreicm6tfzcjfeej45uzhpnowlfvfq6wbyipww4eb4x7dghkieig5z3m\n#civicliker"},"contentFingerprints":["https://depub.blog"]}'::jsonb
 )
 ;
 
 WITH result AS (
-  INSERT INTO iscn (
-    iscn_id,
-    iscn_id_prefix,
-    version,
-    owner,
-    name,
-    description,
-    url,
-    keywords,
-    fingerprints,
-    ipld,
-    timestamp,
-    data
-  ) VALUES (
+  INSERT INTO iscn VALUES (
+    DEFAULT,
     'iscn://likecoin-chain/mSltSmB0ZXl6L_NFP_PssMGgvCF7EoK9riDldvSpt3w/1',
     'iscn://likecoin-chain/mSltSmB0ZXl6L_NFP_PssMGgvCF7EoK9riDldvSpt3w',
     1,
@@ -53,9 +29,7 @@ WITH result AS (
   )
   RETURNING id
 )
-INSERT INTO iscn_stakeholders (
-  iscn_pid, sid, sname, data
-) VALUES (
+INSERT INTO iscn_stakeholders VALUES (
   (SELECT id FROM result), 'did:cosmos:1w6es6du93xmhms60gwwtczr2p2h4cdm8sz26vj','kin','{"entity":{"@id":"did:cosmos:1w6es6du93xmhms60gwwtczr2p2h4cdm8sz26vj","name":"kin","description":""},"contributionType":"http://schema.org/author","rewardProportion":1}'::jsonb
 )
 ;
@@ -79,167 +53,81 @@ WITH result AS (
   )
   RETURNING id
 )
-INSERT INTO iscn_stakeholders (
-  iscn_pid, sid, sname, data
-) VALUES (
+INSERT INTO iscn_stakeholders VALUES (
   (SELECT id FROM result),'John Perry Barlow','John Perry Barlow','{"entity":{"id":"John Perry Barlow","name":"John Perry Barlow"},"contributionType":"http://schema.org/author","rewardProportion":1}'::jsonb
 )
 ;
 
 WITH result AS (
-  INSERT INTO iscn (
-    iscn_id,
-    iscn_id_prefix,
-    version,
-    owner,
-    name,
-    description,
-    url,
-    keywords,
-    fingerprints,
-    ipld,
-    timestamp,
-    data
-  ) VALUES (
+  INSERT INTO iscn VALUES (
+    DEFAULT,
     'iscn://likecoin-chain/meXUlNb4ToJhBYfIs0EOl-kzUsu8ApHrd3nH9XUv1nc/1','iscn://likecoin-chain/meXUlNb4ToJhBYfIs0EOl-kzUsu8ApHrd3nH9XUv1nc',1,'cosmos14vm90y7ve82uvuy2a3vxpcgt6q0epk57dy82us','農場餐廳創辦人　上街賣《哈利波特》
     破產富豪做小販重生','','https://ipfs.io/ipfs/Qmdig4NtBTbUiw9KRri83Warmrp4f5PFFFZMoQUwqXuNbZ/20020101/DU25KBYMTYA35VQ65AZIN5PLC4/index.html','{}'::text[],'{"ipfs://QmdMxGDgze4SCH46spSPRNHQTEJhHbnuHMcCaFFCrs8jpS"}'::text[],'baguqeeraaagaqb6bgvtdjetlgpxm5q4v7nxfbxutbk75zikcryzrhlqywz3a',to_timestamp(1631165580),$${"recordNotes":"","stakeholders":[{"entity":{"id":"Apple Daily","name":"Apple Daily"},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"url":"https://ipfs.io/ipfs/Qmdig4NtBTbUiw9KRri83Warmrp4f5PFFFZMoQUwqXuNbZ/20020101/DU25KBYMTYA35VQ65AZIN5PLC4/index.html","name":"農場餐廳創辦人　上街賣《哈利波特》\r\n破產富豪做小販重生","text":"","@type":"Article","version":1,"@context":"http://schema.org/","headline":"農場餐廳創辦人　上街賣《哈利波特》\r\n破產富豪做小販重生","publisher":"Next Digital Ltd","datePublished":"20020101"},"contentFingerprints":["ipfs://QmdMxGDgze4SCH46spSPRNHQTEJhHbnuHMcCaFFCrs8jpS"]}$$::jsonb
   )
   RETURNING id
 )
-INSERT INTO iscn_stakeholders (
-  iscn_pid, sid, sname, data
-) VALUES (
+INSERT INTO iscn_stakeholders VALUES (
   (SELECT id FROM result),'Apple Daily','Apple Daily','{"entity":{"id":"Apple Daily","name":"Apple Daily"},"contributionType":"http://schema.org/author","rewardProportion":1}'::jsonb
 )
 ;
 
 WITH result AS (
-  INSERT INTO iscn (
-    iscn_id,
-    iscn_id_prefix,
-    version,
-    owner,
-    name,
-    description,
-    url,
-    keywords,
-    fingerprints,
-    ipld,
-    timestamp,
-    data
-  ) VALUES (
+  INSERT INTO iscn VALUES (
+    DEFAULT,
     'iscn://likecoin-chain/ECilYgj4flDbco6-oPjDwMwMEDpEN3Ruy9oFm9d7-Ks/1','iscn://likecoin-chain/ECilYgj4flDbco6-oPjDwMwMEDpEN3Ruy9oFm9d7-Ks',1,'cosmos14vm90y7ve82uvuy2a3vxpcgt6q0epk57dy82us','文化中心小騷亂　警驅散人群
     歡呼2003來臨','','https://ipfs.io/ipfs/Qmdig4NtBTbUiw9KRri83Warmrp4f5PFFFZMoQUwqXuNbZ/20030101/7R7DAMREVAVCRX6FPN2KWMIRNU/index.html','{}'::text[],'{}'::text[],'baguqeerayrmgz7rhirgdckttpcvhuiwwfrl7nizi67t2jdm5ctrtq3di2oeq',to_timestamp(1632369661),'{"recordNotes":"","stakeholders":[{"entity":{"id":"Next Digital Ltd","name":"Next Digital Ltd"},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"url":"https://ipfs.io/ipfs/Qmdig4NtBTbUiw9KRri83Warmrp4f5PFFFZMoQUwqXuNbZ/20030101/7R7DAMREVAVCRX6FPN2KWMIRNU/index.html","name":"文化中心小騷亂　警驅散人群\n歡呼2003來臨","text":"","@type":"CreativeWork","author":"Next Digital Ltd","version":1,"@context":"http://schema.org/","headline":"文化中心小騷亂　警驅散人群\n歡呼2003來臨","datePublished":"20030101"},"contentFingerprints":[]}'::jsonb
   )
   RETURNING id
 )
-INSERT INTO iscn_stakeholders (
-  iscn_pid, sid, sname, data
-) VALUES (
+INSERT INTO iscn_stakeholders VALUES (
   (SELECT id FROM result),'Next Digital Ltd','Next Digital Ltd','{"entity":{"id":"Next Digital Ltd","name":"Next Digital Ltd"},"contributionType":"http://schema.org/author","rewardProportion":1}'::jsonb
 )
 ;
 
 WITH result AS (
-  INSERT INTO iscn (
-    iscn_id,
-    iscn_id_prefix,
-    version,
-    owner,
-    name,
-    description,
-    url,
-    keywords,
-    fingerprints,
-    ipld,
-    timestamp,
-    data
-  ) VALUES (
+  INSERT INTO iscn VALUES (
+    DEFAULT,
     'iscn://likecoin-chain/vbLIsrIZVEkFRHEoFJX3LXPszH5oqzrMld32XrbxVgU/1','iscn://likecoin-chain/vbLIsrIZVEkFRHEoFJX3LXPszH5oqzrMld32XrbxVgU',1,'cosmos1ykkpc0dnetfsya88f5nrdd7p57kplaw8sva6pj','三十而立：明知山有虎，仍在虎山中：專訪年輕政治學人關仲然、鄧逸軒','《明報》星期日副刊 2022-01-16','https://news.mingpao.com/pns/%e5%89%af%e5%88%8a/article/20220116/s00005/1642269620820/%e4%b8%89%e5%8d%81%e8%80%8c%e7%ab%8b-%e6%98%8e%e7%9f%a5%e5%b1%b1%e6%9c%89%e8%99%8e-%e4%bb%8d%e5%9c%a8%e8%99%8e%e5%b1%b1%e4%b8%ad-%e5%b0%88%e8%a8%aa%e5%b9%b4%e8%bc%95%e6%94%bf%e6%b2%bb%e5%ad%b8%e4%ba%ba%e9%97%9c%e4%bb%b2%e7%84%b6-%e9%84%a7%e9%80%b8%e8%bb%92','{"《明報》","香港","政治","學術"}'::text[],'{"hash://sha256/4589b5c300dc6d9b81826653096896c339146261b5b93eae3feb44eef772b47e","ipfs://QmYDbPc2PpUGYKzg9Vkju7zqe5DNtS3mCZLqFJ4HM2PDmc","ar://ITbaJddf8CZabuVv6YZEx0qeBfMwBVTopQxPZlK6-bs"}'::text[],'baguqeeraxyqj3easmfg3b7sw7njtf7r5cd4iqf3qmajrxq6qde46b2a67x7q',to_timestamp(1642296285),'{"recordNotes":"","stakeholders":[{"entity":{"@id":"https://news.mingpao.com/pns/%e5%89%af%e5%88%8a/article/20220116/s00005/1642269620820/%e4%b8%89%e5%8d%81%e8%80%8c%e7%ab%8b-%e6%98%8e%e7%9f%a5%e5%b1%b1%e6%9c%89%e8%99%8e-%e4%bb%8d%e5%9c%a8%e8%99%8e%e5%b1%b1%e4%b8%ad-%e5%b0%88%e8%a8%aa%e5%b9%b4%e8%bc%95%e6%94%bf%e6%b2%bb%e5%ad%b8%e4%ba%ba%e9%97%9c%e4%bb%b2%e7%84%b6-%e9%84%a7%e9%80%b8%e8%bb%92","url":"https://news.mingpao.com/pns/%e5%89%af%e5%88%8a/article/20220116/s00005/1642269620820/%e4%b8%89%e5%8d%81%e8%80%8c%e7%ab%8b-%e6%98%8e%e7%9f%a5%e5%b1%b1%e6%9c%89%e8%99%8e-%e4%bb%8d%e5%9c%a8%e8%99%8e%e5%b1%b1%e4%b8%ad-%e5%b0%88%e8%a8%aa%e5%b9%b4%e8%bc%95%e6%94%bf%e6%b2%bb%e5%ad%b8%e4%ba%ba%e9%97%9c%e4%bb%b2%e7%84%b6-%e9%84%a7%e9%80%b8%e8%bb%92","name":"《明報》","sameAs":["https://news.mingpao.com/pns/%e5%89%af%e5%88%8a/article/20220116/s00005/1642269620820/%e4%b8%89%e5%8d%81%e8%80%8c%e7%ab%8b-%e6%98%8e%e7%9f%a5%e5%b1%b1%e6%9c%89%e8%99%8e-%e4%bb%8d%e5%9c%a8%e8%99%8e%e5%b1%b1%e4%b8%ad-%e5%b0%88%e8%a8%aa%e5%b9%b4%e8%bc%95%e6%94%bf%e6%b2%bb%e5%ad%b8%e4%ba%ba%e9%97%9c%e4%bb%b2%e7%84%b6-%e9%84%a7%e9%80%b8%e8%bb%92"],"identifier":[],"description":"《明報》星期日副刊 2022-01-16"},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"url":"https://news.mingpao.com/pns/%e5%89%af%e5%88%8a/article/20220116/s00005/1642269620820/%e4%b8%89%e5%8d%81%e8%80%8c%e7%ab%8b-%e6%98%8e%e7%9f%a5%e5%b1%b1%e6%9c%89%e8%99%8e-%e4%bb%8d%e5%9c%a8%e8%99%8e%e5%b1%b1%e4%b8%ad-%e5%b0%88%e8%a8%aa%e5%b9%b4%e8%bc%95%e6%94%bf%e6%b2%bb%e5%ad%b8%e4%ba%ba%e9%97%9c%e4%bb%b2%e7%84%b6-%e9%84%a7%e9%80%b8%e8%bb%92","name":"三十而立：明知山有虎，仍在虎山中：專訪年輕政治學人關仲然、鄧逸軒","@type":"CreativeWork","version":1,"@context":"http://schema.org/","exifInfo":{"Size":"98 KB","Format":"text/html"},"keywords":"《明報》,香港,政治,學術","usageInfo":"","description":"《明報》星期日副刊 2022-01-16"},"contentFingerprints":["hash://sha256/4589b5c300dc6d9b81826653096896c339146261b5b93eae3feb44eef772b47e","ipfs://QmYDbPc2PpUGYKzg9Vkju7zqe5DNtS3mCZLqFJ4HM2PDmc","ar://ITbaJddf8CZabuVv6YZEx0qeBfMwBVTopQxPZlK6-bs"]}'::jsonb
   )
   RETURNING id
 )
-INSERT INTO iscn_stakeholders (
-  iscn_pid, sid, sname, data
-) VALUES (
+INSERT INTO iscn_stakeholders VALUES (
   (SELECT id FROM result),'https://news.mingpao.com/pns/%e5%89%af%e5%88%8a/article/20220116/s00005/1642269620820/%e4%b8%89%e5%8d%81%e8%80%8c%e7%ab%8b-%e6%98%8e%e7%9f%a5%e5%b1%b1%e6%9c%89%e8%99%8e-%e4%bb%8d%e5%9c%a8%e8%99%8e%e5%b1%b1%e4%b8%ad-%e5%b0%88%e8%a8%aa%e5%b9%b4%e8%bc%95%e6%94%bf%e6%b2%bb%e5%ad%b8%e4%ba%ba%e9%97%9c%e4%bb%b2%e7%84%b6-%e9%84%a7%e9%80%b8%e8%bb%92','《明報》','{"entity":{"@id":"https://news.mingpao.com/pns/%e5%89%af%e5%88%8a/article/20220116/s00005/1642269620820/%e4%b8%89%e5%8d%81%e8%80%8c%e7%ab%8b-%e6%98%8e%e7%9f%a5%e5%b1%b1%e6%9c%89%e8%99%8e-%e4%bb%8d%e5%9c%a8%e8%99%8e%e5%b1%b1%e4%b8%ad-%e5%b0%88%e8%a8%aa%e5%b9%b4%e8%bc%95%e6%94%bf%e6%b2%bb%e5%ad%b8%e4%ba%ba%e9%97%9c%e4%bb%b2%e7%84%b6-%e9%84%a7%e9%80%b8%e8%bb%92","url":"https://news.mingpao.com/pns/%e5%89%af%e5%88%8a/article/20220116/s00005/1642269620820/%e4%b8%89%e5%8d%81%e8%80%8c%e7%ab%8b-%e6%98%8e%e7%9f%a5%e5%b1%b1%e6%9c%89%e8%99%8e-%e4%bb%8d%e5%9c%a8%e8%99%8e%e5%b1%b1%e4%b8%ad-%e5%b0%88%e8%a8%aa%e5%b9%b4%e8%bc%95%e6%94%bf%e6%b2%bb%e5%ad%b8%e4%ba%ba%e9%97%9c%e4%bb%b2%e7%84%b6-%e9%84%a7%e9%80%b8%e8%bb%92","name":"《明報》","sameAs":["https://news.mingpao.com/pns/%e5%89%af%e5%88%8a/article/20220116/s00005/1642269620820/%e4%b8%89%e5%8d%81%e8%80%8c%e7%ab%8b-%e6%98%8e%e7%9f%a5%e5%b1%b1%e6%9c%89%e8%99%8e-%e4%bb%8d%e5%9c%a8%e8%99%8e%e5%b1%b1%e4%b8%ad-%e5%b0%88%e8%a8%aa%e5%b9%b4%e8%bc%95%e6%94%bf%e6%b2%bb%e5%ad%b8%e4%ba%ba%e9%97%9c%e4%bb%b2%e7%84%b6-%e9%84%a7%e9%80%b8%e8%bb%92"],"identifier":[],"description":"《明報》星期日副刊 2022-01-16"},"contributionType":"http://schema.org/author","rewardProportion":1}'::jsonb
 )
 ;
 
 WITH result AS (
-  INSERT INTO iscn (
-    iscn_id,
-    iscn_id_prefix,
-    version,
-    owner,
-    name,
-    description,
-    url,
-    keywords,
-    fingerprints,
-    ipld,
-    timestamp,
-    data
-  ) VALUES (
+  INSERT INTO iscn VALUES (
+    DEFAULT,
     'iscn://likecoin-chain/GoFJfTkaqWxBFVULtQ8QJYYI30_Oi6UOTHhlNMF9fX4/1','iscn://likecoin-chain/GoFJfTkaqWxBFVULtQ8QJYYI30_Oi6UOTHhlNMF9fX4',1,'like1q2wa8ah2ktrs4n2fyexztkfwnszlju6scd2d6p','depub.space-2022-05-30T01:30:07.103Z','Test','','{}'::text[],'{"https://depub.blog","hash://sha256/532eaabd9574880dbf76b9b8cc00832c20a6ec113d682299550d7a6e0f345e25"}'::text[],'baguqeeray4u3yjfctocqbfjc4aj55qbvyilka6ldsgxipen4aszrcsfqdopa',to_timestamp(1653845428),'{"recordNotes":"A Message posted on depub.space","stakeholders":[{"entity":{"@id":"like1q2wa8ah2ktrs4n2fyexztkfwnszlju6scd2d6p","name":"like1q2wa8ah2ktrs4n2fyexztkfwnszlju6scd2d6p"},"contributionType":"http://schema.org/author","rewardProportion":0.975},{"entity":{"@id":"https://depub.space","name":"depub.space"},"contributionType":"http://schema.org/publisher","rewardProportion":0.025}],"contentMetadata":{"name":"depub.space-2022-05-30T01:30:07.103Z","@type":"Article","author":"like1q2wa8ah2ktrs4n2fyexztkfwnszlju6scd2d6p","version":1,"@context":"http://schema.org/","keywords":"","usageInfo":"https://creativecommons.org/licenses/by/4.0","description":"Test","datePublished":"2022-05-30","recordTimestamp":"2022-05-30T01:30:07.103Z"},"contentFingerprints":["https://depub.blog","hash://sha256/532eaabd9574880dbf76b9b8cc00832c20a6ec113d682299550d7a6e0f345e25"]}'
   )
   RETURNING id
 )
-INSERT INTO iscn_stakeholders (
-  iscn_pid, sid, sname, data
-) VALUES (
+INSERT INTO iscn_stakeholders VALUES (
   (SELECT id FROM result),'https://depub.space','depub.space','{"entity":{"@id":"https://depub.space","name":"depub.space"},"contributionType":"http://schema.org/publisher","rewardProportion":0.025}'::jsonb
 )
 ;
 
 WITH result AS (
-  INSERT INTO iscn (
-    iscn_id,
-    iscn_id_prefix,
-    version,
-    owner,
-    name,
-    description,
-    url,
-    keywords,
-    fingerprints,
-    ipld,
-    timestamp,
-    data
-  ) VALUES (
+  INSERT INTO iscn VALUES (
+    DEFAULT,
     'iscn://likecoin-chain/dypJNH_wAJo2u0ogQT4_jFBIxAmcXSROnSTpK8bigDU/1','iscn://likecoin-chain/dypJNH_wAJo2u0ogQT4_jFBIxAmcXSROnSTpK8bigDU',1,'cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc','depub.space-2022-02-01T06:10:58.440Z','Test','','{}'::text[],'{"https://depub.blog","hash://sha256/532eaabd9574880dbf76b9b8cc00832c20a6ec113d682299550d7a6e0f345e25","ipfs://QmbXtMB5yB2nfTCeXZ9Y8Rtr3errUC1Xui2iBhR7C5CJD5","ar://0uUA5rr1_p6SHmnlylbYRFovMClqjhPlR3vSMgxatzA"}'::text[],'baguqeera3xw266gof6m6bckussek6xndfim7uef4yp5d7b6reg455dptktxq',to_timestamp(1643667089),'{"recordNotes":"A Message posted on depub.SPACE","stakeholders":[{"entity":{"@id":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc","name":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc"},"contributionType":"http://schema.org/author","rewardProportion":0.975},{"entity":{"@id":"https://depub.SPACE","name":"depub.SPACE"},"contributionType":"http://schema.org/publisher","rewardProportion":0.025}],"contentMetadata":{"name":"depub.space-2022-02-01T06:10:58.440Z","@type":"Article","author":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc","version":1,"@context":"http://schema.org/","keywords":"","usageInfo":"https://creativecommons.org/licenses/by/4.0","description":"Test","datePublished":"2022-02-01","recordTimestamp":"2022-02-01T06:10:58.440Z"},"contentFingerprints":["https://depub.blog","hash://sha256/532eaabd9574880dbf76b9b8cc00832c20a6ec113d682299550d7a6e0f345e25","ipfs://QmbXtMB5yB2nfTCeXZ9Y8Rtr3errUC1Xui2iBhR7C5CJD5","ar://0uUA5rr1_p6SHmnlylbYRFovMClqjhPlR3vSMgxatzA"]}'::jsonb
   )
   RETURNING id
 )
-INSERT INTO iscn_stakeholders (
-  iscn_pid, sid, sname, data
-) VALUES (
+INSERT INTO iscn_stakeholders VALUES (
   (SELECT id FROM result),'https://depub.SPACE','depub.SPACE','{"entity":{"@id":"https://depub.SPACE","name":"depub.SPACE"},"contributionType":"http://schema.org/publisher","rewardProportion":0.025}'::jsonb
 )
 ;
 
 WITH result AS (
-  INSERT INTO iscn (
-    iscn_id,
-    iscn_id_prefix,
-    version,
-    owner,
-    name,
-    description,
-    url,
-    keywords,
-    fingerprints,
-    ipld,
-    timestamp,
-    data
-  ) VALUES (
+  INSERT INTO iscn VALUES (
+    DEFAULT,
     'iscn://likecoin-chain/_D-2SVc9cmsoCCaXXYo5Kr2P4kfYI2a2j_0UcxA3zGw/1','iscn://likecoin-chain/_D-2SVc9cmsoCCaXXYo5Kr2P4kfYI2a2j_0UcxA3zGw',1,'cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc','A Message posted on depub.space','Test production','','{}'::text[],'{"https://depub.blog"}'::text[],'baguqeerakjn566t6giritxcek2ywxt6dxk3i4bfsa7r6eke2akcuuf24m5jq',to_timestamp(1642985328),'{"recordNotes":"A Message posted on depub.space","stakeholders":[{"entity":{"@id":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc","name":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc"},"contributionType":"http://schema.org/author","rewardProportion":0.9},{"entity":{"@id":"https://github.com/0xnan-dev","name":"0xNaN"},"contributionType":"http://schema.org/publisher","rewardProportion":0.1}],"contentMetadata":{"name":"A Message posted on depub.space","@type":"Article","author":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc","version":1,"@context":"http://schema.org/","keywords":"","usageInfo":"https://creativecommons.org/licenses/by/4.0","description":"Test production","datePublished":"2022-01-24","recordTimestamp":"2022-01-24T08:48:47.018Z"},"contentFingerprints":["https://depub.blog"]}'::jsonb
   )
   RETURNING id
 )
-INSERT INTO iscn_stakeholders (
-  iscn_pid, sid, sname, data
-) VALUES (
+INSERT INTO iscn_stakeholders VALUES (
   (SELECT id FROM result),'cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc','cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc','{"entity":{"@id":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc","name":"cosmos1arxf43t672dxh26zqa6y0wzwcd85xm6fl68ldc"},"contributionType":"http://schema.org/author","rewardProportion":0.9}'::jsonb
 ), (
   (SELECT id FROM result),'https://github.com/0xnan-dev','0xNaN','{"entity":{"@id":"https://github.com/0xnan-dev","name":"0xNaN"},"contributionType":"http://schema.org/publisher","rewardProportion":0.1}'::jsonb
@@ -247,27 +135,13 @@ INSERT INTO iscn_stakeholders (
 ;
 
 WITH result AS (
-  INSERT INTO iscn (
-    iscn_id,
-    iscn_id_prefix,
-    version,
-    owner,
-    name,
-    description,
-    url,
-    keywords,
-    fingerprints,
-    ipld,
-    timestamp,
-    data
-  ) VALUES (
+  INSERT INTO iscn VALUES (
+    DEFAULT,
     'iscn://likecoin-chain/TPtbTpMco5zNmhGCX2U3UCFe4d415eyrXTabYZGm9PE/1','iscn://likecoin-chain/TPtbTpMco5zNmhGCX2U3UCFe4d415eyrXTabYZGm9PE',1,'cosmos13f4glvg80zvfrrs7utft5p68pct4mcq7cgpf2p','','','','{"blockchain","DAO","decentralization","decentralizehk"}'::text[],'{"ipfs://QmUnGEozva55C9Z1MLpULh6UXrUDe4Yo3g1K4ZN6ZqzyEs"}'::text[],'baguqeerayhsd7mbhbauudoftlcjqejy2k6zl4xurku3z45sq3hg7ekics5ha',to_timestamp(1629318663),'{"recordNotes":"","stakeholders":[{"entity":{"id":"https://like.co/undefined","name":"kin ko"},"contributionType":"http://schema.org/author","rewardProportion":1},{"entity":{"id":"https://matters.news/","name":"Matters","description":"Matters is a decentralized, cryptocurrency driven content creation and discussion platform."},"contributionType":"http://schema.org/publisher","rewardProportion":1}],"contentMetadata":{"@type":"Article","title":"decentralize：無大台，有共識","version":1,"@context":"http://schema.org/","keywords":"blockchain,DAO,decentralization,decentralizehk","usageInfo":"ipfs://QmRvpQiiLA8ttSLAXEd5RArmXeG4qWEsKPmrB7KeiLSuE4"},"contentFingerprints":["ipfs://QmUnGEozva55C9Z1MLpULh6UXrUDe4Yo3g1K4ZN6ZqzyEs"]}'::jsonb
   )
   RETURNING id
 )
-INSERT INTO iscn_stakeholders (
-  iscn_pid, sid, sname, data
-) VALUES (
+INSERT INTO iscn_stakeholders VALUES (
   (SELECT id FROM result),'https://like.co/undefined','kin ko','{"entity":{"id":"https://like.co/undefined","name":"kin ko"},"contributionType":"http://schema.org/author","rewardProportion":1}'::jsonb
 ), (
   (SELECT id FROM result),'https://matters.news/','Matters','{"entity":{"id":"https://matters.news/","name":"Matters","description":"Matters is a decentralized, cryptocurrency driven content creation and discussion platform."},"contributionType":"http://schema.org/publisher","rewardProportion":1}'::jsonb
@@ -275,27 +149,127 @@ INSERT INTO iscn_stakeholders (
 ;
 
 WITH result AS (
-  INSERT INTO iscn (
-    iscn_id,
-    iscn_id_prefix,
-    version,
-    owner,
-    name,
-    description,
-    url,
-    keywords,
-    fingerprints,
-    ipld,
-    timestamp,
-    data
-  ) VALUES (
+  INSERT INTO iscn VALUES (
+    DEFAULT,
     'iscn://likecoin-chain/Rc4eNUqS9JralMtFgHzU8oWWGvqIZSVbVqPED_PwPbc/1','iscn://likecoin-chain/Rc4eNUqS9JralMtFgHzU8oWWGvqIZSVbVqPED_PwPbc',1,'cosmos1ku4e49vfa4wez78crges4cml6he23f9tuwa8y8','LikeCoin - Depub ','LikeCoin - Depub Arweave community spotlight ','','{"LikeCoin","DePub"}'::text[],'{"hash://sha256/7132fbd7830ac52d93764438c2cce6743e7547cee21ba182b5d0e2e48eddbfde","ipfs://QmY9tEHDdodcM7mD27aH3DpvpuSnpqPnNSXysC63BPWotd","ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84"}'::text[],'baguqeeragzoaedqiw4xdjrvqmhzu2evh3z7jdo7ikz63gy6ehr4nkdxphbqq',to_timestamp(1636091966),'{"recordNotes":"","stakeholders":[{"entity":{"@id":"phoebe","url":"phoebe","name":"phoebe","sameAs":[],"identifier":[],"description":""},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"url":"","name":"LikeCoin - Depub ","@type":"Image","version":1,"@context":"http://schema.org/","exifInfo":{"Size":"undefined x undefined PNG (2539 KB)","Filter":"Adaptive","Format":"image/png","BitDepth":8,"ColorType":"Palette","Interlace":"Noninterlaced","ImageWidth":3795,"Compression":"Deflate/Inflate","ImageHeight":2134},"keywords":"LikeCoin,DePub","usageInfo":"","description":"LikeCoin - Depub Arweave community spotlight "},"contentFingerprints":["hash://sha256/7132fbd7830ac52d93764438c2cce6743e7547cee21ba182b5d0e2e48eddbfde","ipfs://QmY9tEHDdodcM7mD27aH3DpvpuSnpqPnNSXysC63BPWotd","ar://3sTMJ3K8ZQMuDMcJmfSkJT5xQfBF7U6kUDnnowN3X84"]}'::jsonb
   )
   RETURNING id
 )
-INSERT INTO iscn_stakeholders (
-  iscn_pid, sid, sname, data
-) VALUES (
+INSERT INTO iscn_stakeholders VALUES (
   (SELECT id FROM result),'phoebe','phoebe','{"entity":{"@id":"phoebe","url":"phoebe","name":"phoebe","sameAs":[],"identifier":[],"description":""},"contributionType":"http://schema.org/author","rewardProportion":1}'::jsonb
+)
+;
+
+INSERT INTO nft_class VALUES (
+  DEFAULT,'likenft1yzdfkf4fjjekqjmxen0czy5eyufapfrx5y3nd6d7wd6hmyy6zt3sk7ak4z','ISCN','iscn://likecoin-chain/IKI9PueuJiOsYvhN6z9jPJIm3UGMh17BQ3tEwEzslQo','','Writing NFT - 分散式出版 DePub 的發展路徑，NFT 從移民到原住民','WRITING','...','https://api.like.co/likernft/metadata?iscn_id=iscn%3A%2F%2Flikecoin-chain%2FIKI9PueuJiOsYvhN6z9jPJIm3UGMh17BQ3tEwEzslQo%2F2','','{"name":"分散式出版 DePub 的發展路徑，NFT 從移民到原住民","@type":"Article","image":"","version":1,"@context":"http://schema.org/","keywords":"DePub,LikeCoin,nft,Numbers","usageInfo":"","description":"...","nft_meta_collection_id":"likerland_writing_nft","nft_meta_collection_name":"Writing NFT","nft_meta_collection_descrption":"Writing NFT by Liker Land"}'::jsonb,'{"burnable":false,"max_supply":"0","blind_box_config":null}'::jsonb,0,to_timestamp(1659297623)
+), (
+  DEFAULT,'likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc','ISCN','iscn://likecoin-chain/IKI9PueuJiOsYvhN6z9jPJIm3UGMh17BQ3tEwEzslQo','','Writing NFT - 分散式出版 DePub 的發展路徑，NFT 從移民到原住民','WRITING','...','https://api.like.co/likernft/metadata?iscn_id=iscn%3A%2F%2Flikecoin-chain%2FIKI9PueuJiOsYvhN6z9jPJIm3UGMh17BQ3tEwEzslQo%2F3','','{"url":"https://ckxpress.com/nft-immigrant-to-native/","name":"分散式出版 DePub 的發展路徑，NFT 從移民到原住民","@type":"Article","image":"ar://_GJD1gNuIqXicYNWce__4B8Qqg5tN8FBRSUCXR8kuJE","version":1,"@context":"http://schema.org/","keywords":"DePub,LikeCoin,nft,Numbers","usageInfo":"","description":"...","nft_meta_collection_id":"likerland_writing_nft","nft_meta_collection_name":"Writing NFT","nft_meta_collection_descrption":"Writing NFT by Liker Land"}'::jsonb,'{"burnable":false,"max_supply":"0","blind_box_config":null}'::jsonb,0,to_timestamp(1659306801)
+)
+;
+
+INSERT INTO nft VALUES (
+  DEFAULT,'likenft18nf6zu6grjxc3ym97qxjzxfaqvn8j689gnnragrfwrvvc8mn6axqx74d8c','like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6','writing-0a86763b-3e6f-40dc-9ef3-1ac77b463c79','https://api.like.co/likernft/metadata?class_id=likenft18nf6zu6grjxc3ym97qxjzxfaqvn8j689gnnragrfwrvvc8mn6axqx74d8c&nft_id=writing-0a86763b-3e6f-40dc-9ef3-1ac77b463c79','','{"name":"Writing NFT - LikeCoin推出「Writing NFT 計畫」一鍵轉文章為NFT收藏、推動去中心化出版","image":"ar://wz1yCBLmPuSZtfyw5kSN9M4NnxF9PmoZHYi2HVYjpo8"}'::jsonb
+)
+;
+
+INSERT INTO nft_event VALUES (
+  DEFAULT,'/cosmos.nft.v1beta1.MsgSend','likenft18nf6zu6grjxc3ym97qxjzxfaqvn8j689gnnragrfwrvvc8mn6axqx74d8c','writing-0a86763b-3e6f-40dc-9ef3-1ac77b463c79','like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs','like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6','{"cosmos.nft.v1beta1.EventSend.class_id=\"\"likenft18nf6zu6grjxc3ym97qxjzxfaqvn8j689gnnragrfwrvvc8mn6axqx74d8c\"\"","cosmos.nft.v1beta1.EventSend.id=\"\"writing-0a86763b-3e6f-40dc-9ef3-1ac77b463c79\"\"","cosmos.nft.v1beta1.EventSend.sender=\"\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"\"","cosmos.nft.v1beta1.EventSend.receiver=\"\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"\"","message.action=\"/cosmos.nft.v1beta1.MsgSend\""}'::text[],'D79E83657AF10A76E13E799AA9BEB357F143CBA65A8D974C56902A231F01FFDA',to_timestamp(1663742446)
+)
+;
+
+INSERT INTO nft_class VALUES (
+  DEFAULT,'likenft18nf6zu6grjxc3ym97qxjzxfaqvn8j689gnnragrfwrvvc8mn6axqx74d8c','ISCN','iscn://likecoin-chain/0dy8t-GOR1nHAflNpze6s1vse-xKBewTO5aJsxI5Pws','','Writing NFT - LikeCoin推出「Writing NFT 計畫」一鍵轉文章為NFT收藏、推動去中心化出版','WRITING','旨在推動去中心出版的 Likecoin 近期推出 「Writing NFT」計畫，讓創作者可以將創作輕鬆轉化成...','https://api.like.co/likernft/metadata?iscn_id=iscn%3A%2F%2Flikecoin-chain%2F0dy8t-GOR1nHAflNpze6s1vse-xKBewTO5aJsxI5Pws%2F1','','{"image":"ar://wz1yCBLmPuSZtfyw5kSN9M4NnxF9PmoZHYi2HVYjpo8","description":"旨在推動去中心出版的 Likecoin 近期推出 「Writing NFT」計畫，讓創作者可以將創作輕鬆轉化成...","external_url":"https://www.blocktempo.com/likecoin-launches-writing-nft-project/","nft_meta_collection_id":"likerland_writing_nft","nft_meta_collection_name":"Writing NFT","nft_meta_collection_descrption":"Writing NFT by Liker Land"}'::jsonb,'{"burnable":false,"max_supply":"0","blind_box_config":null}'::jsonb,0,to_timestamp(1663723723)
+)
+;
+
+INSERT INTO nft VALUES (
+  DEFAULT,'likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc','like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs','writing-c45d7ac6-fc3c-4660-842d-de12cd50887d','https://api.like.co/likernft/metadata?class_id=likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc&nft_id=writing-c45d7ac6-fc3c-4660-842d-de12cd50887d','','{"name":"Writing NFT - 分散式出版 DePub 的發展路徑，NFT 從移民到原住民","image":"ar://_GJD1gNuIqXicYNWce__4B8Qqg5tN8FBRSUCXR8kuJE"}'::jsonb
+), (
+  DEFAULT,'likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc','like1732tu7lsx0s5kjpmjwtruqqjvq6xrvv9s5g0rz','writing-19301e94-d897-4bf0-ac5f-7b3c0a3da9cd','https://api.like.co/likernft/metadata?class_id=likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc&nft_id=writing-19301e94-d897-4bf0-ac5f-7b3c0a3da9cd','','{"name":"Writing NFT - 分散式出版 DePub 的發展路徑，NFT 從移民到原住民","image":"ar://_GJD1gNuIqXicYNWce__4B8Qqg5tN8FBRSUCXR8kuJE"}'::jsonb
+), (
+  DEFAULT,'likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc','like1xpkwcv48jqdxym26m8f5wjqa3e7dytq3zr733e','writing-12c8c2eb-aeba-46ec-b7d3-c7caa876ab13','https://api.like.co/likernft/metadata?class_id=likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc&nft_id=writing-12c8c2eb-aeba-46ec-b7d3-c7caa876ab13','','{"name":"Writing NFT - 分散式出版 DePub 的發展路徑，NFT 從移民到原住民","image":"ar://_GJD1gNuIqXicYNWce__4B8Qqg5tN8FBRSUCXR8kuJE"}'::jsonb
+)
+;
+
+INSERT INTO nft_event VALUES (
+  DEFAULT,'mint_nft','likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc','writing-4504b0ae-92ee-47db-b2d9-89aa769193ec','like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6','','{"coin_received.receiver=\"like17xpfvakm2amg962yls6f84z3kell8c5lr9lzgx\"","coin_received.amount=\"5440000nanolike\"","coin_spent.spender=\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"","coin_spent.amount=\"5440000nanolike\"","cosmos.nft.v1beta1.EventMint.owner=\"\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"\"","cosmos.nft.v1beta1.EventMint.class_id=\"\"likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc\"\"","cosmos.nft.v1beta1.EventMint.id=\"\"writing-4504b0ae-92ee-47db-b2d9-89aa769193ec\"\"","likechain.likenft.v1.EventMintNFT.class_id=\"\"likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc\"\"","likechain.likenft.v1.EventMintNFT.nft_id=\"\"writing-4504b0ae-92ee-47db-b2d9-89aa769193ec\"\"","likechain.likenft.v1.EventMintNFT.owner=\"\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"\"","likechain.likenft.v1.EventMintNFT.class_parent_iscn_id_prefix=\"\"iscn://likecoin-chain/IKI9PueuJiOsYvhN6z9jPJIm3UGMh17BQ3tEwEzslQo\"\"","likechain.likenft.v1.EventMintNFT.class_parent_account=\"\"\"\"","message.action=\"mint_nft\"","message.sender=\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"","transfer.recipient=\"like17xpfvakm2amg962yls6f84z3kell8c5lr9lzgx\"","transfer.sender=\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"","transfer.amount=\"5440000nanolike\""}'::text[],'CE0F63BC6E942BD2727026C1F71829D714EAA3AD575708C6D40CAFD7B4C127D4',to_timestamp(1659306813)
+), (
+  DEFAULT,'/cosmos.nft.v1beta1.MsgSend','likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc','writing-4504b0ae-92ee-47db-b2d9-89aa769193ec','like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6','like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs','{"cosmos.nft.v1beta1.EventSend.receiver=\"\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"\"","cosmos.nft.v1beta1.EventSend.class_id=\"\"likenft1yhsps5l8tmeuy9y7k0rjpx97cl67cjkjnzkycecw5xrvjjp6c5yqz0ttmc\"\"","cosmos.nft.v1beta1.EventSend.id=\"\"writing-4504b0ae-92ee-47db-b2d9-89aa769193ec\"\"","cosmos.nft.v1beta1.EventSend.sender=\"\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"\"","message.action=\"/cosmos.nft.v1beta1.MsgSend\""}'::text[],'CE0F63BC6E942BD2727026C1F71829D714EAA3AD575708C6D40CAFD7B4C127D4',to_timestamp(1659306813)
+)
+;
+
+INSERT INTO nft_class VALUES (
+  DEFAULT,'likenft1ekl34xskcxdu4z76hgd0mptkgwp2fuapffs5ufv8y89futchzu2qknfchr','ISCN','iscn://likecoin-chain/ZUdVeNeSVS0rOIFPfrdtc8s515wnj7fhnQI_HpgzrOg','','Writing NFT - 立場新聞停止運作公告 | Perma','WRITING',$$This is an archive of https://www.thestandnews.com from Monday 03, January 2022
+  立場新聞前身為主場新聞，於 2014 年 12 月成立、以不牟利原則營運，立足香港主場，《立場》編採方針獨立自主，致力守護民主、人權、自由、法治與公義等香港核心價值，至 2021 年 12 月 29 日停運。$$,'https://api.like.co/likernft/metadata?iscn_id=iscn%3A%2F%2Flikecoin-chain%2FZUdVeNeSVS0rOIFPfrdtc8s515wnj7fhnQI_HpgzrOg','','{"image":"ar://zH5RMEvRTr1ENX_hp0YcLeuFJIoyfCc6SBGNopFIg6c","description":"This is an archive of https://www.thestandnews.com from Monday 03, January 2022\n立場新聞前身為主場新聞，於 2014 年 12 月成立、以不牟利原則營運，立足香港主場，《立場》編採方針獨立自主，致力守護民主、人權、自由、法治與公義等香港核心價值，至 2021 年 12 月 29 日停運。","external_url":"https://perma.cc/W4MC-7YF9","nft_meta_collection_id":"likerland_writing_nft","nft_meta_collection_name":"Writing NFT","nft_meta_collection_descrption":"Writing NFT by Liker Land"}'::jsonb,'{"burnable":false,"max_supply":"0","blind_box_config":null}'::jsonb,0,to_timestamp(1660697014)
+)
+;
+
+INSERT INTO nft VALUES (
+  DEFAULT,'likenft1ekl34xskcxdu4z76hgd0mptkgwp2fuapffs5ufv8y89futchzu2qknfchr','like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs','writing-3a8c0ba1-2381-492a-94bf-5bc3fca1f660','https://api.like.co/likernft/metadata?class_id=likenft1ekl34xskcxdu4z76hgd0mptkgwp2fuapffs5ufv8y89futchzu2qknfchr&nft_id=writing-3a8c0ba1-2381-492a-94bf-5bc3fca1f660','','{"name":"Writing NFT - 立場新聞停止運作公告 | Perma","image":"ar://zH5RMEvRTr1ENX_hp0YcLeuFJIoyfCc6SBGNopFIg6c"}'::jsonb
+), (
+  DEFAULT,'likenft1ekl34xskcxdu4z76hgd0mptkgwp2fuapffs5ufv8y89futchzu2qknfchr','like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs','writing-2fd5d8d9-55bd-4c3c-bb18-529e31824e73','https://api.like.co/likernft/metadata?class_id=likenft1ekl34xskcxdu4z76hgd0mptkgwp2fuapffs5ufv8y89futchzu2qknfchr&nft_id=writing-2fd5d8d9-55bd-4c3c-bb18-529e31824e73','','{"name":"Writing NFT - 立場新聞停止運作公告 | Perma","image":"ar://zH5RMEvRTr1ENX_hp0YcLeuFJIoyfCc6SBGNopFIg6c"}'::jsonb
+)
+;
+
+
+INSERT INTO iscn VALUES (
+  DEFAULT,'iscn://likecoin-chain/ZUdVeNeSVS0rOIFPfrdtc8s515wnj7fhnQI_HpgzrOg/1','iscn://likecoin-chain/ZUdVeNeSVS0rOIFPfrdtc8s515wnj7fhnQI_HpgzrOg',1,'like1axrhn76rhdp709ckwper5rt65w2kuvlh62ccj0','Perma | 立場新聞',$$This is an archive of https://www.thestandnews.com from Monday 03, January 2022$$,'https://perma.cc/W4MC-7YF9','{}'::text[],'{"ipfs://QmZEWXQMgjMpTJyfAtsfHQeKvLY3w6SSFMoY39nv7U1UcD","ar://OcwznFdNkWtard6hg3asFB1YngrtgOc9lSPY3DGPRjA"}'::text[],'baguqeeraru7mdpjgnrrj2pbomrdklxrcxuvdu5tavkqvaopx3ovzb5wufcfa',to_timestamp(1660696387),'{"recordNotes":"","stakeholders":[{"entity":{"@id":"like1axrhn76rhdp709ckwper5rt65w2kuvlh62ccj0","url":"","name":"","sameAs":[],"identifier":[{"@type":"PropertyValue","value":"like1axrhn76rhdp709ckwper5rt65w2kuvlh62ccj0","propertyID":"LikeCoin Wallet"}],"description":"This is an archive of https://www.thestandnews.com from Monday 03, January 2022"},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"url":"https://perma.cc/W4MC-7YF9","name":"Perma | 立場新聞","@type":"CreativeWork","version":1,"@context":"http://schema.org/","exifInfo":{},"keywords":"","usageInfo":"","description":"This is an archive of https://www.thestandnews.com from Monday 03, January 2022"},"contentFingerprints":["ipfs://QmZEWXQMgjMpTJyfAtsfHQeKvLY3w6SSFMoY39nv7U1UcD","ar://OcwznFdNkWtard6hg3asFB1YngrtgOc9lSPY3DGPRjA"]}'::jsonb
+), (
+  DEFAULT,'iscn://likecoin-chain/ZUdVeNeSVS0rOIFPfrdtc8s515wnj7fhnQI_HpgzrOg/2','iscn://likecoin-chain/ZUdVeNeSVS0rOIFPfrdtc8s515wnj7fhnQI_HpgzrOg',2,'like1axrhn76rhdp709ckwper5rt65w2kuvlh62ccj0','立場新聞停止運作公告 | Perma',$$This is an archive of https://www.thestandnews.com from Monday 03, January 2022
+  立場新聞前身為主場新聞，於 2014 年 12 月成立、以不牟利原則營運，立足香港主場，《立場》編採方針獨立自主，致力守護民主、人權、自由、法治與公義等香港核心價值，至 2021 年 12 月 29 日停運。$$,'https://perma.cc/W4MC-7YF9','{}'::text[],'{"ipfs://QmZEWXQMgjMpTJyfAtsfHQeKvLY3w6SSFMoY39nv7U1UcD","ar://OcwznFdNkWtard6hg3asFB1YngrtgOc9lSPY3DGPRjA"}'::text[],'baguqeera3ksfmhg2od7u6jcau7wpjxz57knb52tiln7a4wqk2g2tz23n57kq',to_timestamp(1660696813),'{"recordNotes":"","stakeholders":[{"entity":{"@id":"like1axrhn76rhdp709ckwper5rt65w2kuvlh62ccj0","url":"","name":"","sameAs":[],"identifier":[{"@type":"PropertyValue","value":"like1axrhn76rhdp709ckwper5rt65w2kuvlh62ccj0","propertyID":"LikeCoin Wallet"}],"description":"This is an archive of https://www.thestandnews.com from Monday 03, January 2022"},"contributionType":"http://schema.org/author","rewardProportion":"0.5"},{"entity":{"@id":"like1tvgqc738thsrp00fkvv398v64x6egc75ushl84","name":"standnews"},"contributionType":"http://schema.org/author","rewardProportion":"0.5"}],"contentMetadata":{"url":"https://perma.cc/W4MC-7YF9","name":"立場新聞停止運作公告 | Perma","@type":"CreativeWork","version":1,"@context":"http://schema.org/","exifInfo":{},"keywords":"","usageInfo":"","description":"This is an archive of https://www.thestandnews.com from Monday 03, January 2022\n立場新聞前身為主場新聞，於 2014 年 12 月成立、以不牟利原則營運，立足香港主場，《立場》編採方針獨立自主，致力守護民主、人權、自由、法治與公義等香港核心價值，至 2021 年 12 月 29 日停運。"},"contentFingerprints":["ipfs://QmZEWXQMgjMpTJyfAtsfHQeKvLY3w6SSFMoY39nv7U1UcD","ar://OcwznFdNkWtard6hg3asFB1YngrtgOc9lSPY3DGPRjA"]}'::jsonb
+)
+;
+
+INSERT INTO nft_class VALUES (
+  DEFAULT,'likenft1w8p8uwkj909ts6v78n0cn9czfrnz5g43e3w06xtgc2q4z26u2yaslvrmvs','ISCN','iscn://likecoin-chain/zmpGY5Z8A1tn4vqSJJktmyvuLFv0xDcKFFfHKHmN4hc','','Writing NFT - 來自舊金山的明信片','WRITING','好久不見，望你一切安好。 來 大 灣區一個禮拜了，參加完 400 多人的 DWeb Camp，無需口罩，莫說每日自測，但暫時還沒感染肺炎（touch wood），勿念。 不是開玩笑，我真的邊寫邊觸木——正坐在偌大教堂的長椅，現在是凌晨 5 點多，兩層樓高的圓拱大窗，逐漸透出晨光第一線。這麼神聖，歸依我主了？還不是，只是在這裡睡而已。 這裡前身是教堂，我的「睡房」稱為「Great Room」，目測能容納 500 人（以香港的標準，1000 人不是問題）現在是博物館和數據中心，所以這裡開著很多暖氣，不用擔心我著涼；當中有一組伺服器+展品，存著 1997 年的 *整個* 萬維網，共 2T 數據，跟我的「Mac mimi」的容量相若。至於樓下，則是 Internet Archive 的辦公室。據說，創辦人 Brewster Kahle 因為這裡跟組織的 logo 很像，於是買下來。有錢就是任性，大概就是這個意思吧。 Internet Archive 即 Wayback Machine，使命為「Universal access to all knowledge」（真的超任性），26 年來一直在備份互聯網，很多因為各種理由已經（被）消失的網頁，都能透過 WBM 這座巨型圖書館找到。說到這裡，我身處這裡的理由應該足夠充分了吧。 其實是這樣的，WBM 是 DWeb camp 的主辦方，安排來自外地的參加者，有需要的話可在活動前後留宿於這裡。一個個來自世界各地的創業者、倡議者、黑客，隨意地睡在沙發、長椅、舞台、地板；假如我是航拍，zoom out 一下，在畫面加上街頭到處都是的露宿者，要算是一幅另類的美國縮影。 雖然 WBM 包食包住包 WiFi 十分貼心，但我從離港當晚睡在飛機和轉機大堂（實際上是前後 48...','https://api.like.co/likernft/metadata?iscn_id=iscn%3A%2F%2Flikecoin-chain%2FzmpGY5Z8A1tn4vqSJJktmyvuLFv0xDcKFFfHKHmN4hc%2F4','','{"image":"ar://WONtNMv4-rtqu3SdPWZAt4v3Db7FMI-LESCdlyRZDZI","description":"好久不見，望你一切安好。 來 大 灣區一個禮拜了，參加完 400 多人的 DWeb Camp，無需口罩，莫說每日自測，但暫時還沒感染肺炎（touch wood），勿念。 不是開玩笑，我真的邊寫邊觸木——正坐在偌大教堂的長椅，現在是凌晨 5 點多，兩層樓高的圓拱大窗，逐漸透出晨光第一線。這麼神聖，歸依我主了？還不是，只是在這裡睡而已。 這裡前身是教堂，我的「睡房」稱為「Great Room」，目測能容納 500 人（以香港的標準，1000 人不是問題）現在是博物館和數據中心，所以這裡開著很多暖氣，不用擔心我著涼；當中有一組伺服器+展品，存著 1997 年的 *整個* 萬維網，共 2T 數據，跟我的「Mac mimi」的容量相若。至於樓下，則是 Internet Archive 的辦公室。據說，創辦人 Brewster Kahle 因為這裡跟組織的 logo 很像，於是買下來。有錢就是任性，大概就是這個意思吧。 Internet Archive 即 Wayback Machine，使命為「Universal access to all knowledge」（真的超任性），26 年來一直在備份互聯網，很多因為各種理由已經（被）消失的網頁，都能透過 WBM 這座巨型圖書館找到。說到這裡，我身處這裡的理由應該足夠充分了吧。 其實是這樣的，WBM 是 DWeb camp 的主辦方，安排來自外地的參加者，有需要的話可在活動前後留宿於這裡。一個個來自世界各地的創業者、倡議者、黑客，隨意地睡在沙發、長椅、舞台、地板；假如我是航拍，zoom out 一下，在畫面加上街頭到處都是的露宿者，要算是一幅另類的美國縮影。 雖然 WBM 包食包住包 WiFi 十分貼心，但我從離港當晚睡在飛機和轉機大堂（實際上是前後 48...","external_url":"https://ckxpress.com/postcard-from-sf/","nft_meta_collection_id":"likerland_writing_nft","nft_meta_collection_name":"Writing NFT","nft_meta_collection_descrption":"Writing NFT by Liker Land"}'::jsonb,'{"burnable":false,"max_supply":"0","blind_box_config":null}'::jsonb,0,to_timestamp(1662057459)
+)
+;
+
+WITH result AS (
+  INSERT INTO iscn VALUES (
+    DEFAULT,'iscn://likecoin-chain/zmpGY5Z8A1tn4vqSJJktmyvuLFv0xDcKFFfHKHmN4hc/1','iscn://likecoin-chain/zmpGY5Z8A1tn4vqSJJktmyvuLFv0xDcKFFfHKHmN4hc',1,'like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6','來自舊金山的明信片','好久不見，望你一切安好。 來 大 灣區一個禮拜了，參加完 400 多人的 DWeb Camp，無需口罩，莫說每日自測，但暫時還沒感染肺炎（touch wood），勿念。 不是開玩笑，我真的邊寫邊觸木——正坐在偌大教堂的長椅，現在是凌晨 5 點多，兩層樓高的圓拱大窗，逐漸透出晨光第一線。這麼神聖，歸依我主了？還不是，只是在這裡睡而已。 這裡前身是教堂，我的「睡房」稱為「Great Room」，目測能容納 500 人（以香港的標準，1000 人不是問題）現在是博物館和數據中心，所以這裡開著很多暖氣，不用擔心我著涼；當中有一組伺服器+展品，存著 1997 年的 *整個* 萬維網，共 2T 數據，跟我的「Mac mimi」的容量相若。至於樓下，則是 Internet Archive 的辦公室。據說，創辦人 Brewster Kahle 因為這裡跟組織的 logo 很像，於是買下來。有錢就是任性，大概就是這個意思吧。 Internet Archive 即 Wayback Machine，使命為「Universal access to all knowledge」（真的超任性），26 年來一直在備份互聯網，很多因為各種理由已經（被）消失的網頁，都能透過 WBM 這座巨型圖書館找到。說到這裡，我身處這裡的理由應該足夠充分了吧。 其實是這樣的，WBM 是 DWeb camp 的主辦方，安排來自外地的參加者，有需要的話可在活動前後留宿於這裡。一個個來自世界各地的創業者、倡議者、黑客，隨意地睡在沙發、長椅、舞台、地板；假如我是航拍，zoom out 一下，在畫面加上街頭到處都是的露宿者，要算是一幅另類的美國縮影。 雖然 WBM 包食包住包 WiFi 十分貼心，但我從離港當晚睡在飛機和轉機大堂（實際上是前後 48...','','{"diary"}'::text[],'{"ar://sRpyY6122FnUxfJgAw_Rz_0wjL6-o0dxSFOQlDhY9yA","ipfs://QmTrTB7gr6zvJhTH4MPsyFPbHxa7bdTdcrbdfvyUkeWySA"}'::text[],'baguqeeram33psxpctylpw5hxzaowofluth5ayktdqlphqcejyc2whwycdcoq',to_timestamp(1662018524),'{"recordNotes":"LikeCoin WordPress Plugin","stakeholders":[{"entity":{"@id":"did:like:13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6","name":"kin","description":""},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"name":"來自舊金山的明信片","@type":"Article","version":1,"@context":"http://schema.org/","keywords":"diary","usageInfo":"","description":"好久不見，望你一切安好。 來 大 灣區一個禮拜了，參加完 400 多人的 DWeb Camp，無需口罩，莫說每日自測，但暫時還沒感染肺炎（touch wood），勿念。 不是開玩笑，我真的邊寫邊觸木——正坐在偌大教堂的長椅，現在是凌晨 5 點多，兩層樓高的圓拱大窗，逐漸透出晨光第一線。這麼神聖，歸依我主了？還不是，只是在這裡睡而已。 這裡前身是教堂，我的「睡房」稱為「Great Room」，目測能容納 500 人（以香港的標準，1000 人不是問題）現在是博物館和數據中心，所以這裡開著很多暖氣，不用擔心我著涼；當中有一組伺服器+展品，存著 1997 年的 *整個* 萬維網，共 2T 數據，跟我的「Mac mimi」的容量相若。至於樓下，則是 Internet Archive 的辦公室。據說，創辦人 Brewster Kahle 因為這裡跟組織的 logo 很像，於是買下來。有錢就是任性，大概就是這個意思吧。 Internet Archive 即 Wayback Machine，使命為「Universal access to all knowledge」（真的超任性），26 年來一直在備份互聯網，很多因為各種理由已經（被）消失的網頁，都能透過 WBM 這座巨型圖書館找到。說到這裡，我身處這裡的理由應該足夠充分了吧。 其實是這樣的，WBM 是 DWeb camp 的主辦方，安排來自外地的參加者，有需要的話可在活動前後留宿於這裡。一個個來自世界各地的創業者、倡議者、黑客，隨意地睡在沙發、長椅、舞台、地板；假如我是航拍，zoom out 一下，在畫面加上街頭到處都是的露宿者，要算是一幅另類的美國縮影。 雖然 WBM 包食包住包 WiFi 十分貼心，但我從離港當晚睡在飛機和轉機大堂（實際上是前後 48..."},"contentFingerprints":["ar://sRpyY6122FnUxfJgAw_Rz_0wjL6-o0dxSFOQlDhY9yA","ipfs://QmTrTB7gr6zvJhTH4MPsyFPbHxa7bdTdcrbdfvyUkeWySA"]}'::jsonb
+  )
+  RETURNING id
+)
+INSERT INTO iscn_stakeholders VALUES (
+  (SELECT id FROM result),'did:like:13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6','kin','{"entity":{"@id":"did:like:13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6","name":"kin","description":""},"contributionType":"http://schema.org/author","rewardProportion":1}'::jsonb
+)
+;
+
+WITH result AS (
+  INSERT INTO iscn VALUES (
+    DEFAULT,'iscn://likecoin-chain/zmpGY5Z8A1tn4vqSJJktmyvuLFv0xDcKFFfHKHmN4hc/2','iscn://likecoin-chain/zmpGY5Z8A1tn4vqSJJktmyvuLFv0xDcKFFfHKHmN4hc',2,'like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6','來自舊金山的明信片','好久不見，望你一切安好。 來 大 灣區一個禮拜了，參加完 400 多人的 DWeb Camp，無需口罩，莫說每日自測，但暫時還沒感染肺炎（touch wood），勿念。 不是開玩笑，我真的邊寫邊觸木——正坐在偌大教堂的長椅，現在是凌晨 5 點多，兩層樓高的圓拱大窗，逐漸透出晨光第一線。這麼神聖，歸依我主了？還不是，只是在這裡睡而已。 這裡前身是教堂，我的「睡房」稱為「Great Room」，目測能容納 500 人（以香港的標準，1000 人不是問題）現在是博物館和數據中心，所以這裡開著很多暖氣，不用擔心我著涼；當中有一組伺服器+展品，存著 1997 年的 *整個* 萬維網，共 2T 數據，跟我的「Mac mimi」的容量相若。至於樓下，則是 Internet Archive 的辦公室。據說，創辦人 Brewster Kahle 因為這裡跟組織的 logo 很像，於是買下來。有錢就是任性，大概就是這個意思吧。 Internet Archive 即 Wayback Machine，使命為「Universal access to all knowledge」（真的超任性），26 年來一直在備份互聯網，很多因為各種理由已經（被）消失的網頁，都能透過 WBM 這座巨型圖書館找到。說到這裡，我身處這裡的理由應該足夠充分了吧。 其實是這樣的，WBM 是 DWeb camp 的主辦方，安排來自外地的參加者，有需要的話可在活動前後留宿於這裡。一個個來自世界各地的創業者、倡議者、黑客，隨意地睡在沙發、長椅、舞台、地板；假如我是航拍，zoom out 一下，在畫面加上街頭到處都是的露宿者，要算是一幅另類的美國縮影。 雖然 WBM 包食包住包 WiFi 十分貼心，但我從離港當晚睡在飛機和轉機大堂（實際上是前後 48...','https://ckxpress.com/postcard-from-sf/','{"diary"}'::text[],'{"ar://sRpyY6122FnUxfJgAw_Rz_0wjL6-o0dxSFOQlDhY9yA","ipfs://QmTrTB7gr6zvJhTH4MPsyFPbHxa7bdTdcrbdfvyUkeWySA"}'::text[],'baguqeerad3mevbyje7d2626gtgpn7pwv4344knhmnnwqolnbsvc2ohvcfqaa',to_timestamp(1662018954),'{"recordNotes":"LikeCoin WordPress Plugin","stakeholders":[{"entity":{"@id":"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6","name":"kin","identifier":[{"@type":"PropertyValue","value":"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6","propertyID":"LikeCoin Wallet"}],"description":""},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"url":"https://ckxpress.com/postcard-from-sf/","name":"來自舊金山的明信片","@type":"Article","version":1,"@context":"http://schema.org/","keywords":"diary","usageInfo":"","description":"好久不見，望你一切安好。 來 大 灣區一個禮拜了，參加完 400 多人的 DWeb Camp，無需口罩，莫說每日自測，但暫時還沒感染肺炎（touch wood），勿念。 不是開玩笑，我真的邊寫邊觸木——正坐在偌大教堂的長椅，現在是凌晨 5 點多，兩層樓高的圓拱大窗，逐漸透出晨光第一線。這麼神聖，歸依我主了？還不是，只是在這裡睡而已。 這裡前身是教堂，我的「睡房」稱為「Great Room」，目測能容納 500 人（以香港的標準，1000 人不是問題）現在是博物館和數據中心，所以這裡開著很多暖氣，不用擔心我著涼；當中有一組伺服器+展品，存著 1997 年的 *整個* 萬維網，共 2T 數據，跟我的「Mac mimi」的容量相若。至於樓下，則是 Internet Archive 的辦公室。據說，創辦人 Brewster Kahle 因為這裡跟組織的 logo 很像，於是買下來。有錢就是任性，大概就是這個意思吧。 Internet Archive 即 Wayback Machine，使命為「Universal access to all knowledge」（真的超任性），26 年來一直在備份互聯網，很多因為各種理由已經（被）消失的網頁，都能透過 WBM 這座巨型圖書館找到。說到這裡，我身處這裡的理由應該足夠充分了吧。 其實是這樣的，WBM 是 DWeb camp 的主辦方，安排來自外地的參加者，有需要的話可在活動前後留宿於這裡。一個個來自世界各地的創業者、倡議者、黑客，隨意地睡在沙發、長椅、舞台、地板；假如我是航拍，zoom out 一下，在畫面加上街頭到處都是的露宿者，要算是一幅另類的美國縮影。 雖然 WBM 包食包住包 WiFi 十分貼心，但我從離港當晚睡在飛機和轉機大堂（實際上是前後 48..."},"contentFingerprints":["ar://sRpyY6122FnUxfJgAw_Rz_0wjL6-o0dxSFOQlDhY9yA","ipfs://QmTrTB7gr6zvJhTH4MPsyFPbHxa7bdTdcrbdfvyUkeWySA"]}'::jsonb
+  )
+  RETURNING id
+)
+INSERT INTO iscn_stakeholders VALUES (
+  (SELECT id FROM result),'like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6','kin','{"entity":{"@id":"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6","name":"kin","identifier":[{"@type":"PropertyValue","value":"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6","propertyID":"LikeCoin Wallet"}],"description":""},"contributionType":"http://schema.org/author","rewardProportion":1}'::jsonb
+)
+;
+
+INSERT INTO nft_class VALUES (
+  DEFAULT,'likenft1jr26vv3ar0zlnqt6l25z3w7dzer2gst88880677t70qj756vgj4qqzm55h','ISCN','iscn://likecoin-chain/KQMGo0spwjyI1xzObWidJMtoWFenadmqIe8xqNbvvO4','','Writing NFT - 沒有反目，何來和解　《我們的藍調時光》治癒不了我','WRITING','我竟然在 Netflix 看了長達 20 小時的韓劇《我們的藍調時光》，Our Blues。 說「竟然」，因為韓劇完全不是我的菜，我對之極度無知，唯一看過的是《來自星星的你》，為的是看「叫獸」有多帥，當然還有全智賢的風采。 發生這宗「竟然」，是因為在我心目中，看過的韓劇應該比我更少的學者好友「竟然」向我推坑，甚至在首次推介幾天後來訊跟進，讓我認定這齣韓劇一定很了不起，於是放下成見，乖乖開坑。 [以下內容包含劇透] 英希 跟坊間一面倒把《藍》捧到上天的評論不同，觀看時我沒有覺得這齣治癒系韓劇很神。首兩集給我的感覺甚至是，怎麼那種誇張的演技和打鬧似曾相識，彷如韓版《愛回家》？我無意冒犯《藍》，也承認這個比較過分苛刻，只是對於沒看電視多年的我，《愛回家》是貧乏的我唯一可能產生的聯想。事實是，假如《愛回家》的製作及得上人家一半誠意，我跟家母吃飯時就不用那麼難受了。 我一邊追看，一邊思考友人為甚麼大力推薦，到底華麗的畫面之下，它有何特別之處我沒看出來。大概是遲鈍，不然就是冷漠，一直看到全劇三分之二，第十四集英希和英玉的故事，我才發現，好吧，我也喜歡這劇。至少是這個篇章。 劇情讓人動容不在話下，單是製作方針，英希與英玉的故事線就足以讓我見識到韓劇以至韓國的進步。當 TVB 現在還大玩男扮女裝「搞笑」，以港人塗黑皮膚、說偏口音演菲律賓人當噱頭，《藍》的製作方 tvN 從劇本開始就直視唐氏綜合症患者的存在，卻又不會為求政治正確而讓主流與小眾失衡，更花了一年時間找來真正的患者鄭恩惠演出，而且演技毫不馬虎，比很多專業演員更自然。 平心而論，不只 TVB，就算是荷李活，也會找 Scarlett Johansson 演《Ghost in the Shell》的草薙素子，日本電影圈也找我很喜歡的宮崎葵演大製作《怒》的智障角色，諸如此類強化刻板印象的例子世界各地比比皆是；有時基於市場考慮，有時純粹宣傳噱頭，也有很多時候相信確實出於可行性，比如《媽媽的神奇小子》要找到現實生活中的痙攣人士演蘇樺偉，恐怕極之困難。正是因為難度如此高，才更突顯《藍》製作團隊的認真和努力和英希一角的可貴。 除了英希，飾演劇中聾啞角色星星，笑容甜美的演員李韶星本人也是聽障人士，更是個手語舞蹈家。相對於唐氏綜合症和痙攣患者，物色聾啞人士演出的難度較低，過往卻鮮有電視劇和電影嘗試過，《藍》帶動社會關注弱勢社群的用心，可見一斑。 因為喜歡英希，看後搜了一下進一步了解。嘩，真是不得了，原來鄭恩惠現實生活中真的是個畫家，畫風帶有強烈個人風格，劇中的所有畫作，全部出自鄭恩惠的手筆！這種劇本、演員、美術的無縫融合，讓我對《藍》的印象，又再提升兩個台階。 介紹鄭恩惠的日常生活以及當上藝術家之路的紀錄片《你的臉》，曾參展釜山電影節、光州女性電影節等，並於月前公映，無論票房如何都叫人喜出望外。欣喜的非因文化輸出或韓流席捲，而是社會進步和民族成熟；一個國家的真正崛起，並非火箭升空，更不是武力震懾鄰國，而是人民當家作主，生活得有尊嚴，即使弱勢社群，都得到應有的重視與照顧。 和解 追問之下，友人來訊揭曉，「這套劇打動我，是它談及人的脆弱和傷痛，然後如何嘗試和自己及身邊的人和解。」 收到訊息後，我想，我不像很多其他觀眾般被以和解為主旨的《藍》深深打動，會不會正正因為我沒有跟自己和身邊的人和解的經驗，甚至沒有這份強烈意欲？ 我絕對不是面面俱圓的人，甚至相當稜角，卻從來沒有如劇中情節般跟人反目成仇的經驗。雖然《藍》的製作優秀，美術讓人目不暇給，但我卻一直沒法投入，帶點抽離，甚至腹黑得，在恩喜與美蘭的故事，相對於替冰釋前嫌的兩人高興，我寧願雙方不要和解。即使不用反目，但道不同不相為謀大家更舒服，也更為真誠。 或許，我也屬於恩喜那種人設，基於所謂的「義氣」背負了很多，卻沒有意識到原來在日積月累間已到達自己的臨界點。偏偏，因為你多年來都是這樣承受著，而冤屈點點滴滴累積，從來沒有突然大增，反而使得連表達不滿的觸發點都沒有。 《藍》畢竟是電視劇，劇情發展會讓人物爆發衝突，然後雙方關係決裂，也因而產生了和解的契機。現實卻並非如此，至少我的經驗完全相反。從來就沒有「生死不相往還」，只有歲月中悄悄流失，在你意識到之前，關係原來已經沒有然後了。總是回看才知道，原來上次跟某某的互動，已是最後一次。 數年前那個「割席年」，我跟 99% 國內朋友斷了聯繫。是「斷」，不是「斷絕」；我沒有敵人，雖然我不能代替對方說同樣的話。說到原因，根本就沒甚麼原因，只是我再難以接受內容像明信片般赤裸裸的聊天軟件，而且就算我能接受，國內號碼無奈被停後也再難以登錄；反過來，朋友們又不見得會翻牆和使用有加密的溝通工具。 你說，難道就不值得為了跟朋友聯繫而對溝通工具妥協麼？也不是，只是在你有機會考慮這個問題之前，關係已經斷了，不是再沒話可說了，反而是時日磨人，五味雜陳，不知從何說起；就好像因電視壞掉而暫停追看長篇連續劇，等到電視修好，已經沒法跟上劇情。 在','https://api.like.co/likernft/metadata?iscn_id=iscn%3A%2F%2Flikecoin-chain%2FKQMGo0spwjyI1xzObWidJMtoWFenadmqIe8xqNbvvO4%2F3','','{"url":"https://ckxpress.com/our-blues/","name":"沒有反目，何來和解　《我們的藍調時光》治癒不了我","@type":"Article","image":"ar://hPcI5daGjHV64jxim94Ac9BNdNc9rcTjsQuGqtvcTrU","version":1,"@context":"http://schema.org/","keywords":"diary","usageInfo":"","description":"我竟然在 Netflix 看了長達 20 小時的韓劇《我們的藍調時光》，Our Blues。 說「竟然」，因為韓劇完全不是我的菜，我對之極度無知，唯一看過的是《來自星星的你》，為的是看「叫獸」有多帥，當然還有全智賢的風采。 發生這宗「竟然」，是因為在我心目中，看過的韓劇應該比我更少的學者好友「竟然」向我推坑，甚至在首次推介幾天後來訊跟進，讓我認定這齣韓劇一定很了不起，於是放下成見，乖乖開坑。 [以下內容包含劇透] 英希 跟坊間一面倒把《藍》捧到上天的評論不同，觀看時我沒有覺得這齣治癒系韓劇很神。首兩集給我的感覺甚至是，怎麼那種誇張的演技和打鬧似曾相識，彷如韓版《愛回家》？我無意冒犯《藍》，也承認這個比較過分苛刻，只是對於沒看電視多年的我，《愛回家》是貧乏的我唯一可能產生的聯想。事實是，假如《愛回家》的製作及得上人家一半誠意，我跟家母吃飯時就不用那麼難受了。 我一邊追看，一邊思考友人為甚麼大力推薦，到底華麗的畫面之下，它有何特別之處我沒看出來。大概是遲鈍，不然就是冷漠，一直看到全劇三分之二，第十四集英希和英玉的故事，我才發現，好吧，我也喜歡這劇。至少是這個篇章。 劇情讓人動容不在話下，單是製作方針，英希與英玉的故事線就足以讓我見識到韓劇以至韓國的進步。當 TVB 現在還大玩男扮女裝「搞笑」，以港人塗黑皮膚、說偏口音演菲律賓人當噱頭，《藍》的製作方 tvN 從劇本開始就直視唐氏綜合症患者的存在，卻又不會為求政治正確而讓主流與小眾失衡，更花了一年時間找來真正的患者鄭恩惠演出，而且演技毫不馬虎，比很多專業演員更自然。 平心而論，不只 TVB，就算是荷李活，也會找 Scarlett Johansson 演《Ghost in the Shell》的草薙素子，日本電影圈也找我很喜歡的宮崎葵演大製作《怒》的智障角色，諸如此類強化刻板印象的例子世界各地比比皆是；有時基於市場考慮，有時純粹宣傳噱頭，也有很多時候相信確實出於可行性，比如《媽媽的神奇小子》要找到現實生活中的痙攣人士演蘇樺偉，恐怕極之困難。正是因為難度如此高，才更突顯《藍》製作團隊的認真和努力和英希一角的可貴。 除了英希，飾演劇中聾啞角色星星，笑容甜美的演員李韶星本人也是聽障人士，更是個手語舞蹈家。相對於唐氏綜合症和痙攣患者，物色聾啞人士演出的難度較低，過往卻鮮有電視劇和電影嘗試過，《藍》帶動社會關注弱勢社群的用心，可見一斑。 因為喜歡英希，看後搜了一下進一步了解。嘩，真是不得了，原來鄭恩惠現實生活中真的是個畫家，畫風帶有強烈個人風格，劇中的所有畫作，全部出自鄭恩惠的手筆！這種劇本、演員、美術的無縫融合，讓我對《藍》的印象，又再提升兩個台階。 介紹鄭恩惠的日常生活以及當上藝術家之路的紀錄片《你的臉》，曾參展釜山電影節、光州女性電影節等，並於月前公映，無論票房如何都叫人喜出望外。欣喜的非因文化輸出或韓流席捲，而是社會進步和民族成熟；一個國家的真正崛起，並非火箭升空，更不是武力震懾鄰國，而是人民當家作主，生活得有尊嚴，即使弱勢社群，都得到應有的重視與照顧。 和解 追問之下，友人來訊揭曉，「這套劇打動我，是它談及人的脆弱和傷痛，然後如何嘗試和自己及身邊的人和解。」 收到訊息後，我想，我不像很多其他觀眾般被以和解為主旨的《藍》深深打動，會不會正正因為我沒有跟自己和身邊的人和解的經驗，甚至沒有這份強烈意欲？ 我絕對不是面面俱圓的人，甚至相當稜角，卻從來沒有如劇中情節般跟人反目成仇的經驗。雖然《藍》的製作優秀，美術讓人目不暇給，但我卻一直沒法投入，帶點抽離，甚至腹黑得，在恩喜與美蘭的故事，相對於替冰釋前嫌的兩人高興，我寧願雙方不要和解。即使不用反目，但道不同不相為謀大家更舒服，也更為真誠。 或許，我也屬於恩喜那種人設，基於所謂的「義氣」背負了很多，卻沒有意識到原來在日積月累間已到達自己的臨界點。偏偏，因為你多年來都是這樣承受著，而冤屈點點滴滴累積，從來沒有突然大增，反而使得連表達不滿的觸發點都沒有。 《藍》畢竟是電視劇，劇情發展會讓人物爆發衝突，然後雙方關係決裂，也因而產生了和解的契機。現實卻並非如此，至少我的經驗完全相反。從來就沒有「生死不相往還」，只有歲月中悄悄流失，在你意識到之前，關係原來已經沒有然後了。總是回看才知道，原來上次跟某某的互動，已是最後一次。 數年前那個「割席年」，我跟 99% 國內朋友斷了聯繫。是「斷」，不是「斷絕」；我沒有敵人，雖然我不能代替對方說同樣的話。說到原因，根本就沒甚麼原因，只是我再難以接受內容像明信片般赤裸裸的聊天軟件，而且就算我能接受，國內號碼無奈被停後也再難以登錄；反過來，朋友們又不見得會翻牆和使用有加密的溝通工具。 你說，難道就不值得為了跟朋友聯繫而對溝通工具妥協麼？也不是，只是在你有機會考慮這個問題之前，關係已經斷了，不是再沒話可說了，反而是時日磨人，五味雜陳，不知從何說起；就好像因電視壞掉而暫停追看長篇連續劇，等到電視修好，已經沒法跟上劇情。 在","nft_meta_collection_id":"likerland_writing_nft","nft_meta_collection_name":"Writing NFT","nft_meta_collection_descrption":"Writing NFT by Liker Land"}'::jsonb,'{"burnable":false,"max_supply":"0","blind_box_config":null}'::jsonb,0,to_timestamp(1660184548)
+)
+;
+
+INSERT INTO iscn VALUES (
+  DEFAULT,'iscn://likecoin-chain/KQMGo0spwjyI1xzObWidJMtoWFenadmqIe8xqNbvvO4/1','iscn://likecoin-chain/KQMGo0spwjyI1xzObWidJMtoWFenadmqIe8xqNbvvO4',1,'like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6','沒有反目，何來和解　《我們的藍調時光》治癒不了我','我竟然在 Netflix 看了長達 20 小時的韓劇《我們的藍調時光》，Our Blues。 說「竟然」，因為韓劇完全不是我的菜，我對之極度無知，唯一看過的是《來自星星的你》，為的是看「叫獸」有多帥，當然還有全智賢的風采。 發生這宗「竟然」，是因為在我心目中，看過的韓劇應該比我更少的學者好友「竟然」向我推坑，甚至在首次推介幾天後來訊跟進，讓我認定這齣韓劇一定很了不起，於是放下成見，乖乖開坑。 [以下內容包含劇透] 英希 跟坊間一面倒把《藍》捧到上天的評論不同，觀看時我沒有覺得這齣治癒系韓劇很神。首兩集給我的感覺甚至是，怎麼那種誇張的演技和打鬧似曾相識，彷如韓版《愛回家》？我無意冒犯《藍》，也承認這個比較過分苛刻，只是對於沒看電視多年的我，《愛回家》是貧乏的我唯一可能產生的聯想。事實是，假如《愛回家》的製作及得上人家一半誠意，我跟家母吃飯時就不用那麼難受了。 我一邊追看，一邊思考友人為甚麼大力推薦，到底華麗的畫面之下，它有何特別之處我沒看出來。大概是遲鈍，不然就是冷漠，一直看到全劇三分之二，第十四集英希和英玉的故事，我才發現，好吧，我也喜歡這劇。至少是這個篇章。 劇情讓人動容不在話下，單是製作方針，英希與英玉的故事線就足以讓我見識到韓劇以至韓國的進步。當 TVB 現在還大玩男扮女裝「搞笑」，以港人塗黑皮膚、說偏口音演菲律賓人當噱頭，《藍》的製作方 tvN 從劇本開始就直視唐氏綜合症患者的存在，卻又不會為求政治正確而讓主流與小眾失衡，更花了一年時間找來真正的患者鄭恩惠演出，而且演技毫不馬虎，比很多專業演員更自然。 平心而論，不只 TVB，就算是荷李活，也會找 Scarlett Johansson 演《Ghost in the Shell》的草薙素子，日本電影圈也找我很喜歡的宮崎葵演大製作《怒》的智障角色，諸如此類強化刻板印象的例子世界各地比比皆是；有時基於市場考慮，有時純粹宣傳噱頭，也有很多時候相信確實出於可行性，比如《媽媽的神奇小子》要找到現實生活中的痙攣人士演蘇樺偉，恐怕極之困難。正是因為難度如此高，才更突顯《藍》製作團隊的認真和努力和英希一角的可貴。 除了英希，飾演劇中聾啞角色星星，笑容甜美的演員李韶星本人也是聽障人士，更是個手語舞蹈家。相對於唐氏綜合症和痙攣患者，物色聾啞人士演出的難度較低，過往卻鮮有電視劇和電影嘗試過，《藍》帶動社會關注弱勢社群的用心，可見一斑。 因為喜歡英希，看後搜了一下進一步了解。嘩，真是不得了，原來鄭恩惠現實生活中真的是個畫家，畫風帶有強烈個人風格，劇中的所有畫作，全部出自鄭恩惠的手筆！這種劇本、演員、美術的無縫融合，讓我對《藍》的印象，又再提升兩個台階。 介紹鄭恩惠的日常生活以及當上藝術家之路的紀錄片《你的臉》，曾參展釜山電影節、光州女性電影節等，並於月前公映，無論票房如何都叫人喜出望外。欣喜的非因文化輸出或韓流席捲，而是社會進步和民族成熟；一個國家的真正崛起，並非火箭升空，更不是武力震懾鄰國，而是人民當家作主，生活得有尊嚴，即使弱勢社群，都得到應有的重視與照顧。 和解 追問之下，友人來訊揭曉，「這套劇打動我，是它談及人的脆弱和傷痛，然後如何嘗試和自己及身邊的人和解。」 收到訊息後，我想，我不像很多其他觀眾般被以和解為主旨的《藍》深深打動，會不會正正因為我沒有跟自己和身邊的人和解的經驗，甚至沒有這份強烈意欲？ 我絕對不是面面俱圓的人，甚至相當稜角，卻從來沒有如劇中情節般跟人反目成仇的經驗。雖然《藍》的製作優秀，美術讓人目不暇給，但我卻一直沒法投入，帶點抽離，甚至腹黑得，在恩喜與美蘭的故事，相對於替冰釋前嫌的兩人高興，我寧願雙方不要和解。即使不用反目，但道不同不相為謀大家更舒服，也更為真誠。 或許，我也屬於恩喜那種人設，基於所謂的「義氣」背負了很多，卻沒有意識到原來在日積月累間已到達自己的臨界點。偏偏，因為你多年來都是這樣承受著，而冤屈點點滴滴累積，從來沒有突然大增，反而使得連表達不滿的觸發點都沒有。 《藍》畢竟是電視劇，劇情發展會讓人物爆發衝突，然後雙方關係決裂，也因而產生了和解的契機。現實卻並非如此，至少我的經驗完全相反。從來就沒有「生死不相往還」，只有歲月中悄悄流失，在你意識到之前，關係原來已經沒有然後了。總是回看才知道，原來上次跟某某的互動，已是最後一次。 數年前那個「割席年」，我跟 99% 國內朋友斷了聯繫。是「斷」，不是「斷絕」；我沒有敵人，雖然我不能代替對方說同樣的話。說到原因，根本就沒甚麼原因，只是我再難以接受內容像明信片般赤裸裸的聊天軟件，而且就算我能接受，國內號碼無奈被停後也再難以登錄；反過來，朋友們又不見得會翻牆和使用有加密的溝通工具。 你說，難道就不值得為了跟朋友聯繫而對溝通工具妥協麼？也不是，只是在你有機會考慮這個問題之前，關係已經斷了，不是再沒話可說了，反而是時日磨人，五味雜陳，不知從何說起；就好像因電視壞掉而暫停追看長篇連續劇，等到電視修好，已經沒法跟上劇情。 在與林憶蓮合唱的《下落不明》，黃耀明唱出了這種無疾而終： 幾多派對　幾多個失散伴侶幾多個故事　並無下一句終於一天　想起要跟你聚　那號碼已不對 更妙的卻是林憶蓮的短短幾句的和應： 誰　沒有找誰　沒有等誰　自那天再不可追誰　沒有找誰　沒有等誰　又間中有些唏噓 同樣出自黃偉文手筆，《最佳損友》的歌詞，更露骨地勾畫出這種微妙的關係。 各自也沒有自由位置變了各有隊友早知解散後各自有際遇作導遊奇就奇在接受了各自有路走問我有沒有確實也沒有一直躲避的藉口非什麼大仇為何舊知己在最後變不到老友不知你是我敵友已沒法望透被推著走跟著生活流來年陌生的是昨日最親的某某 談起陳奕迅的歌，戛然而止的關係，又何止朋友而已。歌手同樣是如此，或許，你也跟我一樣，從沒煞有介事地決定不再聽陳奕迅的歌，卻不知從何時開始，他從自己的生活圈消失了。又或者，也說不上完全消失，歌曲播放列表偶爾還會有他的舊作，只是，跟他的關係就像是定格，停頓了在某一年之前。 沒有反目，沒法和解，大概就是《我們的藍調時光》治癒不了我的原因。 假如你喜歡這篇文章，請收集它的 Writing NFT，透過無大台出版，支持創作，記錄歷史，保育文化。','','{"diary"}'::text[],'{"ar://M5OkjtapnD0x_dVl-n30ZNnE8ajXuZfhmbtgtruNeX4","ipfs://QmT4EdVDZNJvJYGwmuvGcz7joFWY6mUR8X78gaWnXxAUqT"}'::text[],'baguqeera3v3rdnevmnqknqe2hbaolvkzs3a24pmizvq5fga2ijlzql4cacma',to_timestamp(1660181152),'{"recordNotes":"LikeCoin WordPress Plugin","stakeholders":[{"entity":{"@id":"did:like:13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6","name":"kin","description":""},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"name":"沒有反目，何來和解　《我們的藍調時光》治癒不了我","@type":"Article","version":1,"@context":"http://schema.org/","keywords":"diary","usageInfo":"","description":"我竟然在 Netflix 看了長達 20 小時的韓劇《我們的藍調時光》，Our Blues。 說「竟然」，因為韓劇完全不是我的菜，我對之極度無知，唯一看過的是《來自星星的你》，為的是看「叫獸」有多帥，當然還有全智賢的風采。 發生這宗「竟然」，是因為在我心目中，看過的韓劇應該比我更少的學者好友「竟然」向我推坑，甚至在首次推介幾天後來訊跟進，讓我認定這齣韓劇一定很了不起，於是放下成見，乖乖開坑。 [以下內容包含劇透] 英希 跟坊間一面倒把《藍》捧到上天的評論不同，觀看時我沒有覺得這齣治癒系韓劇很神。首兩集給我的感覺甚至是，怎麼那種誇張的演技和打鬧似曾相識，彷如韓版《愛回家》？我無意冒犯《藍》，也承認這個比較過分苛刻，只是對於沒看電視多年的我，《愛回家》是貧乏的我唯一可能產生的聯想。事實是，假如《愛回家》的製作及得上人家一半誠意，我跟家母吃飯時就不用那麼難受了。 我一邊追看，一邊思考友人為甚麼大力推薦，到底華麗的畫面之下，它有何特別之處我沒看出來。大概是遲鈍，不然就是冷漠，一直看到全劇三分之二，第十四集英希和英玉的故事，我才發現，好吧，我也喜歡這劇。至少是這個篇章。 劇情讓人動容不在話下，單是製作方針，英希與英玉的故事線就足以讓我見識到韓劇以至韓國的進步。當 TVB 現在還大玩男扮女裝「搞笑」，以港人塗黑皮膚、說偏口音演菲律賓人當噱頭，《藍》的製作方 tvN 從劇本開始就直視唐氏綜合症患者的存在，卻又不會為求政治正確而讓主流與小眾失衡，更花了一年時間找來真正的患者鄭恩惠演出，而且演技毫不馬虎，比很多專業演員更自然。 平心而論，不只 TVB，就算是荷李活，也會找 Scarlett Johansson 演《Ghost in the Shell》的草薙素子，日本電影圈也找我很喜歡的宮崎葵演大製作《怒》的智障角色，諸如此類強化刻板印象的例子世界各地比比皆是；有時基於市場考慮，有時純粹宣傳噱頭，也有很多時候相信確實出於可行性，比如《媽媽的神奇小子》要找到現實生活中的痙攣人士演蘇樺偉，恐怕極之困難。正是因為難度如此高，才更突顯《藍》製作團隊的認真和努力和英希一角的可貴。 除了英希，飾演劇中聾啞角色星星，笑容甜美的演員李韶星本人也是聽障人士，更是個手語舞蹈家。相對於唐氏綜合症和痙攣患者，物色聾啞人士演出的難度較低，過往卻鮮有電視劇和電影嘗試過，《藍》帶動社會關注弱勢社群的用心，可見一斑。 因為喜歡英希，看後搜了一下進一步了解。嘩，真是不得了，原來鄭恩惠現實生活中真的是個畫家，畫風帶有強烈個人風格，劇中的所有畫作，全部出自鄭恩惠的手筆！這種劇本、演員、美術的無縫融合，讓我對《藍》的印象，又再提升兩個台階。 介紹鄭恩惠的日常生活以及當上藝術家之路的紀錄片《你的臉》，曾參展釜山電影節、光州女性電影節等，並於月前公映，無論票房如何都叫人喜出望外。欣喜的非因文化輸出或韓流席捲，而是社會進步和民族成熟；一個國家的真正崛起，並非火箭升空，更不是武力震懾鄰國，而是人民當家作主，生活得有尊嚴，即使弱勢社群，都得到應有的重視與照顧。 和解 追問之下，友人來訊揭曉，「這套劇打動我，是它談及人的脆弱和傷痛，然後如何嘗試和自己及身邊的人和解。」 收到訊息後，我想，我不像很多其他觀眾般被以和解為主旨的《藍》深深打動，會不會正正因為我沒有跟自己和身邊的人和解的經驗，甚至沒有這份強烈意欲？ 我絕對不是面面俱圓的人，甚至相當稜角，卻從來沒有如劇中情節般跟人反目成仇的經驗。雖然《藍》的製作優秀，美術讓人目不暇給，但我卻一直沒法投入，帶點抽離，甚至腹黑得，在恩喜與美蘭的故事，相對於替冰釋前嫌的兩人高興，我寧願雙方不要和解。即使不用反目，但道不同不相為謀大家更舒服，也更為真誠。 或許，我也屬於恩喜那種人設，基於所謂的「義氣」背負了很多，卻沒有意識到原來在日積月累間已到達自己的臨界點。偏偏，因為你多年來都是這樣承受著，而冤屈點點滴滴累積，從來沒有突然大增，反而使得連表達不滿的觸發點都沒有。 《藍》畢竟是電視劇，劇情發展會讓人物爆發衝突，然後雙方關係決裂，也因而產生了和解的契機。現實卻並非如此，至少我的經驗完全相反。從來就沒有「生死不相往還」，只有歲月中悄悄流失，在你意識到之前，關係原來已經沒有然後了。總是回看才知道，原來上次跟某某的互動，已是最後一次。 數年前那個「割席年」，我跟 99% 國內朋友斷了聯繫。是「斷」，不是「斷絕」；我沒有敵人，雖然我不能代替對方說同樣的話。說到原因，根本就沒甚麼原因，只是我再難以接受內容像明信片般赤裸裸的聊天軟件，而且就算我能接受，國內號碼無奈被停後也再難以登錄；反過來，朋友們又不見得會翻牆和使用有加密的溝通工具。 你說，難道就不值得為了跟朋友聯繫而對溝通工具妥協麼？也不是，只是在你有機會考慮這個問題之前，關係已經斷了，不是再沒話可說了，反而是時日磨人，五味雜陳，不知從何說起；就好像因電視壞掉而暫停追看長篇連續劇，等到電視修好，已經沒法跟上劇情。 在與林憶蓮合唱的《下落不明》，黃耀明唱出了這種無疾而終： 幾多派對　幾多個失散伴侶幾多個故事　並無下一句終於一天　想起要跟你聚　那號碼已不對 更妙的卻是林憶蓮的短短幾句的和應： 誰　沒有找誰　沒有等誰　自那天再不可追誰　沒有找誰　沒有等誰　又間中有些唏噓 同樣出自黃偉文手筆，《最佳損友》的歌詞，更露骨地勾畫出這種微妙的關係。 各自也沒有自由位置變了各有隊友早知解散後各自有際遇作導遊奇就奇在接受了各自有路走問我有沒有確實也沒有一直躲避的藉口非什麼大仇為何舊知己在最後變不到老友不知你是我敵友已沒法望透被推著走跟著生活流來年陌生的是昨日最親的某某 談起陳奕迅的歌，戛然而止的關係，又何止朋友而已。歌手同樣是如此，或許，你也跟我一樣，從沒煞有介事地決定不再聽陳奕迅的歌，卻不知從何時開始，他從自己的生活圈消失了。又或者，也說不上完全消失，歌曲播放列表偶爾還會有他的舊作，只是，跟他的關係就像是定格，停頓了在某一年之前。 沒有反目，沒法和解，大概就是《我們的藍調時光》治癒不了我的原因。 假如你喜歡這篇文章，請收集它的 Writing NFT，透過無大台出版，支持創作，記錄歷史，保育文化。"},"contentFingerprints":["ar://M5OkjtapnD0x_dVl-n30ZNnE8ajXuZfhmbtgtruNeX4","ipfs://QmT4EdVDZNJvJYGwmuvGcz7joFWY6mUR8X78gaWnXxAUqT"]}'::jsonb
+)
+;
+
+INSERT INTO iscn VALUES (
+  DEFAULT,'iscn://likecoin-chain/IKI9PueuJiOsYvhN6z9jPJIm3UGMh17BQ3tEwEzslQo/1','iscn://likecoin-chain/IKI9PueuJiOsYvhN6z9jPJIm3UGMh17BQ3tEwEzslQo',1,'like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6','分散式出版 DePub 的發展路徑，NFT 從移民到原住民','...','','{"DePub","LikeCoin","nft","Numbers"}'::text[],'{"ar://CfGHuUYpmVykxo_3ZZgW2CpVrComa9LJVSCMIHXi6N8","ipfs://QmZQLJw8L3QZvJQDQnRrChPParQHBKH9WV3wj9wbhtF7TG"}'::text[],'baguqeera7duqoiqoj2iw6xi7mrkhwgjbip3y2m6s4vgsuz7khxxocfpiratq',to_timestamp(1651803057),'{"recordNotes":"LikeCoin WordPress Plugin","stakeholders":[{"entity":{"@id":"did:like:1w6es6du93xmhms60gwwtczr2p2h4cdm8r7kc0f","name":"kin","description":""},"contributionType":"http://schema.org/author","rewardProportion":1}],"contentMetadata":{"name":"分散式出版 DePub 的發展路徑，NFT 從移民到原住民","@type":"Article","version":1,"@context":"http://schema.org/","keywords":"DePub,LikeCoin,nft,Numbers","usageInfo":"","description":"..."},"contentFingerprints":["ar://CfGHuUYpmVykxo_3ZZgW2CpVrComa9LJVSCMIHXi6N8","ipfs://QmZQLJw8L3QZvJQDQnRrChPParQHBKH9WV3wj9wbhtF7TG"]}'::jsonb
+)
+;
+
+INSERT INTO txs VALUES (
+  DEFAULT,5706264,0,'{"tx":{"body":{"memo":"like.co NFT API","messages":[{"msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"nanolike","amount":"256002000000"}],"to_address":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs","from_address":"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6"}],"@type":"/cosmos.authz.v1beta1.MsgExec","grantee":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"id":"writing-0a86763b-3e6f-40dc-9ef3-1ac77b463c79","@type":"/cosmos.nft.v1beta1.MsgSend","sender":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs","class_id":"likenft18nf6zu6grjxc3ym97qxjzxfaqvn8j689gnnragrfwrvvc8mn6axqx74d8c","receiver":"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6"},{"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"nanolike","amount":"224000000000"}],"to_address":"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd","from_address":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"nanolike","amount":"6400000000"}],"to_address":"like10ywsmztkxjl55xarxnhlxwc83z9v2hkxtsajwl","from_address":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"nanolike","amount":"25600000000"}],"to_address":"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd","from_address":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"}],"timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"@type":"/cosmos.tx.v1beta1.Tx","auth_info":{"fee":{"payer":"","amount":[{"denom":"nanolike","amount":"4000000"}],"granter":"","gas_limit":"400000"},"signer_infos":[{"sequence":"1188","mode_info":{"single":{"mode":"SIGN_MODE_DIRECT"}},"public_key":{"key":"A6rHW/lpdjqkHHJwjLAsK/jK8Rh4M1XdAalAfvx1juKN","@type":"/cosmos.crypto.secp256k1.PubKey"}}]},"signatures":["qvnxyJXa3PvnVTevof/7zUhspAu6lEY7hQi/s21cpmUHScBlpSeUkwDwDf0IJZ82ZXWCgViFVub/KdOeB5C7IQ=="]},"code":0,"data":"0A230A1D2F636F736D6F732E617574687A2E763162657461312E4D73674578656312020A000A1D0A1B2F636F736D6F732E6E66742E763162657461312E4D736753656E640A1E0A1C2F636F736D6F732E62616E6B2E763162657461312E4D736753656E640A1E0A1C2F636F736D6F732E62616E6B2E763162657461312E4D736753656E640A1E0A1C2F636F736D6F732E62616E6B2E763162657461312E4D736753656E64","info":"","logs":[{"log":"","events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"key":"amount","value":"256002000000nanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6"},{"key":"amount","value":"256002000000nanolike"}]},{"type":"cosmos.authz.v1beta1.EventRevoke","attributes":[{"key":"msg_type_url","value":"\"/cosmos.bank.v1beta1.MsgSend\""},{"key":"granter","value":"\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\""},{"key":"grantee","value":"\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.authz.v1beta1.MsgExec"},{"key":"sender","value":"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"key":"sender","value":"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6"},{"key":"amount","value":"256002000000nanolike"}]}],"msg_index":0},{"log":"","events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"likenft18nf6zu6grjxc3ym97qxjzxfaqvn8j689gnnragrfwrvvc8mn6axqx74d8c\""},{"key":"id","value":"\"writing-0a86763b-3e6f-40dc-9ef3-1ac77b463c79\""},{"key":"sender","value":"\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\""},{"key":"receiver","value":"\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}],"msg_index":1},{"log":"","events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd"},{"key":"amount","value":"224000000000nanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"key":"amount","value":"224000000000nanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd"},{"key":"sender","value":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"key":"amount","value":"224000000000nanolike"}]}],"msg_index":2},{"log":"","events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"like10ywsmztkxjl55xarxnhlxwc83z9v2hkxtsajwl"},{"key":"amount","value":"6400000000nanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"key":"amount","value":"6400000000nanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"like10ywsmztkxjl55xarxnhlxwc83z9v2hkxtsajwl"},{"key":"sender","value":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"key":"amount","value":"6400000000nanolike"}]}],"msg_index":3},{"log":"","events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd"},{"key":"amount","value":"25600000000nanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"key":"amount","value":"25600000000nanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd"},{"key":"sender","value":"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"},{"key":"amount","value":"25600000000nanolike"}]}],"msg_index":4}],"events":[{"type":"coin_spent","attributes":[{"key":"c3BlbmRlcg==","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="},{"key":"YW1vdW50","index":true,"value":"NDAwMDAwMG5hbm9saWtl"}]},{"type":"coin_received","attributes":[{"key":"cmVjZWl2ZXI=","index":true,"value":"bGlrZTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHI5bHpneA=="},{"key":"YW1vdW50","index":true,"value":"NDAwMDAwMG5hbm9saWtl"}]},{"type":"transfer","attributes":[{"key":"cmVjaXBpZW50","index":true,"value":"bGlrZTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHI5bHpneA=="},{"key":"c2VuZGVy","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="},{"key":"YW1vdW50","index":true,"value":"NDAwMDAwMG5hbm9saWtl"}]},{"type":"message","attributes":[{"key":"c2VuZGVy","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="}]},{"type":"tx","attributes":[{"key":"ZmVl","index":true,"value":"NDAwMDAwMG5hbm9saWtl"}]},{"type":"tx","attributes":[{"key":"YWNjX3NlcQ==","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycy8xMTg4"}]},{"type":"tx","attributes":[{"key":"c2lnbmF0dXJl","index":true,"value":"cXZueHlKWGEzUHZuVlRldm9mLzd6VWhzcEF1NmxFWTdoUWkvczIxY3BtVUhTY0JscFNlVWt3RHdEZjBJSlo4MlpYV0NnVmlGVnViL0tkT2VCNUM3SVE9PQ=="}]},{"type":"message","attributes":[{"key":"YWN0aW9u","index":true,"value":"L2Nvc21vcy5hdXRoei52MWJldGExLk1zZ0V4ZWM="}]},{"type":"cosmos.authz.v1beta1.EventRevoke","attributes":[{"key":"bXNnX3R5cGVfdXJs","index":true,"value":"Ii9jb3Ntb3MuYmFuay52MWJldGExLk1zZ1NlbmQi"},{"key":"Z3JhbnRlcg==","index":true,"value":"Imxpa2UxM2Y0Z2x2ZzgwenZmcnJzN3V0ZnQ1cDY4cGN0NG1jcTd0NWF0ZjYi"},{"key":"Z3JhbnRlZQ==","index":true,"value":"Imxpa2UxN200dndybmhqbWQyMHV1N3RzdDdudjBrYXA2ZWU3anM2OWpmcnMi"}]},{"type":"coin_spent","attributes":[{"key":"c3BlbmRlcg==","index":true,"value":"bGlrZTEzZjRnbHZnODB6dmZycnM3dXRmdDVwNjhwY3Q0bWNxN3Q1YXRmNg=="},{"key":"YW1vdW50","index":true,"value":"MjU2MDAyMDAwMDAwbmFub2xpa2U="}]},{"type":"coin_received","attributes":[{"key":"cmVjZWl2ZXI=","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="},{"key":"YW1vdW50","index":true,"value":"MjU2MDAyMDAwMDAwbmFub2xpa2U="}]},{"type":"transfer","attributes":[{"key":"cmVjaXBpZW50","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="},{"key":"c2VuZGVy","index":true,"value":"bGlrZTEzZjRnbHZnODB6dmZycnM3dXRmdDVwNjhwY3Q0bWNxN3Q1YXRmNg=="},{"key":"YW1vdW50","index":true,"value":"MjU2MDAyMDAwMDAwbmFub2xpa2U="}]},{"type":"message","attributes":[{"key":"c2VuZGVy","index":true,"value":"bGlrZTEzZjRnbHZnODB6dmZycnM3dXRmdDVwNjhwY3Q0bWNxN3Q1YXRmNg=="}]},{"type":"message","attributes":[{"key":"bW9kdWxl","index":true,"value":"YmFuaw=="}]},{"type":"message","attributes":[{"key":"YWN0aW9u","index":true,"value":"L2Nvc21vcy5uZnQudjFiZXRhMS5Nc2dTZW5k"}]},{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"Y2xhc3NfaWQ=","index":true,"value":"Imxpa2VuZnQxOG5mNnp1NmdyanhjM3ltOTdxeGp6eGZhcXZuOGo2ODlnbm5yYWdyZndydnZjOG1uNmF4cXg3NGQ4YyI="},{"key":"aWQ=","index":true,"value":"IndyaXRpbmctMGE4Njc2M2ItM2U2Zi00MGRjLTllZjMtMWFjNzdiNDYzYzc5Ig=="},{"key":"c2VuZGVy","index":true,"value":"Imxpa2UxN200dndybmhqbWQyMHV1N3RzdDdudjBrYXA2ZWU3anM2OWpmcnMi"},{"key":"cmVjZWl2ZXI=","index":true,"value":"Imxpa2UxM2Y0Z2x2ZzgwenZmcnJzN3V0ZnQ1cDY4cGN0NG1jcTd0NWF0ZjYi"}]},{"type":"message","attributes":[{"key":"YWN0aW9u","index":true,"value":"L2Nvc21vcy5iYW5rLnYxYmV0YTEuTXNnU2VuZA=="}]},{"type":"coin_spent","attributes":[{"key":"c3BlbmRlcg==","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="},{"key":"YW1vdW50","index":true,"value":"MjI0MDAwMDAwMDAwbmFub2xpa2U="}]},{"type":"coin_received","attributes":[{"key":"cmVjZWl2ZXI=","index":true,"value":"bGlrZTFxZ2hreG00MmtxcDh6cXJxYWZ3YTIwanN6Y3BqZjNreGZjaHNwZA=="},{"key":"YW1vdW50","index":true,"value":"MjI0MDAwMDAwMDAwbmFub2xpa2U="}]},{"type":"transfer","attributes":[{"key":"cmVjaXBpZW50","index":true,"value":"bGlrZTFxZ2hreG00MmtxcDh6cXJxYWZ3YTIwanN6Y3BqZjNreGZjaHNwZA=="},{"key":"c2VuZGVy","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="},{"key":"YW1vdW50","index":true,"value":"MjI0MDAwMDAwMDAwbmFub2xpa2U="}]},{"type":"message","attributes":[{"key":"c2VuZGVy","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="}]},{"type":"message","attributes":[{"key":"bW9kdWxl","index":true,"value":"YmFuaw=="}]},{"type":"message","attributes":[{"key":"YWN0aW9u","index":true,"value":"L2Nvc21vcy5iYW5rLnYxYmV0YTEuTXNnU2VuZA=="}]},{"type":"coin_spent","attributes":[{"key":"c3BlbmRlcg==","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="},{"key":"YW1vdW50","index":true,"value":"NjQwMDAwMDAwMG5hbm9saWtl"}]},{"type":"coin_received","attributes":[{"key":"cmVjZWl2ZXI=","index":true,"value":"bGlrZTEweXdzbXp0a3hqbDU1eGFyeG5obHh3Yzgzejl2MmhreHRzYWp3bA=="},{"key":"YW1vdW50","index":true,"value":"NjQwMDAwMDAwMG5hbm9saWtl"}]},{"type":"transfer","attributes":[{"key":"cmVjaXBpZW50","index":true,"value":"bGlrZTEweXdzbXp0a3hqbDU1eGFyeG5obHh3Yzgzejl2MmhreHRzYWp3bA=="},{"key":"c2VuZGVy","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="},{"key":"YW1vdW50","index":true,"value":"NjQwMDAwMDAwMG5hbm9saWtl"}]},{"type":"message","attributes":[{"key":"c2VuZGVy","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="}]},{"type":"message","attributes":[{"key":"bW9kdWxl","index":true,"value":"YmFuaw=="}]},{"type":"message","attributes":[{"key":"YWN0aW9u","index":true,"value":"L2Nvc21vcy5iYW5rLnYxYmV0YTEuTXNnU2VuZA=="}]},{"type":"coin_spent","attributes":[{"key":"c3BlbmRlcg==","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="},{"key":"YW1vdW50","index":true,"value":"MjU2MDAwMDAwMDBuYW5vbGlrZQ=="}]},{"type":"coin_received","attributes":[{"key":"cmVjZWl2ZXI=","index":true,"value":"bGlrZTFxZ2hreG00MmtxcDh6cXJxYWZ3YTIwanN6Y3BqZjNreGZjaHNwZA=="},{"key":"YW1vdW50","index":true,"value":"MjU2MDAwMDAwMDBuYW5vbGlrZQ=="}]},{"type":"transfer","attributes":[{"key":"cmVjaXBpZW50","index":true,"value":"bGlrZTFxZ2hreG00MmtxcDh6cXJxYWZ3YTIwanN6Y3BqZjNreGZjaHNwZA=="},{"key":"c2VuZGVy","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="},{"key":"YW1vdW50","index":true,"value":"MjU2MDAwMDAwMDBuYW5vbGlrZQ=="}]},{"type":"message","attributes":[{"key":"c2VuZGVy","index":true,"value":"bGlrZTE3bTR2d3JuaGptZDIwdXU3dHN0N252MGthcDZlZTdqczY5amZycw=="}]},{"type":"message","attributes":[{"key":"bW9kdWxl","index":true,"value":"YmFuaw=="}]}],"height":"5706264","txhash":"D79E83657AF10A76E13E799AA9BEB357F143CBA65A8D974C56902A231F01FFDA","raw_log":"[{\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"},{\"key\":\"amount\",\"value\":\"256002000000nanolike\"}]},{\"type\":\"coin_spent\",\"attributes\":[{\"key\":\"spender\",\"value\":\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"},{\"key\":\"amount\",\"value\":\"256002000000nanolike\"}]},{\"type\":\"cosmos.authz.v1beta1.EventRevoke\",\"attributes\":[{\"key\":\"msg_type_url\",\"value\":\"\\\"/cosmos.bank.v1beta1.MsgSend\\\"\"},{\"key\":\"granter\",\"value\":\"\\\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\\\"\"},{\"key\":\"grantee\",\"value\":\"\\\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\\\"\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.authz.v1beta1.MsgExec\"},{\"key\":\"sender\",\"value\":\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"},{\"key\":\"module\",\"value\":\"bank\"}]},{\"type\":\"transfer\",\"attributes\":[{\"key\":\"recipient\",\"value\":\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"},{\"key\":\"sender\",\"value\":\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"},{\"key\":\"amount\",\"value\":\"256002000000nanolike\"}]}]},{\"msg_index\":1,\"events\":[{\"type\":\"cosmos.nft.v1beta1.EventSend\",\"attributes\":[{\"key\":\"class_id\",\"value\":\"\\\"likenft18nf6zu6grjxc3ym97qxjzxfaqvn8j689gnnragrfwrvvc8mn6axqx74d8c\\\"\"},{\"key\":\"id\",\"value\":\"\\\"writing-0a86763b-3e6f-40dc-9ef3-1ac77b463c79\\\"\"},{\"key\":\"sender\",\"value\":\"\\\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\\\"\"},{\"key\":\"receiver\",\"value\":\"\\\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\\\"\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.nft.v1beta1.MsgSend\"}]}]},{\"msg_index\":2,\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd\"},{\"key\":\"amount\",\"value\":\"224000000000nanolike\"}]},{\"type\":\"coin_spent\",\"attributes\":[{\"key\":\"spender\",\"value\":\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"},{\"key\":\"amount\",\"value\":\"224000000000nanolike\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.bank.v1beta1.MsgSend\"},{\"key\":\"sender\",\"value\":\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"},{\"key\":\"module\",\"value\":\"bank\"}]},{\"type\":\"transfer\",\"attributes\":[{\"key\":\"recipient\",\"value\":\"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd\"},{\"key\":\"sender\",\"value\":\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"},{\"key\":\"amount\",\"value\":\"224000000000nanolike\"}]}]},{\"msg_index\":3,\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"like10ywsmztkxjl55xarxnhlxwc83z9v2hkxtsajwl\"},{\"key\":\"amount\",\"value\":\"6400000000nanolike\"}]},{\"type\":\"coin_spent\",\"attributes\":[{\"key\":\"spender\",\"value\":\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"},{\"key\":\"amount\",\"value\":\"6400000000nanolike\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.bank.v1beta1.MsgSend\"},{\"key\":\"sender\",\"value\":\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"},{\"key\":\"module\",\"value\":\"bank\"}]},{\"type\":\"transfer\",\"attributes\":[{\"key\":\"recipient\",\"value\":\"like10ywsmztkxjl55xarxnhlxwc83z9v2hkxtsajwl\"},{\"key\":\"sender\",\"value\":\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"},{\"key\":\"amount\",\"value\":\"6400000000nanolike\"}]}]},{\"msg_index\":4,\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd\"},{\"key\":\"amount\",\"value\":\"25600000000nanolike\"}]},{\"type\":\"coin_spent\",\"attributes\":[{\"key\":\"spender\",\"value\":\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"},{\"key\":\"amount\",\"value\":\"25600000000nanolike\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.bank.v1beta1.MsgSend\"},{\"key\":\"sender\",\"value\":\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"},{\"key\":\"module\",\"value\":\"bank\"}]},{\"type\":\"transfer\",\"attributes\":[{\"key\":\"recipient\",\"value\":\"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd\"},{\"key\":\"sender\",\"value\":\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"},{\"key\":\"amount\",\"value\":\"25600000000nanolike\"}]}]}]","gas_used":"141898","codespace":"","timestamp":"2022-09-21T14:40:46Z","gas_wanted":"400000"}'::jsonb,'{"coin_received.receiver=\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"","coin_received.amount=\"256002000000nanolike\"","coin_spent.spender=\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"","coin_spent.amount=\"256002000000nanolike\"","cosmos.authz.v1beta1.EventRevoke.msg_type_url=\"\"/cosmos.bank.v1beta1.MsgSend\"\"","cosmos.authz.v1beta1.EventRevoke.granter=\"\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"\"","cosmos.authz.v1beta1.EventRevoke.grantee=\"\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"\"","message.action=\"/cosmos.authz.v1beta1.MsgExec\"","message.sender=\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"","message.module=\"bank\"","transfer.recipient=\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"","transfer.sender=\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"","transfer.amount=\"256002000000nanolike\"","cosmos.nft.v1beta1.EventSend.class_id=\"\"likenft18nf6zu6grjxc3ym97qxjzxfaqvn8j689gnnragrfwrvvc8mn6axqx74d8c\"\"","cosmos.nft.v1beta1.EventSend.id=\"\"writing-0a86763b-3e6f-40dc-9ef3-1ac77b463c79\"\"","cosmos.nft.v1beta1.EventSend.sender=\"\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"\"","cosmos.nft.v1beta1.EventSend.receiver=\"\"like13f4glvg80zvfrrs7utft5p68pct4mcq7t5atf6\"\"","message.action=\"/cosmos.nft.v1beta1.MsgSend\"","coin_received.receiver=\"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd\"","coin_received.amount=\"224000000000nanolike\"","coin_spent.spender=\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"","coin_spent.amount=\"224000000000nanolike\"","message.action=\"/cosmos.bank.v1beta1.MsgSend\"","message.sender=\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"","message.module=\"bank\"","transfer.recipient=\"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd\"","transfer.sender=\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"","transfer.amount=\"224000000000nanolike\"","coin_received.receiver=\"like10ywsmztkxjl55xarxnhlxwc83z9v2hkxtsajwl\"","coin_received.amount=\"6400000000nanolike\"","coin_spent.spender=\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"","coin_spent.amount=\"6400000000nanolike\"","message.action=\"/cosmos.bank.v1beta1.MsgSend\"","message.sender=\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"","message.module=\"bank\"","transfer.recipient=\"like10ywsmztkxjl55xarxnhlxwc83z9v2hkxtsajwl\"","transfer.sender=\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"","transfer.amount=\"6400000000nanolike\"","coin_received.receiver=\"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd\"","coin_received.amount=\"25600000000nanolike\"","coin_spent.spender=\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"","coin_spent.amount=\"25600000000nanolike\"","message.action=\"/cosmos.bank.v1beta1.MsgSend\"","message.sender=\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"","message.module=\"bank\"","transfer.recipient=\"like1qghkxm42kqp8zqrqafwa20jszcpjf3kxfchspd\"","transfer.sender=\"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs\"","transfer.amount=\"25600000000nanolike\""}'::varchar[]
+)
+;
+
+INSERT INTO nft_event VALUES (
+  DEFAULT,'new_class','likenft1hzhd4lvhgxp7wldca5vy0g5gm9qdmy3sc5ycns42kc9dt76vh3jsh8654r','','like1ulcpx4wp43xkap3rqzdmmszvp478dzh6t7f0v8','','{"coin_received.receiver=\"like17xpfvakm2amg962yls6f84z3kell8c5lr9lzgx\"","coin_received.amount=\"2220000nanolike\"","coin_spent.spender=\"like1ulcpx4wp43xkap3rqzdmmszvp478dzh6t7f0v8\"","coin_spent.amount=\"2220000nanolike\"","likechain.likenft.v1.EventNewClass.parent_iscn_id_prefix=\"\"iscn://likecoin-chain/mT9FmQkTXI82jK0XBtN-gBpB0bVRaUpqllxeenmk5as\"\"","likechain.likenft.v1.EventNewClass.parent_account=\"\"\"\"","likechain.likenft.v1.EventNewClass.class_id=\"\"likenft1hzhd4lvhgxp7wldca5vy0g5gm9qdmy3sc5ycns42kc9dt76vh3jsh8654r\"\"","message.action=\"new_class\"","message.sender=\"like1ulcpx4wp43xkap3rqzdmmszvp478dzh6t7f0v8\"","transfer.recipient=\"like17xpfvakm2amg962yls6f84z3kell8c5lr9lzgx\"","transfer.sender=\"like1ulcpx4wp43xkap3rqzdmmszvp478dzh6t7f0v8\"","transfer.amount=\"2220000nanolike\""}'::text[],'DE0DAFAB210EEE2E3A5B89BE26489AEFB113CA821E5EEB72F1C77B09DEA138BD',to_timestamp(1658393354)
+), (
+  DEFAULT,'new_class','likenft1azzhjkw8pp4kepc0k0xaz57umwdrhgy25zcevuf593ugdjgwj7dszj2vga','','like1kcz2gaztc47zl3mcgplf9vkwl76wuzxrpssed0','','{"coin_received.receiver=\"like17xpfvakm2amg962yls6f84z3kell8c5lr9lzgx\"","coin_received.amount=\"14230000nanolike\"","coin_spent.spender=\"like1kcz2gaztc47zl3mcgplf9vkwl76wuzxrpssed0\"","coin_spent.amount=\"14230000nanolike\"","likechain.likenft.v1.EventNewClass.class_id=\"\"likenft1azzhjkw8pp4kepc0k0xaz57umwdrhgy25zcevuf593ugdjgwj7dszj2vga\"\"","likechain.likenft.v1.EventNewClass.parent_iscn_id_prefix=\"\"iscn://likecoin-chain/Vrlj5wAwLS8OhNWUJ45ULBh0SvLUcW8nX_esrShgeKI\"\"","likechain.likenft.v1.EventNewClass.parent_account=\"\"\"\"","message.action=\"new_class\"","message.sender=\"like1kcz2gaztc47zl3mcgplf9vkwl76wuzxrpssed0\"","transfer.recipient=\"like17xpfvakm2amg962yls6f84z3kell8c5lr9lzgx\"","transfer.sender=\"like1kcz2gaztc47zl3mcgplf9vkwl76wuzxrpssed0\"","transfer.amount=\"14230000nanolike\""}'::text[],'D13DD6FC6084E1CC386C193B2E2DC11CDB03C0D2E16DB908B10EDB7299A54CA9',to_timestamp(1658891207)
 )
 ;
