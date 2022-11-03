@@ -1,12 +1,15 @@
-package db
+package db_test
 
 import (
 	"encoding/json"
 	"testing"
+
+	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
+	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
 
 func TestNftCount(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +41,7 @@ func TestNftCount(t *testing.T) {
 }
 
 func TestNftTradeStats(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +65,7 @@ func TestNftTradeStats(t *testing.T) {
 }
 
 func TestNftCreatorCount(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +82,7 @@ func TestNftCreatorCount(t *testing.T) {
 }
 
 func TestNftOwnerCount(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +99,7 @@ func TestNftOwnerCount(t *testing.T) {
 }
 
 func TestNftOwnerList(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}

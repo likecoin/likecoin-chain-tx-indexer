@@ -1,12 +1,15 @@
-package db
+package db_test
 
 import (
 	"log"
 	"testing"
+
+	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
+	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
 
 func TestIscnCombineQuery(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -124,7 +127,7 @@ func TestIscnCombineQuery(t *testing.T) {
 }
 
 func TestIscnList(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -145,7 +148,7 @@ func TestIscnList(t *testing.T) {
 }
 
 func TestIscnQueryAll(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -223,7 +226,7 @@ func TestIscnQueryAll(t *testing.T) {
 }
 
 func TestIscnPagination(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		log.Fatalln(err)
 	}

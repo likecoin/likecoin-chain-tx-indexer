@@ -1,10 +1,12 @@
-package db
+package db_test
 
 import (
 	"encoding/json"
 	"testing"
 	"time"
 
+	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
+	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
@@ -32,7 +34,7 @@ func TestQueryNftClass(t *testing.T) {
 			false,
 		},
 	}
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +67,7 @@ func TestQueryNftClass(t *testing.T) {
 }
 
 func TestQueryNftByOwner(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,7 +100,7 @@ func TestQueryNftByOwner(t *testing.T) {
 }
 
 func TestOwnerByClassId(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,7 +142,7 @@ func TestNftEvents(t *testing.T) {
 		},
 	}
 
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -234,7 +236,7 @@ func TestQueryNftRanking(t *testing.T) {
 			},
 		},
 	}
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -260,7 +262,7 @@ func TestQueryNftRanking(t *testing.T) {
 	}
 }
 func TestCollectors(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -284,7 +286,7 @@ func TestCollectors(t *testing.T) {
 }
 
 func TestCreators(t *testing.T) {
-	conn, err := AcquireFromPool(pool)
+	conn, err := AcquireFromPool(Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
