@@ -5,6 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
 func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountResponse, err error) {
@@ -16,10 +17,11 @@ func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountRe
 	WHERE ($1 = true OR i.owner != n.owner)
 		AND ($2::text[] IS NULL OR n.owner != ALL($2))
 	`
+	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	err = conn.QueryRow(ctx, sql, q.IncludeOwner, q.IgnoreList).Scan(&count.Count)
+	err = conn.QueryRow(ctx, sql, q.IncludeOwner, ignoreListVariations).Scan(&count.Count)
 	if err != nil {
 		err = fmt.Errorf("get nft count failed: %w", err)
 		logger.L.Error(err, q)
