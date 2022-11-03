@@ -51,6 +51,24 @@ The indexer will also poll and index new transactions from the lite client.
 
 Query format is the same as the `/txs?...` endpoint of the lite client, example: `http://localhost:8997/txs?message.action=send&page=3005&limit=100`
 
+### testing
+
+You may run a testing Postgres database:
+
+```
+docker compose run --rm -p 127.0.0.1:5433:5432 test-db
+```
+
+Then run `go test ./...`.
+
+Alternatively, provide an empty Postrgres database with environment variables:
+
+```
+DB_NAME=my_pg_db DB_HOST=somewhere DB_PORT=15432 DB_USER=my_pg_user DB_PASS=my_password go test ./...
+```
+
+If you really want to test on production server, you may add `TEST_ON_PRODUCTION=1` environment variable to enforce it.
+
 ### API Example
 
 Please refer to [examples](./examples)

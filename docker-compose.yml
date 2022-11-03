@@ -42,3 +42,11 @@ services:
         "--postgres-user", "postgres",
         "--postgres-pwd", "password",
         "--liked-path", "/liked"]
+  test-db:
+    profiles: ["scripts"]
+    image: postgres:12.3
+    ports:
+     - 127.0.0.1:5432:5432
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres_test
