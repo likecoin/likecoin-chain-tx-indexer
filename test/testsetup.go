@@ -39,17 +39,44 @@ func SetupDbAndRunTest(m *testing.M, preRun func(pool *pgxpool.Pool)) {
 		log.Fatalln(err)
 	}
 	defer Pool.Close()
+
+	// this connection is dedicated for the lock to make the schema checkings on another connection "happens after" the lock
+	lockConn, err := db.AcquireFromPool(Pool)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer lockConn.Release()
+
+	// explicitly locking the database, so database related tests will not run in parallel
+	_, err = lockConn.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS testing_lock ()")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	tx, err := lockConn.Begin(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	}
+	_, err = tx.Exec(context.Background(), "LOCK testing_lock")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer tx.Rollback(context.Background())
+
 	conn, err := db.AcquireFromPool(Pool)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	defer conn.Release()
-
 	onProduction, err := checkTableExists(conn, "meta")
+	testOnProduction := (utils.EnvInt("TEST_ON_PRODUCTION", 0) == 1)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	if !onProduction {
+		if testOnProduction {
+			log.Println("WARNING: TEST_ON_PRODUCTION is set but now on testing database.")
+		}
 		err := db.InitDB(conn)
 		if err != nil {
 			log.Fatalln(err)
@@ -59,8 +86,8 @@ func SetupDbAndRunTest(m *testing.M, preRun func(pool *pgxpool.Pool)) {
 			log.Fatalln(err)
 		}
 	} else {
-		if utils.EnvInt("TEST_ON_PRODUCTION", 0) == 1 {
-			log.Println("WARNING: explicitly testing on production server.")
+		if testOnProduction {
+			log.Println("WARNING: explicitly testing on production database.")
 		} else {
 			log.Fatalln("Database is not empty testing database, not testing on it unless TEST_ON_PRODUCTION=1 is set.")
 		}
