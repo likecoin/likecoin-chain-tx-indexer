@@ -40,28 +40,19 @@ func SetupDbAndRunTest(m *testing.M, preRun func(pool *pgxpool.Pool)) {
 	}
 	defer Pool.Close()
 
+	// explicitly locking the database, so database related tests will not run in parallel
 	// this connection is dedicated for the lock to make the schema checkings on another connection "happens after" the lock
 	lockConn, err := db.AcquireFromPool(Pool)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	defer lockConn.Release()
-
-	// explicitly locking the database, so database related tests will not run in parallel
-	_, err = lockConn.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS testing_lock ()")
+	// some randomly generated number to make sure there is no conflict with other application
+	_, err = lockConn.Exec(context.Background(), "SELECT pg_advisory_lock(4317656794910816416)")
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	tx, err := lockConn.Begin(context.Background())
-	if err != nil {
-		log.Fatalln(err)
-	}
-	_, err = tx.Exec(context.Background(), "LOCK testing_lock")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer tx.Rollback(context.Background())
+	// the lock will be released automatically once lockConn is released
 
 	conn, err := db.AcquireFromPool(Pool)
 	if err != nil {
