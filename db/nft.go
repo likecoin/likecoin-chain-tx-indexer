@@ -199,10 +199,12 @@ func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, err
 
 func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (QueryEventsResponse, error) {
 	sql := fmt.Sprintf(`
-	SELECT e.id, action, e.class_id, e.nft_id, e.sender, e.receiver, e.timestamp, e.tx_hash, e.events
+	SELECT e.id, action, e.class_id, e.nft_id, e.sender, e.receiver, e.timestamp, e.tx_hash, e.events, t.tx -> 'tx' -> 'body' ->> 'memo' AS memo
 	FROM nft_event as e
 	JOIN nft_class as c
 	ON e.class_id = c.class_id
+	JOIN txs AS t
+	ON e.tx_hash = t.tx ->> 'txhash'::text
 	WHERE ($4 = '' OR e.class_id = $4)
 		AND (nft_id = '' OR $5 = '' OR nft_id = $5)
 		AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
@@ -233,7 +235,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 		if err = rows.Scan(
 			&res.Pagination.NextKey,
 			&e.Action, &e.ClassId, &e.NftId, &e.Sender,
-			&e.Receiver, &e.Timestamp, &e.TxHash, &eventRaw,
+			&e.Receiver, &e.Timestamp, &e.TxHash, &eventRaw, &e.Memo,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft events", "error", err, "q", q)
 			return QueryEventsResponse{}, fmt.Errorf("query nft events data failed: %w", err)
