@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -32,6 +33,11 @@ const DefaultDBPoolMin = 4
 const DefaultDBPoolMax = 32
 
 const META_EXTRACTOR = "extractor_v1"
+
+var (
+	pool     *pgxpool.Pool = nil
+	poolLock               = &sync.Mutex{}
+)
 
 type Order string
 
@@ -68,36 +74,45 @@ func GetTimeoutContext() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 45*time.Second)
 }
 
-func NewConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) {
-	dbname, err := cmd.Flags().GetString(CmdDBName)
-	if err != nil {
-		return nil, err
+func GetConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) {
+	poolLock.Lock()
+	defer poolLock.Unlock()
+	if pool == nil {
+		dbname, err := cmd.Flags().GetString(CmdDBName)
+		if err != nil {
+			return nil, err
+		}
+		host, err := cmd.Flags().GetString(CmdDBHost)
+		if err != nil {
+			return nil, err
+		}
+		port, err := cmd.Flags().GetString(CmdDBPort)
+		if err != nil {
+			return nil, err
+		}
+		user, err := cmd.Flags().GetString(CmdDBUser)
+		if err != nil {
+			return nil, err
+		}
+		pwd, err := cmd.Flags().GetString(CmdDBPassword)
+		if err != nil {
+			return nil, err
+		}
+		poolMin, err := cmd.Flags().GetInt(CmdDBPoolMin)
+		if err != nil {
+			return nil, err
+		}
+		poolMax, err := cmd.Flags().GetInt(CmdDBPoolMax)
+		if err != nil {
+			return nil, err
+		}
+		returnPool, err := NewConnPool(dbname, host, port, user, pwd, poolMin, poolMax)
+		if err != nil {
+			return nil, err
+		}
+		pool = returnPool
 	}
-	host, err := cmd.Flags().GetString(CmdDBHost)
-	if err != nil {
-		return nil, err
-	}
-	port, err := cmd.Flags().GetString(CmdDBPort)
-	if err != nil {
-		return nil, err
-	}
-	user, err := cmd.Flags().GetString(CmdDBUser)
-	if err != nil {
-		return nil, err
-	}
-	pwd, err := cmd.Flags().GetString(CmdDBPassword)
-	if err != nil {
-		return nil, err
-	}
-	poolMin, err := cmd.Flags().GetInt(CmdDBPoolMin)
-	if err != nil {
-		return nil, err
-	}
-	poolMax, err := cmd.Flags().GetInt(CmdDBPoolMax)
-	if err != nil {
-		return nil, err
-	}
-	return NewConnPool(dbname, host, port, user, pwd, poolMin, poolMax)
+	return pool, nil
 }
 
 func NewConnPool(dbname string, host string, port string, user string, pwd string, poolMin int, poolMax int) (pool *pgxpool.Pool, err error) {

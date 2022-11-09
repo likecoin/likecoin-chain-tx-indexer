@@ -32,10 +32,24 @@ Import and index the transactions from existing LikeCoin chain data folder.
 
 Note that the node needs to be shutdown before importing, since LevelDB does not allow concurrent access from different processes.
 
-### serve
+### poller
 
 ```
-indexer serve \
+indexer serve poller \
+    --postgres-db "postgres" \
+    --postgres-host "localhost" \
+    --postgres-port "5432" \
+    --postgres-user "postgres" \
+    --postgres-pwd "password" \
+    --lcd-endpoint "http://localhost:1317"
+```
+
+Start poller, whihc will poll and index new transactions from the lite client into Postgres database.
+
+### HTTP server
+
+```
+indexer serve http \
     --postgres-db "postgres" \
     --postgres-host "localhost" \
     --postgres-port "5432" \
@@ -45,11 +59,11 @@ indexer serve \
     --listen-addr ":8997"
 ```
 
-Start serving the `/txs` endpoint.
+Start serving the query endpoints.
 
-The indexer will also poll and index new transactions from the lite client.
+For `/txs` endpoint, the query format is the same as the `/txs?...` endpoint of the lite client. Example: `http://localhost:8997/txs?message.action=send&page=3005&limit=100`
 
-Query format is the same as the `/txs?...` endpoint of the lite client, example: `http://localhost:8997/txs?message.action=send&page=3005&limit=100`
+Unreconized endpoints will be forwarded to the lite client.
 
 ### testing
 
