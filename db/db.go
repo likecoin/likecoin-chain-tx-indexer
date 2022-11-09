@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/pubsub"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 	"github.com/likecoin/likecoin-chain/v3/app"
 	"github.com/spf13/cobra"
@@ -265,6 +267,7 @@ func (batch *Batch) InsertTx(txRes types.TxResponse, height int64, txIndex int) 
 	if err != nil {
 		return err
 	}
+	pubsub.Publish("NewTx", json.RawMessage(txResJSON))
 	logger.L.Infow("Processing transaction", "txhash", txRes.TxHash, "height", height, "index", txIndex)
 	batch.Batch.Queue("INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, txIndex, txResJSON, eventStrings)
 	batch.prevHeight = height

@@ -12,6 +12,7 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/extractor"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/poller"
+	"github.com/likecoin/likecoin-chain-tx-indexer/pubsub"
 )
 
 var PollerCommand = &cobra.Command{
@@ -42,6 +43,11 @@ func ServePoller(cmd *cobra.Command) {
 	lcdEndpoint, err := cmd.Flags().GetString("lcd-endpoint")
 	if err != nil {
 		logger.L.Panicw("Cannot get lcd endpoint address from command line parameters", "error", err)
+	}
+
+	err = pubsub.InitPubsubFromCmd(cmd)
+	if err != nil {
+		logger.L.Errorw("Pubsub initialization filed", "error", err)
 	}
 
 	ctx := poller.CosmosCallContext{

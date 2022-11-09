@@ -12,6 +12,10 @@ services:
     image: likechain/tx-indexer
     depends_on:
      - db
+    volumes:
+     - ./serviceAccountKey.json:/serviceAccountKey.json
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /serviceAccountKey.json
     restart: always
     command: [
       "tx-indexer", "serve", "poller",
@@ -20,7 +24,9 @@ services:
       "--postgres-port", "5432",
       "--postgres-user", "postgres",
       "--postgres-pwd", "password",
-      "--lcd-endpoint", "http://somewhere:1317",
+      "--lcd-endpoint", "http://somwehere:1317",
+      "--pubsub-project-id", "project-id",
+      "--pubsub-topic", "",
     ]
   tx-indexer-http:
     image: likechain/tx-indexer
