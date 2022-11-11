@@ -19,12 +19,14 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 		SELECT array_agg(row_to_json((n.*)))
 		FROM nft as n
 		WHERE n.class_id = c.class_id
-			AND $6 = true
+			AND $7 = true
 		GROUP BY n.class_id
 	) as nfts
 	FROM nft_class as c
+	LEFT JOIN iscn AS i ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	WHERE ($4 = '' OR c.parent_iscn_id_prefix = $4)
 		AND ($5 = '' OR c.parent_account = $5)
+		AND ($6 = '' OR i.owner = $6)
 		AND ($1 = 0 OR c.id > $1)
 		AND ($2 = 0 OR c.id < $2)
 	ORDER BY c.id %s
@@ -32,7 +34,7 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	`, p.Order())
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, q.IscnIdPrefix, q.Account, q.Expand)
+	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, q.IscnIdPrefix, q.Account, q.IscnOwner, q.Expand)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft class by iscn id prefix", "error", err, "q", q)
 		return QueryClassResponse{}, fmt.Errorf("query nft class by iscn id prefix error: %w", err)
