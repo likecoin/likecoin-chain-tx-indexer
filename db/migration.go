@@ -62,6 +62,10 @@ func InitDB(conn *pgxpool.Conn) error {
 			if err != nil {
 				return err
 			}
+			_, err = dbTx.Exec(context.Background(), `UPDATE meta SET height = $1 WHERE id = 'schema_version'`, version)
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})

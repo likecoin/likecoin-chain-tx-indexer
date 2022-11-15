@@ -11,6 +11,8 @@ import (
 )
 
 func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryClassResponse, error) {
+	accountVariations := utils.ConvertAddressPrefixes(q.Account, AddressPrefixes)
+	iscnOwnerVariations := utils.ConvertAddressPrefixes(q.IscnOwner, AddressPrefixes)
 	sql := fmt.Sprintf(`
 	SELECT c.id, c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
 	c.config, c.metadata, c.price,
@@ -25,8 +27,8 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	FROM nft_class as c
 	LEFT JOIN iscn AS i ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	WHERE ($4 = '' OR c.parent_iscn_id_prefix = $4)
-		AND ($5 = '' OR c.parent_account = $5)
-		AND ($6 = '' OR i.owner = $6)
+		AND ($5::text[] IS NULL OR cardinality($5::text[]) = 0 OR c.parent_account = ANY($5))
+		AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR i.owner = ANY($6))
 		AND ($1 = 0 OR c.id > $1)
 		AND ($2 = 0 OR c.id < $2)
 	ORDER BY c.id %s
@@ -34,7 +36,10 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	`, p.Order())
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, q.IscnIdPrefix, q.Account, q.IscnOwner, q.Expand)
+	rows, err := conn.Query(
+		ctx, sql,
+		p.After(), p.Before(), p.Limit, q.IscnIdPrefix, accountVariations,
+		iscnOwnerVariations, q.Expand)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft class by iscn id prefix", "error", err, "q", q)
 		return QueryClassResponse{}, fmt.Errorf("query nft class by iscn id prefix error: %w", err)
@@ -67,6 +72,10 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 }
 
 func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest) (QueryRankingResponse, error) {
+	stakeholderIdVariataions := utils.ConvertAddressPrefixes(q.StakeholderId, AddressPrefixes)
+	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
+	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
+	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	sql := `
 	SELECT c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
 	c.config, c.metadata, c.price,
@@ -80,25 +89,25 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 		LEFT JOIN iscn_stakeholders ON i.id = iscn_pid
 		LEFT JOIN nft as n ON c.class_id = n.class_id
 			AND ($1 = true OR n.owner != i.owner)
-			AND ($2::text[] IS NULL OR n.owner != ALL($2))
-		WHERE ($4 = '' OR i.owner = $4)
+			AND ($2::text[] IS NULL OR cardinality($2::text[]) = 0 OR n.owner != ALL($2))
+		WHERE ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR i.owner = ANY($4))
 			AND ($5 = '' OR i.data #>> '{"contentMetadata", "@type"}' = $5)
-			AND ($6 = '' OR sid = $6)
+			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR sid = ANY($6))
 			AND ($7 = '' OR sname = $7)
 			AND ($9 = 0 OR c.created_at > to_timestamp($9))
 			AND ($10 = 0 OR c.created_at < to_timestamp($10))
 		GROUP BY c.id
 	) AS t USING(id)
-	WHERE ($8 = '' OR $8 = ANY(t.owners))
+	WHERE ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR ($8 && t.owners))
 	ORDER BY sold_count DESC
 	LIMIT $3
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.IncludeOwner, q.IgnoreList,
-		p.Limit, q.Creator, q.Type, q.StakeholderId, q.StakeholderName,
-		q.Collector, q.After, q.Before)
+	rows, err := conn.Query(ctx, sql, q.IncludeOwner, ignoreListVariations,
+		p.Limit, creatorVariations, q.Type, stakeholderIdVariataions, q.StakeholderName,
+		collectorVariations, q.After, q.Before)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft class ranking", "error", err, "q", q)
 		return QueryRankingResponse{}, fmt.Errorf("query nft class ranking error: %w", err)
@@ -123,6 +132,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 }
 
 func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResponse, error) {
+	ownerVariations := utils.ConvertAddressPrefixes(q.Owner, AddressPrefixes)
 	sql := fmt.Sprintf(`
 	SELECT n.id, n.nft_id, n.class_id, n.owner, n.uri, n.uri_hash, n.metadata,
 		e.timestamp, c.parent_type, c.parent_iscn_id_prefix, c.parent_account
@@ -132,11 +142,11 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 	JOIN (
 		SELECT DISTINCT ON (nft_id) nft_id, timestamp
 		FROM nft_event
-		WHERE receiver = $4
+		WHERE receiver = ANY($4)
 		ORDER BY nft_id, timestamp DESC
 	) e
 	ON n.nft_id = e.nft_id
-	WHERE owner = $4
+	WHERE owner = ANY($4)
 		AND ($1 = 0 OR n.id > $1)
 		AND ($2 = 0 OR n.id < $2)
 	ORDER BY n.id %s
@@ -144,7 +154,7 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 	`, p.Order())
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, q.Owner)
+	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, ownerVariations)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft by owner", "error", err, "q", q)
 		return QueryNftResponse{}, fmt.Errorf("query nft class error: %w", err)
@@ -200,6 +210,8 @@ func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, err
 }
 
 func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (QueryEventsResponse, error) {
+	ignoreFromListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreFromList, AddressPrefixes)
+	ignoreToListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreToList, AddressPrefixes)
 	sql := fmt.Sprintf(`
 	SELECT e.id, action, e.class_id, e.nft_id, e.sender, e.receiver, e.timestamp, e.tx_hash, e.events, t.tx -> 'tx' -> 'body' ->> 'memo' AS memo
 	FROM nft_event as e
@@ -212,9 +224,9 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 		AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
 		AND ($1 = 0 OR e.id > $1)
 		AND ($2 = 0 OR e.id < $2)
-		AND ($7::text[] IS NULL OR e.action = ANY($7))
-		AND ($8::text[] IS NULL OR e.sender != ALL($8))
-		AND ($9::text[] IS NULL OR e.receiver != ALL($9))
+		AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR e.action = ANY($7))
+		AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR e.sender != ALL($8))
+		AND ($9::text[] IS NULL OR cardinality($9::text[]) = 0 OR e.receiver != ALL($9))
 	ORDER BY e.id %s
 	LIMIT $3
 	`, p.Order())
@@ -222,7 +234,11 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, p.After(), p.Before(), p.Limit, q.ClassId, q.NftId, q.IscnIdPrefix, q.ActionType, q.IgnoreFromList, q.IgnoreToList)
+	rows, err := conn.Query(
+		ctx, sql,
+		p.After(), p.Before(), p.Limit, q.ClassId, q.NftId,
+		q.IscnIdPrefix, q.ActionType, ignoreFromListVariations, ignoreToListVariations,
+	)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft events", "error", err)
 		return QueryEventsResponse{}, fmt.Errorf("query nft events error: %w", err)
@@ -256,6 +272,8 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 }
 
 func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (res QueryCollectorResponse, err error) {
+	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
+	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	sql := `
 	SELECT owner, sum(count) as total,
 		array_agg(json_build_object(
@@ -267,8 +285,8 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 		FROM iscn as i
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
-			AND ($4::text[] IS NULL OR n.owner != ALL($4))
-		WHERE $1 = '' OR i.owner = $1
+			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
+		WHERE $1::text[] IS NULL OR cardinality($1::text[]) = 0 OR i.owner = ANY($1)
 		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
 	) as r
 	GROUP BY owner
@@ -279,7 +297,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.Creator, p.Offset, p.Limit, q.IgnoreList)
+	rows, err := conn.Query(ctx, sql, creatorVariations, p.Offset, p.Limit, ignoreListVariations)
 	if err != nil {
 		logger.L.Errorw("Failed to query collectors", "error", err, "q", q)
 		err = fmt.Errorf("query supporters error: %w", err)
@@ -297,6 +315,8 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 }
 
 func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res QueryCreatorResponse, err error) {
+	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
+	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	sql := `
 	SELECT owner, sum(count) as total,
 		array_agg(json_build_object(
@@ -308,8 +328,8 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 		FROM iscn as i
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
-			AND ($4::text[] IS NULL OR n.owner != ALL($4))
-		WHERE $1 = '' OR i.owner = $1
+			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
+		WHERE $1::text[] IS NULL OR cardinality($1::text[]) = 0 OR i.owner = ANY($1)
 		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
 	) as r
 	GROUP BY owner
@@ -320,7 +340,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.Collector, p.Offset, p.Limit, q.IgnoreList)
+	rows, err := conn.Query(ctx, sql, collectorVariations, p.Offset, p.Limit, ignoreListVariations)
 	if err != nil {
 		logger.L.Errorw("Failed to query creators", "error", err, "q", q)
 		err = fmt.Errorf("query creators error: %w", err)

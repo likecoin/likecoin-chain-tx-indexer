@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 	"github.com/likecoin/likecoin-chain/v3/app"
 	"github.com/spf13/cobra"
 )
@@ -41,12 +42,14 @@ const (
 
 var encodingConfig = app.MakeEncodingConfig()
 
+var AddressPrefixes = []string{"like", "cosmos"}
+
 func serializeTx(txRes *types.TxResponse) ([]byte, error) {
 	txResJSON, err := encodingConfig.Marshaler.MarshalJSON(txRes)
 	if err != nil {
 		return nil, err
 	}
-	sanitizedJSON := sanitizeJSON(txResJSON)
+	sanitizedJSON := utils.SanitizeJSON(txResJSON)
 	return sanitizedJSON, nil
 }
 
@@ -133,12 +136,12 @@ func GetLatestHeight(conn *pgxpool.Conn) (int64, error) {
 	}
 	defer rows.Close()
 	if !rows.Next() {
-		// No record in database, so max height = 0
 		return 0, nil
 	}
 	var height int64
 	err = rows.Scan(&height)
 	if err != nil {
+		// conversion failed, the `max` is NULL, i.e. no records
 		return 0, nil
 	}
 	return height, nil

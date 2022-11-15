@@ -1,4 +1,4 @@
-package db
+package utils
 
 import (
 	"bytes"
@@ -88,7 +88,7 @@ func parseEscape(bz []byte, start int) (sanitizerResult int, nextStart int) {
 // They are converted into single character in Postgres JSONB storage.
 // So Postgres don't accept one single dangling surrogate code point (they are actually invalid).
 // But somehow these invalid code points appear in JSON...
-func sanitizeJSON(bz []byte) []byte {
+func SanitizeJSON(bz []byte) []byte {
 	// TODO: check the encoding of string used by the output of MarshalJSON.
 	// If it is not UTF-8 (e.g. UTF-16), we cannot use []byte and need to process
 	// strings and characters.

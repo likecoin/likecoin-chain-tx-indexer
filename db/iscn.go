@@ -8,11 +8,14 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
 const MAX_LIMIT = 100
 
 func QueryIscn(conn *pgxpool.Conn, query IscnQuery, page PageRequest) (IscnResponse, error) {
+	ownerVariations := utils.ConvertAddressPrefixes(query.Owner, AddressPrefixes)
+	stakeholderIdVariataions := utils.ConvertAddressPrefixes(query.StakeholderId, AddressPrefixes)
 	sql := fmt.Sprintf(`
 			SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 			FROM iscn
@@ -21,10 +24,10 @@ func QueryIscn(conn *pgxpool.Conn, query IscnQuery, page PageRequest) (IscnRespo
 			WHERE
 				($1 = '' OR iscn_id = $1)
 				AND ($2 = '' OR iscn_id_prefix = $2)
-				AND ($3 = '' OR owner = $3)
-				AND ($4::text[] IS NULL OR keywords @> $4)
-				AND ($5::text[] IS NULL OR fingerprints @> $5)
-				AND ($6 = '' OR sid = $6)
+				AND ($3::text[] IS NULL OR cardinality($3::text[]) = 0 OR owner = ANY($3))
+				AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR keywords @> $4)
+				AND ($5::text[] IS NULL OR cardinality($5::text[]) = 0 OR fingerprints @> $5)
+				AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR sid = ANY($6::text[]))
 				AND ($7 = '' OR sname = $7)
 				AND ($8 = 0 OR id > $8)
 				AND ($9 = 0 OR id < $9)
@@ -37,8 +40,8 @@ func QueryIscn(conn *pgxpool.Conn, query IscnQuery, page PageRequest) (IscnRespo
 
 	rows, err := conn.Query(
 		ctx, sql,
-		query.IscnId, query.IscnIdPrefix, query.Owner, query.Keywords,
-		query.Fingerprints, query.StakeholderId, query.StakeholderName,
+		query.IscnId, query.IscnIdPrefix, ownerVariations, query.Keywords,
+		query.Fingerprints, stakeholderIdVariataions, query.StakeholderName,
 		page.After(), page.Before(),
 	)
 	if err != nil {
@@ -83,11 +86,11 @@ func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest) (I
 				ON id = iscn_pid
 				WHERE
 					(
-						sid = $1
+						sid = ANY($3)
 						OR sname = $1
 					)
-					AND ($3 = 0 OR id > $3)
-					AND ($4 = 0 OR id < $4)
+					AND ($4 = 0 OR id > $4)
+					AND ($5 = 0 OR id < $5)
 				ORDER BY id, timestamp %[1]s
 				LIMIT %[2]d
 			)
@@ -99,12 +102,12 @@ func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest) (I
 					(
 						iscn_id = $1
 						OR iscn_id_prefix = $1
-						OR owner = $1
+						OR owner = ANY($3::text[])
 						OR keywords @> $2::text[]
 						OR fingerprints @> $2::text[]
 					)
-					AND ($3 = 0 OR id > $3)
-					AND ($4 = 0 OR id < $4)
+					AND ($4 = 0 OR id > $4)
+					AND ($5 = 0 OR id < $5)
 				ORDER BY id, timestamp %[1]s
 				LIMIT %[2]d
 			)
@@ -117,7 +120,7 @@ func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest) (I
 	defer cancel()
 
 	rows, err := conn.Query(ctx, sql,
-		term, []string{term},
+		term, []string{term}, utils.ConvertAddressPrefixes(term, AddressPrefixes),
 		pagination.After(), pagination.Before(),
 	)
 	if err != nil {

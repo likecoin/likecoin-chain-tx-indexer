@@ -39,7 +39,7 @@ func TestISCNCombine(t *testing.T) {
 		{
 			name:   "keyword",
 			query:  "keyword=DAO&limit=5",
-			length: 5,
+			length: 2,
 		},
 		{
 			name:  "multiple-keywords",
@@ -48,7 +48,7 @@ func TestISCNCombine(t *testing.T) {
 		{
 			name:   "keyword & owner",
 			query:  "keyword=香港&owner=cosmos1ykkpc0dnetfsya88f5nrdd7p57kplaw8sva6pj&limit=5",
-			length: 5,
+			length: 1,
 		},
 		{
 			name:    "stakeholder name",
@@ -59,7 +59,7 @@ func TestISCNCombine(t *testing.T) {
 		{
 			name:    "Apple Daily",
 			query:   "stakeholder.name=Apple+Daily&limit=10",
-			length:  10,
+			length:  1,
 			contain: []string{"Apple Daily"},
 		},
 		{
@@ -70,7 +70,7 @@ func TestISCNCombine(t *testing.T) {
 		{
 			name:   "search by keyword",
 			query:  "q=香港&limit=5",
-			length: 5,
+			length: 1,
 		},
 		{
 			name:    "search by owner",
