@@ -14,12 +14,14 @@ import (
 const (
 	CmdProjectID = "pubsub-project-id"
 	CmdTopic     = "pubsub-topic"
+	CmdChainID   = "pubsub-chain-id"
 )
 
 var (
-	client *pubsub.Client
-	topic  *pubsub.Topic
-	lock   = &sync.Mutex{}
+	client        *pubsub.Client
+	topic         *pubsub.Topic
+	pubsubChainID string
+	lock          = &sync.Mutex{}
 )
 
 func InitPubsubFromCmd(cmd *cobra.Command) error {
@@ -35,11 +37,15 @@ func InitPubsubFromCmd(cmd *cobra.Command) error {
 		logger.L.Infow("Pubsub topic is empty, pubsub disabled")
 		return nil
 	}
-	logger.L.Infow("Pubsub enabled", "project_id", projectID, "topic", topicID)
-	return InitPubsub(projectID, topicID)
+	chainID, err := cmd.Flags().GetString(CmdChainID)
+	if err != nil {
+		return err
+	}
+	logger.L.Infow("Pubsub enabled", "project_id", projectID, "topic", topicID, "chain_id", chainID)
+	return InitPubsub(projectID, topicID, chainID)
 }
 
-func InitPubsub(projectID, topicID string) error {
+func InitPubsub(projectID, topicID, chainID string) error {
 	lock.Lock()
 	defer lock.Unlock()
 	if client == nil {
@@ -48,15 +54,16 @@ func InitPubsub(projectID, topicID string) error {
 			return err
 		}
 		client = c
-	}
-	if topic == nil {
 		topic = client.Topic(topicID)
+		pubsubChainID = chainID
 	}
 	return nil
 }
 
 type PubsubPayload struct {
 	Event   string      `json:"event"`
+	Source  string      `json:"source"`
+	ChainID string      `json:"chain_id"`
 	Payload interface{} `json:"payload"`
 }
 
@@ -67,7 +74,9 @@ func Publish(action string, payload interface{}) error {
 		return nil
 	}
 	encodedBz, err := json.Marshal(PubsubPayload{
-		Event:   "eventIndexer" + action,
+		Event:   action,
+		Source:  "indexer",
+		ChainID: pubsubChainID,
 		Payload: payload,
 	})
 	if err != nil {
@@ -86,6 +95,7 @@ func Publish(action string, payload interface{}) error {
 }
 
 func ConfigCmd(cmd *cobra.Command) {
+	cmd.PersistentFlags().String(CmdChainID, "", "Chain ID marked in pubsub payloads")
 	cmd.PersistentFlags().String(CmdProjectID, "", "Pubsub project ID")
 	cmd.PersistentFlags().String(CmdTopic, "", "Pubsub topic (empty means disable pubsub)")
 }

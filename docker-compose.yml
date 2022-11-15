@@ -27,6 +27,7 @@ services:
       "--lcd-endpoint", "http://somwehere:1317",
       "--pubsub-project-id", "project-id",
       "--pubsub-topic", "",
+      "--pubsub-chain-id", "likecoin-mainnet-2",
     ]
   tx-indexer-http:
     image: likechain/tx-indexer
