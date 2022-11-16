@@ -108,6 +108,7 @@ func TestIscnCombineQuery(t *testing.T) {
 
 	for i, v := range tables {
 		t.Run(v.name, func(t *testing.T) {
+			v.IscnQuery.AllIscnVersions = true
 			p := PageRequest{
 				Limit:   1,
 				Reverse: true,
@@ -138,7 +139,7 @@ func TestIscnList(t *testing.T) {
 		Reverse: true,
 	}
 
-	res, err := QueryIscnList(conn, p)
+	res, err := QueryIscnList(conn, p, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -213,7 +214,7 @@ func TestIscnQueryAll(t *testing.T) {
 	for i, v := range tables {
 		t.Run(v.term, func(t *testing.T) {
 			t.Log(v.term)
-			res, err := QueryIscnSearch(conn, v.term, p)
+			res, err := QueryIscnSearch(conn, v.term, p, true)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -244,7 +245,7 @@ func TestIscnPagination(t *testing.T) {
 		}: 1,
 	}
 	for p, expectedNextKey := range table {
-		res, err := QueryIscnList(conn, p)
+		res, err := QueryIscnList(conn, p, true)
 		if err != nil {
 			t.Fatal(err)
 		}

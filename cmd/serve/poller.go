@@ -9,6 +9,7 @@ import (
 	"github.com/likecoin/likecoin-chain/v3/app"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db/schema"
 	"github.com/likecoin/likecoin-chain-tx-indexer/extractor"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/poller"
@@ -34,7 +35,7 @@ func ServePoller(cmd *cobra.Command) {
 		logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
 	}
 	defer conn.Release()
-	err = db.InitDB(conn)
+	err = schema.InitDB(conn)
 	if err != nil {
 		logger.L.Panicw("Cannot initialize database", "error", err)
 	}

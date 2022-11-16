@@ -73,7 +73,7 @@ You may run a testing Postgres database:
 docker compose run --rm -p 127.0.0.1:5433:5432 test-db
 ```
 
-Then run `go test ./...`.
+Then run `go test --count=1 ./...`. The `--count=1` parameter is to ensure database tests won't be cached.
 
 Alternatively, provide an empty Postrgres database with environment variables:
 

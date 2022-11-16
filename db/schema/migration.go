@@ -1,4 +1,4 @@
-package db
+package schema
 
 import (
 	"context"
@@ -6,14 +6,14 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 
-	"github.com/likecoin/likecoin-chain-tx-indexer/db/schema"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
-func GetSchemaVersion(dbTx pgx.Tx) (uint64, error) {
-	ctx, cancel := GetTimeoutContext()
+func GetSchemaVersion(conn *pgxpool.Conn) (uint64, error) {
+	ctx, cancel := db.GetTimeoutContext()
 	defer cancel()
-	row := dbTx.QueryRow(ctx, `
+	row := conn.QueryRow(ctx, `
 SELECT EXISTS (
   SELECT FROM information_schema.tables
   WHERE table_name = 'meta'
@@ -29,7 +29,7 @@ SELECT EXISTS (
 		logger.L.Debug("Table meta does not exist, schema version = 0")
 		return 0, nil
 	}
-	row = dbTx.QueryRow(ctx, `SELECT height FROM meta WHERE id = 'schema_version'`)
+	row = conn.QueryRow(ctx, `SELECT height FROM meta WHERE id = 'schema_version'`)
 	var schemaVersion uint64
 	err = row.Scan(&schemaVersion)
 	if err != nil {
@@ -45,16 +45,16 @@ SELECT EXISTS (
 }
 
 func InitDB(conn *pgxpool.Conn) error {
+	versionSqlMap, codeSchemaVersion, err := GetVersionSQLMap()
+	if err != nil {
+		return err
+	}
+	dbSchemaVersion, err := GetSchemaVersion(conn)
+	if err != nil {
+		return err
+	}
 	// migration could be long, so we use background context instead of the timeout version
 	return conn.BeginFunc(context.Background(), func(dbTx pgx.Tx) error {
-		versionSqlMap, codeSchemaVersion, err := schema.GetVersionSQLMap()
-		if err != nil {
-			return err
-		}
-		dbSchemaVersion, err := GetSchemaVersion(dbTx)
-		if err != nil {
-			return err
-		}
 		for version := dbSchemaVersion + 1; version <= codeSchemaVersion; version++ {
 			logger.L.Infow("Running SQL migration", "from_schema_version", version-1, "to_schema_version", version)
 			sql := versionSqlMap[version]

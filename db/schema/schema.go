@@ -21,7 +21,7 @@ func GetVersionSQLMap() (versionSqlMap map[uint64]string, codeSchemaVersion uint
 	for _, fsEntry := range files {
 		filename := fsEntry.Name()
 		path := strings.Split(filename, "/")
-		// Since the glob from go:embed is schema/v*.sql, we simply strip off the first 1 and last 4 chars
+		// Since the glob from go:embed is v*.sql, we simply strip off the first 1 and last 4 chars
 		numericPart := path[len(path)-1][1 : len(filename)-4]
 		version, err := strconv.ParseUint(numericPart, 10, 64)
 		if err != nil {

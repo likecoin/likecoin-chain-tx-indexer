@@ -46,6 +46,7 @@ func TestQueryNftClass(t *testing.T) {
 
 	for _, v := range table {
 		t.Run(v.name, func(t *testing.T) {
+			v.q.AllIscnVersions = true
 			res, err := GetClasses(conn, v.q, p)
 			if err != nil {
 				t.Error(err)
@@ -248,6 +249,7 @@ func TestQueryNftRanking(t *testing.T) {
 
 	for _, q := range table {
 		t.Run(q.name, func(t *testing.T) {
+			q.QueryRankingRequest.AllIscnVersions = true
 			res, err := GetClassesRanking(conn, q.QueryRankingRequest, p)
 			if err != nil {
 				t.Error(err)
@@ -269,7 +271,8 @@ func TestCollectors(t *testing.T) {
 	defer conn.Release()
 
 	q := QueryCollectorRequest{
-		Creator: KIN,
+		Creator:         KIN,
+		AllIscnVersions: true,
 	}
 	p := PageRequest{
 		Offset:  0,
@@ -293,7 +296,8 @@ func TestCreators(t *testing.T) {
 	defer conn.Release()
 
 	q := QueryCreatorRequest{
-		Collector: COLLECTOR,
+		Collector:       COLLECTOR,
+		AllIscnVersions: true,
 	}
 	p := PageRequest{
 		Offset: 0,

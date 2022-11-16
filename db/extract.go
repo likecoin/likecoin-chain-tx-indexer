@@ -166,6 +166,14 @@ func (batch *Batch) InsertIscn(insert IscnInsert) {
 		// $11 ~ $15
 		insert.Description, insert.Url, stakeholderIDs, stakeholderNames, stakeholderRawJSONs,
 	)
+	sql = `
+		INSERT INTO iscn_latest_version AS t (iscn_id_prefix, latest_version)
+		VALUES ($1, $2)
+		ON CONFLICT (iscn_id_prefix) DO UPDATE
+			SET latest_version = GREATEST(t.latest_version, EXCLUDED.latest_version)
+		;
+	`
+	batch.Batch.Queue(sql, insert.IscnPrefix, insert.Version)
 	pubsub.Publish("NewISCN", insert)
 }
 

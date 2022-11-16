@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db/schema"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
@@ -29,7 +30,7 @@ func SetupDbAndRunTest(m *testing.M, preRun func(pool *pgxpool.Pool)) {
 	Pool, err = db.NewConnPool(
 		utils.Env("DB_NAME", "postgres_test"),
 		utils.Env("DB_HOST", "localhost"),
-		utils.Env("DB_PORT", "5432"),
+		utils.Env("DB_PORT", "5433"),
 		utils.Env("DB_USER", "postgres"),
 		utils.Env("DB_PASS", "password"),
 		32,
@@ -68,7 +69,7 @@ func SetupDbAndRunTest(m *testing.M, preRun func(pool *pgxpool.Pool)) {
 		if testOnProduction {
 			log.Println("WARNING: TEST_ON_PRODUCTION is set but now on testing database.")
 		}
-		err := db.InitDB(conn)
+		err := schema.InitDB(conn)
 		if err != nil {
 			log.Fatalln(err)
 		}
