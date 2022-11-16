@@ -8,24 +8,46 @@ services:
     restart: always
     environment:
       POSTGRES_PASSWORD: password
-  tx-indexer:
+  tx-indexer-poller:
+    image: likechain/tx-indexer
+    depends_on:
+     - db
+    volumes:
+     - ./serviceAccountKey.json:/serviceAccountKey.json
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /serviceAccountKey.json
+    restart: always
+    command: [
+      "tx-indexer", "serve", "poller",
+      "--postgres-db", "postgres",
+      "--postgres-host", "db",
+      "--postgres-port", "5432",
+      "--postgres-user", "postgres",
+      "--postgres-pwd", "password",
+      "--lcd-endpoint", "http://somwehere:1317",
+      "--pubsub-project-id", "project-id",
+      "--pubsub-topic", "",
+      "--pubsub-chain-id", "likecoin-mainnet-2",
+    ]
+  tx-indexer-http:
     image: likechain/tx-indexer
     depends_on:
      - db
     ports: 
      - 8997:8997
-    restart: always
     environment:
       GIN_MODE: release
     command: [
-        "tx-indexer", "serve",
-        "--postgres-db", "postgres",
-        "--postgres-host", "db",
-        "--postgres-port", "5432",
-        "--postgres-user", "postgres",
-        "--postgres-pwd", "password",
-        "--lcd-endpoint", "http://192.168.1.186:1317",
-        "--listen-addr", ":8997"]
+      "tx-indexer", "serve", "http",
+      "--postgres-db", "postgres",
+      "--postgres-host", "db",
+      "--postgres-port", "5432",
+      "--postgres-user", "postgres",
+      "--postgres-pwd", "password",
+      "--lcd-endpoint", "http://somewhere:1317",
+      "--listen-addr", ":8997",
+    ]
+    restart: always
   import-tx:
     profiles: ["scripts"]
     image: likechain/tx-indexer

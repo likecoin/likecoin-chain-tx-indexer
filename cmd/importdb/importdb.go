@@ -16,7 +16,7 @@ var Command = &cobra.Command{
 		if err != nil {
 			logger.L.Panicw("Cannot get liked data folder path from command line parameters", "error", err)
 		}
-		pool, err := db.NewConnPoolFromCmdArgs(cmd)
+		pool, err := db.GetConnPoolFromCmdArgs(cmd)
 		if err != nil {
 			logger.L.Panicw("Cannot connect to Postgres", "error", err)
 		}

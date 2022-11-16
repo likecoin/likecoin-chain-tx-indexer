@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/pubsub"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
@@ -165,6 +166,7 @@ func (batch *Batch) InsertIscn(insert IscnInsert) {
 		// $11 ~ $15
 		insert.Description, insert.Url, stakeholderIDs, stakeholderNames, stakeholderRawJSONs,
 	)
+	pubsub.Publish("NewISCN", insert)
 }
 
 func (batch *Batch) UpdateMetaHeight(key string, height int64) {
@@ -187,6 +189,7 @@ func (batch *Batch) InsertNftClass(c NftClass) {
 		c.Name, c.Symbol, c.Description, c.URI, c.URIHash,
 		c.Metadata, c.Config, c.Price, c.CreatedAt,
 	)
+	pubsub.Publish("NewNFTClass", c)
 }
 
 func (batch *Batch) UpdateNftClass(c NftClass) {
@@ -205,6 +208,7 @@ func (batch *Batch) UpdateNftClass(c NftClass) {
 		c.Name, c.Symbol, c.Description, c.URI, c.URIHash,
 		c.Metadata, c.Config, c.Id,
 	)
+	pubsub.Publish("UpdateNFTClass", c)
 }
 
 func (batch *Batch) InsertNft(n Nft) {
@@ -215,6 +219,7 @@ func (batch *Batch) InsertNft(n Nft) {
 	($1, $2, $3, $4, $5, $6)
 	ON CONFLICT DO NOTHING`
 	batch.Batch.Queue(sql, n.NftId, n.ClassId, n.Owner, n.Uri, n.UriHash, n.Metadata)
+	pubsub.Publish("NewNFT", n)
 }
 
 func (batch *Batch) InsertNftEvent(e NftEvent) {
@@ -224,4 +229,5 @@ func (batch *Batch) InsertNftEvent(e NftEvent) {
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	ON CONFLICT DO NOTHING`
 	batch.Batch.Queue(sql, e.Action, e.ClassId, e.NftId, e.Sender, e.Receiver, getEventStrings(e.Events), e.TxHash, e.Timestamp)
+	pubsub.Publish("NewNFTEvent", e)
 }
