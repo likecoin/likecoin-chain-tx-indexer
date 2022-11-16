@@ -44,7 +44,7 @@ indexer serve poller \
     --lcd-endpoint "http://localhost:1317"
 ```
 
-Start poller, whihc will poll and index new transactions from the lite client into Postgres database.
+Start poller, which will poll and index new transactions from the lite client into Postgres database.
 
 ### HTTP server
 
@@ -63,7 +63,7 @@ Start serving the query endpoints.
 
 For `/txs` endpoint, the query format is the same as the `/txs?...` endpoint of the lite client. Example: `http://localhost:8997/txs?message.action=send&page=3005&limit=100`
 
-Unreconized endpoints will be forwarded to the lite client.
+Unrecognized endpoints will be forwarded to the lite client.
 
 ### testing
 
