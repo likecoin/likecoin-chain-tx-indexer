@@ -3,6 +3,7 @@ package rest
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	iscntypes "github.com/likecoin/likecoin-chain/v3/x/iscn/types"
 )
 
 func handleIscn(c *gin.Context) {
@@ -29,6 +30,10 @@ func handleIscn(c *gin.Context) {
 	if form.Empty() {
 		res, err = db.QueryIscnList(conn, p, form.AllIscnVersions)
 	} else {
+		if form.IscnId != "" {
+			// makes no sense to query only latest while the ISCN ID is already specified
+			form.AllIscnVersions = true
+		}
 		res, err = db.QueryIscn(conn, form, p)
 	}
 	if err != nil {
@@ -46,8 +51,15 @@ func handleIscnSearch(c *gin.Context, form db.IscnQuery) {
 		return
 	}
 	term := form.SearchTerm
+	queryAllIscnVersion := form.AllIscnVersions
+	iscnID, err := iscntypes.ParseIscnId(term)
+	if err == nil && iscnID.Version > 0 {
+		// user wants us to search an ISCN ID with specific version
+		// then we should search all versions
+		queryAllIscnVersion = true
+	}
 	conn := getConn(c)
-	res, err := db.QueryIscnSearch(conn, term, p, form.AllIscnVersions)
+	res, err := db.QueryIscnSearch(conn, term, p, queryAllIscnVersion)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
