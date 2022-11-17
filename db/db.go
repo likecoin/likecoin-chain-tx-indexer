@@ -51,7 +51,10 @@ const (
 
 var encodingConfig = app.MakeEncodingConfig()
 
-var AddressPrefixes = []string{"like", "cosmos"}
+var (
+	MainAddressPrefix = "like"
+	AddressPrefixes   = []string{MainAddressPrefix, "cosmos"}
+)
 
 func serializeTx(txRes *types.TxResponse) ([]byte, error) {
 	txResJSON, err := encodingConfig.Marshaler.MarshalJSON(txRes)

@@ -141,6 +141,10 @@ func (batch *Batch) InsertIscn(insert IscnInsert) {
 		stakeholderNames = append(stakeholderNames, s.Entity.Name)
 		stakeholderRawJSONs = append(stakeholderRawJSONs, s.Data)
 	}
+	convertedOwner, err := utils.ConvertAddressPrefix(insert.Owner, MainAddressPrefix)
+	if err == nil {
+		insert.Owner = convertedOwner
+	}
 	sql := `
 	WITH result AS (
 		INSERT INTO iscn
@@ -220,6 +224,10 @@ func (batch *Batch) UpdateNftClass(c NftClass) {
 }
 
 func (batch *Batch) InsertNft(n Nft) {
+	convertedOwner, err := utils.ConvertAddressPrefix(n.Owner, MainAddressPrefix)
+	if err == nil {
+		n.Owner = convertedOwner
+	}
 	sql := `
 	INSERT INTO nft
 	(nft_id, class_id, owner, uri, uri_hash, metadata)
@@ -231,6 +239,14 @@ func (batch *Batch) InsertNft(n Nft) {
 }
 
 func (batch *Batch) InsertNftEvent(e NftEvent) {
+	convertedSender, err := utils.ConvertAddressPrefix(e.Sender, MainAddressPrefix)
+	if err == nil {
+		e.Sender = convertedSender
+	}
+	convertedReceiver, err := utils.ConvertAddressPrefix(e.Receiver, MainAddressPrefix)
+	if err == nil {
+		e.Receiver = convertedReceiver
+	}
 	sql := `
 	INSERT INTO nft_event
 	(action, class_id, nft_id, sender, receiver, events, tx_hash, timestamp)

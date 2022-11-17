@@ -29,7 +29,7 @@ var MigrationSetupIscnVersionTableCommand = &cobra.Command{
 			logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
 		}
 		defer conn.Release()
-		return schema.MigrationSetupIscnVersionTable(conn, batchSize)
+		return schema.MigrateSetupIscnVersionTable(conn, batchSize)
 	},
 }
 
