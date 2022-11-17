@@ -80,7 +80,7 @@ func QueryIscnList(conn *pgxpool.Conn, pagination PageRequest, allIscnVersions b
 	return parseIscn(rows, pagination.Limit)
 }
 
-func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest, latestOnly bool) (IscnResponse, error) {
+func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest, allIscnVersions bool) (IscnResponse, error) {
 	order := pagination.Order()
 	sql := fmt.Sprintf(`
 		SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
@@ -133,7 +133,7 @@ func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest, la
 
 	rows, err := conn.Query(ctx, sql,
 		term, []string{term}, utils.ConvertAddressPrefixes(term, AddressPrefixes),
-		pagination.After(), pagination.Before(), latestOnly,
+		pagination.After(), pagination.Before(), allIscnVersions,
 	)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "term", term)
