@@ -4,6 +4,8 @@ import (
 	"log"
 	"testing"
 
+	iscntypes "github.com/likecoin/likecoin-chain/v3/x/iscn/types"
+
 	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
@@ -127,6 +129,49 @@ func TestIscnCombineQuery(t *testing.T) {
 	}
 }
 
+func TestIscnQueryLatestVersionOnly(t *testing.T) {
+	conn, err := AcquireFromPool(Pool)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer conn.Release()
+
+	query := IscnQuery{
+		IscnIdPrefix:    "iscn://likecoin-chain/ZUdVeNeSVS0rOIFPfrdtc8s515wnj7fhnQI_HpgzrOg",
+		AllIscnVersions: true,
+	}
+
+	p := PageRequest{
+		Limit: 100,
+	}
+
+	res, err := QueryIscn(conn, query, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Records) != 2 {
+		t.Fatalf("query with AllIscnVersions: true should return 2 records, got %d records", len(res.Records))
+	}
+
+	query.AllIscnVersions = false
+
+	res, err = QueryIscn(conn, query, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Records) != 1 {
+		t.Fatalf("query with AllIscnVersions: false should only return latest record, got %d records", len(res.Records))
+	}
+	iscnIdStr := res.Records[0].Data.Id
+	iscnId, err := iscntypes.ParseIscnId(iscnIdStr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if iscnId.Version != 2 {
+		t.Fatalf("query with AllIscnVersions: false should return record with latest version, expect version = 2, got version = %d", iscnId.Version)
+	}
+}
+
 func TestIscnList(t *testing.T) {
 	conn, err := AcquireFromPool(Pool)
 	if err != nil {
@@ -223,6 +268,43 @@ func TestIscnQueryAll(t *testing.T) {
 				t.Fatalf("Test %d (%s): hasResult should be %t, got %d results instead.\n", i, v.term, v.hasResult, len(res.Records))
 			}
 		})
+	}
+}
+
+func TestIscnQuerySearchLatestVersion(t *testing.T) {
+	conn, err := AcquireFromPool(Pool)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer conn.Release()
+
+	term := "iscn://likecoin-chain/ZUdVeNeSVS0rOIFPfrdtc8s515wnj7fhnQI_HpgzrOg"
+
+	p := PageRequest{
+		Limit: 100,
+	}
+	res, err := QueryIscnSearch(conn, term, p, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Records) != 2 {
+		t.Fatalf("query with AllIscnVersions: true should return 2 records, got %d records", len(res.Records))
+	}
+
+	res, err = QueryIscnSearch(conn, term, p, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Records) != 1 {
+		t.Fatalf("query with AllIscnVersions: false should return only latest record, got %d records", len(res.Records))
+	}
+	iscnIdStr := res.Records[0].Data.Id
+	iscnId, err := iscntypes.ParseIscnId(iscnIdStr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if iscnId.Version != 2 {
+		t.Fatalf("query with AllIscnVersions: false should return record with latest version, expect version = 2, got version = %d", iscnId.Version)
 	}
 }
 
