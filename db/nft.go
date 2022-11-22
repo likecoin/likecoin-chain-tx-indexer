@@ -26,6 +26,9 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	) as nfts
 	FROM nft_class as c
 	LEFT JOIN iscn AS i ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+	JOIN iscn_latest_version
+	ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+		AND ($8 = true OR i.version = iscn_latest_version.latest_version)
 	WHERE ($4 = '' OR c.parent_iscn_id_prefix = $4)
 		AND ($5::text[] IS NULL OR cardinality($5::text[]) = 0 OR c.parent_account = ANY($5))
 		AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR i.owner = ANY($6))
@@ -39,7 +42,7 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	rows, err := conn.Query(
 		ctx, sql,
 		p.After(), p.Before(), p.Limit, q.IscnIdPrefix, accountVariations,
-		iscnOwnerVariations, q.Expand)
+		iscnOwnerVariations, q.Expand, q.AllIscnVersions)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft class by iscn id prefix", "error", err, "q", q)
 		return QueryClassResponse{}, fmt.Errorf("query nft class by iscn id prefix error: %w", err)
@@ -86,6 +89,9 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 		FROM nft_class as c
 		JOIN iscn as i
 		ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN iscn_latest_version
+		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND ($11 = true OR i.version = iscn_latest_version.latest_version)
 		LEFT JOIN iscn_stakeholders ON i.id = iscn_pid
 		LEFT JOIN nft as n ON c.class_id = n.class_id
 			AND ($1 = true OR n.owner != i.owner)
@@ -107,7 +113,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 
 	rows, err := conn.Query(ctx, sql, q.IncludeOwner, ignoreListVariations,
 		p.Limit, creatorVariations, q.Type, stakeholderIdVariataions, q.StakeholderName,
-		collectorVariations, q.After, q.Before)
+		collectorVariations, q.After, q.Before, q.AllIscnVersions)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft class ranking", "error", err, "q", q)
 		return QueryRankingResponse{}, fmt.Errorf("query nft class ranking error: %w", err)
@@ -283,6 +289,9 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 	FROM (
 		SELECT n.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
 		FROM iscn as i
+		JOIN iscn_latest_version
+		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND ($5 = true OR i.version = iscn_latest_version.latest_version)
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
@@ -297,7 +306,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, creatorVariations, p.Offset, p.Limit, ignoreListVariations)
+	rows, err := conn.Query(ctx, sql, creatorVariations, p.Offset, p.Limit, ignoreListVariations, q.AllIscnVersions)
 	if err != nil {
 		logger.L.Errorw("Failed to query collectors", "error", err, "q", q)
 		err = fmt.Errorf("query supporters error: %w", err)
@@ -326,6 +335,9 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 	FROM (
 		SELECT i.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
 		FROM iscn as i
+		JOIN iscn_latest_version
+		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND ($5 = true OR i.version = iscn_latest_version.latest_version)
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
@@ -340,7 +352,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, collectorVariations, p.Offset, p.Limit, ignoreListVariations)
+	rows, err := conn.Query(ctx, sql, collectorVariations, p.Offset, p.Limit, ignoreListVariations, q.AllIscnVersions)
 	if err != nil {
 		logger.L.Errorw("Failed to query creators", "error", err, "q", q)
 		err = fmt.Errorf("query creators error: %w", err)
@@ -406,11 +418,14 @@ func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatR
 	sql = `
 	SELECT COUNT(DISTINCT(c.class_id))
 	FROM iscn AS i
+	JOIN iscn_latest_version
+	ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+		AND ($2 = true OR i.version = iscn_latest_version.latest_version)
 	JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	WHERE i.owner = $1
 	`
 
-	row := conn.QueryRow(ctx, sql, q.User)
+	row := conn.QueryRow(ctx, sql, q.User, q.AllIscnVersions)
 
 	if err = row.Scan(&res.CreatedCount); err != nil {
 		err = fmt.Errorf("scan created count error: %w", err)
@@ -420,13 +435,16 @@ func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatR
 	sql = `
 	SELECT COUNT(DISTINCT(n.owner))
 	FROM iscn AS i
+	JOIN iscn_latest_version
+	ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+		AND ($3 = true OR iscn.version = iscn_latest_version.latest_version)
 	JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	JOIN nft AS n ON c.class_id = n.class_id
 		AND ($2::text[] IS NULL OR n.owner != ALL($2))
 	WHERE i.owner = $1
 	`
 
-	row = conn.QueryRow(ctx, sql, q.User, q.IgnoreList)
+	row = conn.QueryRow(ctx, sql, q.User, q.IgnoreList, q.AllIscnVersions)
 
 	err = row.Scan(&res.CollectorCount)
 	if err != nil {

@@ -46,6 +46,7 @@ func TestQueryNftClass(t *testing.T) {
 
 	for _, v := range table {
 		t.Run(v.name, func(t *testing.T) {
+			v.q.AllIscnVersions = true
 			res, err := GetClasses(conn, v.q, p)
 			if err != nil {
 				t.Error(err)
@@ -64,6 +65,44 @@ func TestQueryNftClass(t *testing.T) {
 		})
 	}
 
+}
+
+func TestQueryNftClassByIscnOwner(t *testing.T) {
+	conn, err := AcquireFromPool(Pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Release()
+
+	query := QueryClassRequest{
+		IscnIdPrefix: ISCN_ID_PREFIX,
+		IscnOwner:    KIN,
+	}
+	p := PageRequest{
+		Limit: 10,
+	}
+
+	res, err := GetClasses(conn, query, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Classes) > 0 {
+		t.Fatalf("Expect no result when query.AllIscnVersions = false as the latest iscn version has different owner, got results: %#v", res.Classes)
+	}
+
+	query.AllIscnVersions = true
+	res, err = GetClasses(conn, query, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Classes) == 0 {
+		t.Fatalf("Expect getting results when query.AllIscnVersions = true, got no result")
+	}
+	for _, c := range res.Classes {
+		if c.Parent.Account != query.Account {
+			t.Fatalf("Account not equal, expect %s, got %#v", query.Account, c)
+		}
+	}
 }
 
 func TestQueryNftByOwner(t *testing.T) {
@@ -248,6 +287,7 @@ func TestQueryNftRanking(t *testing.T) {
 
 	for _, q := range table {
 		t.Run(q.name, func(t *testing.T) {
+			q.QueryRankingRequest.AllIscnVersions = true
 			res, err := GetClassesRanking(conn, q.QueryRankingRequest, p)
 			if err != nil {
 				t.Error(err)
@@ -269,7 +309,8 @@ func TestCollectors(t *testing.T) {
 	defer conn.Release()
 
 	q := QueryCollectorRequest{
-		Creator: KIN,
+		Creator:         KIN,
+		AllIscnVersions: true,
 	}
 	p := PageRequest{
 		Offset:  0,
@@ -293,7 +334,8 @@ func TestCreators(t *testing.T) {
 	defer conn.Release()
 
 	q := QueryCreatorRequest{
-		Collector: COLLECTOR,
+		Collector:       COLLECTOR,
+		AllIscnVersions: true,
 	}
 	p := PageRequest{
 		Offset: 0,

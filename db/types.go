@@ -52,6 +52,7 @@ type IscnInsert struct {
 }
 
 type IscnQuery struct {
+	SearchTerm      string   `form:"q"`
 	IscnId          string   `form:"iscn_id"`
 	IscnIdPrefix    string   `form:"iscn_id_prefix"`
 	Owner           string   `form:"owner"`
@@ -59,6 +60,7 @@ type IscnQuery struct {
 	Fingerprints    []string `form:"fingerprint"`
 	StakeholderId   string   `form:"stakeholder.id"`
 	StakeholderName string   `form:"stakeholder.name"`
+	AllIscnVersions bool     `form:"all_iscn_versions"`
 }
 
 func (q IscnQuery) Empty() bool {
@@ -181,10 +183,11 @@ type iscnResponseData struct {
 }
 
 type QueryClassRequest struct {
-	IscnIdPrefix string `form:"iscn_id_prefix"`
-	Account      string `form:"account"`
-	IscnOwner    string `form:"iscn_owner"`
-	Expand       bool   `form:"expand"`
+	IscnIdPrefix    string `form:"iscn_id_prefix"`
+	Account         string `form:"account"`
+	IscnOwner       string `form:"iscn_owner"`
+	Expand          bool   `form:"expand"`
+	AllIscnVersions bool   `form:"all_iscn_versions"`
 }
 
 type QueryClassResponse struct {
@@ -252,6 +255,7 @@ type QueryRankingRequest struct {
 	Before          int64    `form:"before"`
 	IncludeOwner    bool     `form:"include_owner"`
 	IgnoreList      []string `form:"ignore_list"`
+	AllIscnVersions bool     `form:"all_iscn_versions"`
 }
 
 type QueryRankingResponse struct {
@@ -265,8 +269,9 @@ type NftClassRankingResponse struct {
 }
 
 type QueryCollectorRequest struct {
-	Creator    string   `form:"creator"`
-	IgnoreList []string `form:"ignore_list"`
+	Creator         string   `form:"creator"`
+	IgnoreList      []string `form:"ignore_list"`
+	AllIscnVersions bool     `form:"all_iscn_versions"`
 }
 
 type QueryCollectorResponse struct {
@@ -275,8 +280,9 @@ type QueryCollectorResponse struct {
 }
 
 type QueryCreatorRequest struct {
-	Collector  string   `form:"collector"`
-	IgnoreList []string `form:"ignore_list"`
+	Collector       string   `form:"collector"`
+	IgnoreList      []string `form:"ignore_list"`
+	AllIscnVersions bool     `form:"all_iscn_versions"`
 }
 
 type QueryCreatorResponse struct {
@@ -297,8 +303,9 @@ type collection struct {
 }
 
 type QueryUserStatRequest struct {
-	User       string   `form:"user"`
-	IgnoreList []string `form:"ignore_list"`
+	User            string   `form:"user"`
+	IgnoreList      []string `form:"ignore_list"`
+	AllIscnVersions bool     `form:"all_iscn_versions"`
 }
 
 type QueryUserStatResponse struct {
@@ -317,8 +324,9 @@ type QueryCountResponse struct {
 }
 
 type QueryNftCountRequest struct {
-	IncludeOwner bool     `form:"include_owner"`
-	IgnoreList   []string `form:"ignore_list"`
+	IncludeOwner    bool     `form:"include_owner"`
+	IgnoreList      []string `form:"ignore_list"`
+	AllIscnVersions bool     `form:"all_iscn_versions"`
 }
 
 type QueryNftTradeStatsRequest struct {

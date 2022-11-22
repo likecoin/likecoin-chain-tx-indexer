@@ -19,11 +19,14 @@ func QueryIscn(conn *pgxpool.Conn, query IscnQuery, page PageRequest) (IscnRespo
 	sql := fmt.Sprintf(`
 			SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 			FROM iscn
+			JOIN iscn_latest_version
+			ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+				AND ($10 = true OR iscn.version = iscn_latest_version.latest_version)
 			LEFT JOIN iscn_stakeholders
 			ON id = iscn_pid
 			WHERE
 				($1 = '' OR iscn_id = $1)
-				AND ($2 = '' OR iscn_id_prefix = $2)
+				AND ($2 = '' OR iscn.iscn_id_prefix = $2)
 				AND ($3::text[] IS NULL OR cardinality($3::text[]) = 0 OR owner = ANY($3))
 				AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR keywords @> $4)
 				AND ($5::text[] IS NULL OR cardinality($5::text[]) = 0 OR fingerprints @> $5)
@@ -42,7 +45,7 @@ func QueryIscn(conn *pgxpool.Conn, query IscnQuery, page PageRequest) (IscnRespo
 		ctx, sql,
 		query.IscnId, query.IscnIdPrefix, ownerVariations, query.Keywords,
 		query.Fingerprints, stakeholderIdVariataions, query.StakeholderName,
-		page.After(), page.Before(),
+		page.After(), page.Before(), query.AllIscnVersions,
 	)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "iscn_query", query)
@@ -53,19 +56,22 @@ func QueryIscn(conn *pgxpool.Conn, query IscnQuery, page PageRequest) (IscnRespo
 	return parseIscn(rows, page.Limit)
 }
 
-func QueryIscnList(conn *pgxpool.Conn, pagination PageRequest) (IscnResponse, error) {
+func QueryIscnList(conn *pgxpool.Conn, pagination PageRequest, allIscnVersions bool) (IscnResponse, error) {
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
 	sql := fmt.Sprintf(`
 		SELECT id, iscn_id, owner, timestamp, ipld, data
 		FROM iscn
+		JOIN iscn_latest_version
+		ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND ($3 = true OR iscn.version = iscn_latest_version.latest_version)
 		WHERE ($1 = 0 OR id > $1)
 			AND ($2 = 0 OR id < $2)
 		ORDER BY id %s
 		LIMIT %d;
 	`, pagination.Order(), MAX_LIMIT)
-	rows, err := conn.Query(ctx, sql, pagination.After(), pagination.Before())
+	rows, err := conn.Query(ctx, sql, pagination.After(), pagination.Before(), allIscnVersions)
 	if err != nil {
 		logger.L.Errorw("Query error:", "error", err)
 		return IscnResponse{}, err
@@ -74,7 +80,7 @@ func QueryIscnList(conn *pgxpool.Conn, pagination PageRequest) (IscnResponse, er
 	return parseIscn(rows, pagination.Limit)
 }
 
-func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest) (IscnResponse, error) {
+func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest, allIscnVersions bool) (IscnResponse, error) {
 	order := pagination.Order()
 	sql := fmt.Sprintf(`
 		SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, data
@@ -82,6 +88,9 @@ func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest) (I
 			(
 				SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 				FROM iscn
+				JOIN iscn_latest_version
+				ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+					AND ($6 = true OR iscn.version = iscn_latest_version.latest_version)
 				LEFT JOIN iscn_stakeholders
 				ON id = iscn_pid
 				WHERE
@@ -98,10 +107,13 @@ func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest) (I
 			(
 				SELECT DISTINCT ON (id) id, iscn_id, owner, timestamp, ipld, iscn.data
 				FROM iscn
+				JOIN iscn_latest_version
+				ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+					AND ($6 = true OR iscn.version = iscn_latest_version.latest_version)
 				WHERE
 					(
 						iscn_id = $1
-						OR iscn_id_prefix = $1
+						OR iscn.iscn_id_prefix = $1
 						OR owner = ANY($3::text[])
 						OR keywords @> $2::text[]
 						OR fingerprints @> $2::text[]
@@ -121,7 +133,7 @@ func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest) (I
 
 	rows, err := conn.Query(ctx, sql,
 		term, []string{term}, utils.ConvertAddressPrefixes(term, AddressPrefixes),
-		pagination.After(), pagination.Before(),
+		pagination.After(), pagination.Before(), allIscnVersions,
 	)
 	if err != nil {
 		logger.L.Errorw("Query ISCN failed", "error", err, "term", term)

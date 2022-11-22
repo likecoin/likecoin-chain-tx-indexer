@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/cmd/importdb"
+	"github.com/likecoin/likecoin-chain-tx-indexer/cmd/migrate"
 	"github.com/likecoin/likecoin-chain-tx-indexer/cmd/serve"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
@@ -26,6 +27,9 @@ func Execute() {
 func init() {
 	db.ConfigCmd(rootCmd)
 	logger.ConfigCmd(rootCmd)
-	rootCmd.AddCommand(importdb.Command)
-	rootCmd.AddCommand(serve.Command)
+	rootCmd.AddCommand(
+		importdb.Command,
+		serve.Command,
+		migrate.MigrateCommand,
+	)
 }

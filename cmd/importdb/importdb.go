@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db/schema"
 	"github.com/likecoin/likecoin-chain-tx-indexer/importdb"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
@@ -24,7 +25,7 @@ var Command = &cobra.Command{
 		if err != nil {
 			logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
 		}
-		err = db.InitDB(conn)
+		err = schema.InitDB(conn)
 		if err != nil {
 			logger.L.Panicw("Cannot initialize Postgres database", "error", err)
 		}
