@@ -6,9 +6,36 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
+	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
 
 func TestISCNCombine(t *testing.T) {
+	iscns := []IscnInsert{
+		{
+			Iscn:  "iscn://testing/abcdef/1",
+			Owner: ADDR_01_LIKE,
+			Stakeholders: []Stakeholder{
+				{
+					Entity: Entity{Name: "alice", Id: ADDR_01_LIKE},
+					Data:   []byte("{}"),
+				},
+				{
+					Entity: Entity{Name: "bob", Id: ADDR_02_LIKE},
+					Data:   []byte("{}"),
+				},
+			},
+			Keywords:     []string{"apple", "boy"},
+			Fingerprints: []string{"hash://unknown/asdf", "hash://unknown/qwer"},
+		},
+	}
+	err := PrepareTestData(iscns, nil, nil, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer CleanupTestData(Conn)
+
 	table := []struct {
 		name    string
 		query   string
@@ -18,15 +45,19 @@ func TestISCNCombine(t *testing.T) {
 	}{
 		{
 			name:  "iscn_id",
-			query: "iscn_id=iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
+			query: "iscn_id=" + iscns[0].Iscn,
 		},
 		{
 			name:  "owner",
-			query: "owner=cosmos1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmcwdt79j",
+			query: "owner=" + iscns[0].Owner,
 		},
 		{
-			name:  "fingerprint",
-			query: "fingerprint=hash://sha256/8e6984120afb8ac0f81080cf3e7a38042c472c4deb3e2588480df6e199741c89",
+			name:  "fingerprint (0)",
+			query: "fingerprint=" + iscns[0].Fingerprints[0],
+		},
+		{
+			name:  "fingerprint (1)",
+			query: "fingerprint=" + iscns[0].Fingerprints[1],
 		},
 		{
 			name:  "empty",
@@ -37,55 +68,52 @@ func TestISCNCombine(t *testing.T) {
 			query: "limit=15",
 		},
 		{
-			name:   "keyword",
-			query:  "keyword=DAO&limit=5",
-			length: 2,
+			name:  "keyword (0)",
+			query: "keyword=" + iscns[0].Keywords[0],
 		},
 		{
-			name:  "multiple-keywords",
-			query: "keyword=Cyberspace&keyword=EFF&limit=5",
+			name:  "keyword (1)",
+			query: "keyword=" + iscns[0].Keywords[1],
 		},
 		{
-			name:   "keyword & owner",
-			query:  "keyword=香港&owner=cosmos1ykkpc0dnetfsya88f5nrdd7p57kplaw8sva6pj&limit=5",
-			length: 1,
+			name:  "keyword (0,1)",
+			query: "keyword=" + iscns[0].Keywords[0] + "&keyword=" + iscns[0].Keywords[1],
 		},
 		{
-			name:    "stakeholder name",
-			query:   "stakeholder.name=John+Perry+Barlow",
-			length:  1,
-			contain: []string{"John Perry Barlow"},
+			name:  "keyword & owner",
+			query: "keyword=" + iscns[0].Keywords[0] + "&owner=" + iscns[0].Owner,
 		},
 		{
-			name:    "Apple Daily",
-			query:   "stakeholder.name=Apple+Daily&limit=10",
-			length:  1,
-			contain: []string{"Apple Daily"},
+			name:  "stakeholder name (0)",
+			query: "stakeholder.name=" + iscns[0].Stakeholders[0].Entity.Name,
 		},
 		{
-			name:    "search by iscn_id",
-			query:   "q=iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1",
-			contain: []string{"iscn://likecoin-chain/laa5PLHfQO2eIfiPB2-ZnFLQrmSXOgL-NvoxyBTXHvY/1"},
+			name:  "stakeholder name (0)",
+			query: "stakeholder.name=" + iscns[0].Stakeholders[1].Entity.Name,
 		},
 		{
-			name:   "search by keyword",
-			query:  "q=香港&limit=5",
-			length: 1,
+			name:  "stakeholder id (0)",
+			query: "stakeholder.id=" + iscns[0].Stakeholders[0].Entity.Id,
 		},
 		{
-			name:    "search by owner",
-			query:   "q=cosmos1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmcwdt79j",
-			contain: []string{"cosmos1qv66yzpgg9f8w46zj7gkuk9wd2nrpqmcwdt79j"},
+			name:  "stakeholder id (1)",
+			query: "stakeholder.id=" + iscns[0].Stakeholders[1].Entity.Id,
 		},
 		{
-			name:    "search by fingerprint",
-			query:   "q=hash://sha256/8e6984120afb8ac0f81080cf3e7a38042c472c4deb3e2588480df6e199741c89",
-			contain: []string{"hash://sha256/8e6984120afb8ac0f81080cf3e7a38042c472c4deb3e2588480df6e199741c89"},
+			name:  "search by iscn_id",
+			query: "q=" + iscns[0].Iscn,
 		},
 		{
-			name:    "LikeCoin",
-			query:   "q=LikeCoin",
-			contain: []string{"LikeCoin"},
+			name:  "search by keyword",
+			query: "q=" + iscns[0].Keywords[0],
+		},
+		{
+			name:  "search by owner",
+			query: "q=" + iscns[0].Owner,
+		},
+		{
+			name:  "search by fingerprint",
+			query: "q=" + iscns[0].Fingerprints[0],
 		},
 	}
 	for _, v := range table {
@@ -120,8 +148,8 @@ func TestISCNCombine(t *testing.T) {
 			if v.length != 0 && len(records.Records) != v.length {
 				t.Errorf("Length should be %d, got %d.\n%s\n", v.length, len(records.Records), v.query)
 			}
-			for _, record := range records.Records {
-				if v.contain != nil {
+			if v.contain != nil {
+				for _, record := range records.Records {
 					for _, s := range v.contain {
 						if !strings.Contains(string(record), s) {
 							t.Errorf("record should contain %s, but not found: %s", s, string(record))

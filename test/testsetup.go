@@ -4,7 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"log"
+	"os"
 	"testing"
 
 	"go.uber.org/zap/zapcore"
@@ -12,88 +12,83 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 
+	iscntypes "github.com/likecoin/likecoin-chain/v3/x/iscn/types"
+
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db/schema"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
-var Pool *pgxpool.Pool
+const (
+	ADDR_01_LIKE   = "like1qyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqewmlu9"
+	ADDR_01_COSMOS = "cosmos1qyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq2j8al7"
+	ADDR_02_LIKE   = "like1qgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqm5jeaq"
+	ADDR_02_COSMOS = "cosmos1qgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqggwm7m"
+	ADDR_03_LIKE   = "like1qvqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqz94m9r"
+	ADDR_03_COSMOS = "cosmos1qvqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3efexc"
+	ADDR_04_LIKE   = "like1qsqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqlfq4l2"
+	ADDR_04_COSMOS = "cosmos1qsqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqv4uhu3"
+	ADDR_05_LIKE   = "like1q5qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxc8h8f"
+	ADDR_05_COSMOS = "cosmos1q5qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq4ym4yj"
+	ADDR_06_LIKE   = "like1qcqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqyzw3xv"
+	ADDR_06_COSMOS = "cosmos1qcqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqh7jn9h"
+	ADDR_07_LIKE   = "like1quqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqanfn70"
+	ADDR_07_COSMOS = "cosmos1quqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqw043a5"
+	ADDR_08_LIKE   = "like1pqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqql7w3tp"
+	ADDR_08_COSMOS = "cosmos1pqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvzjng6"
+	ADDR_09_LIKE   = "like1pyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqx0fnnz"
+	ADDR_09_COSMOS = "cosmos1pyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq4n43se"
+	ADDR_10_LIKE   = "like1pgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqy4q4j8"
+	ADDR_10_COSMOS = "cosmos1pgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhfuh3u"
+)
 
-//go:embed test_data.sql
-//go:embed test_cleanup.sql
+var Pool *pgxpool.Pool
+var Conn *pgxpool.Conn
+
+//go:embed test_cleanup_data.sql
+//go:embed test_cleanup_table.sql
 var EmbedFS embed.FS
 
 func SetupDbAndRunTest(m *testing.M, preRun func(pool *pgxpool.Pool)) {
-	logger.SetupLogger(zapcore.DebugLevel, []string{"stdout"}, "console")
-	var err error
-	Pool, err = db.NewConnPool(
-		utils.Env("DB_NAME", "postgres_test"),
-		utils.Env("DB_HOST", "localhost"),
-		utils.Env("DB_PORT", "5433"),
-		utils.Env("DB_USER", "postgres"),
-		utils.Env("DB_PASS", "password"),
-		32,
-		4,
-	)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer Pool.Close()
+	// wrap into a func to respect `defer` while calling `os.Exit` when done
+	code := func() int {
+		logger.SetupLogger(zapcore.DebugLevel, []string{"stdout"}, "console")
+		var err error
+		Pool, err = db.NewConnPool(
+			utils.Env("DB_NAME", "postgres_test"),
+			utils.Env("DB_HOST", "localhost"),
+			utils.Env("DB_PORT", "5433"),
+			utils.Env("DB_USER", "postgres"),
+			utils.Env("DB_PASS", "password"),
+			32,
+			4,
+		)
+		if err != nil {
+			logger.L.Panic(err)
+		}
+		defer Pool.Close()
 
-	// explicitly locking the database, so database related tests will not run in parallel
-	// this connection is dedicated for the lock to make the schema checkings on another connection "happens after" the lock
-	lockConn, err := db.AcquireFromPool(Pool)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer lockConn.Release()
-	// some randomly generated number to make sure there is no conflict with other application
-	_, err = lockConn.Exec(context.Background(), "SELECT pg_advisory_lock(4317656794910816416)")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// the lock will be released automatically once lockConn is released
-
-	conn, err := db.AcquireFromPool(Pool)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer conn.Release()
-	onProduction, err := checkTableExists(conn, "meta")
-	testOnProduction := (utils.EnvInt("TEST_ON_PRODUCTION", 0) == 1)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	if !onProduction {
-		if testOnProduction {
-			log.Println("WARNING: TEST_ON_PRODUCTION is set but now on testing database.")
-		}
-		err := schema.InitDB(conn)
+		Conn, err = db.AcquireFromPool(Pool)
 		if err != nil {
-			log.Fatalln(err)
+			logger.L.Panic(err)
 		}
-		err = setupTestDatabase(conn)
+		defer Conn.Release()
+		err = setupTestDatabase(Conn)
 		if err != nil {
-			log.Fatalln(err)
+			logger.L.Panic(err)
 		}
-	} else {
-		if testOnProduction {
-			log.Println("WARNING: explicitly testing on production database.")
-		} else {
-			log.Fatalln("Database is not empty testing database, not testing on it unless TEST_ON_PRODUCTION=1 is set.")
+		if preRun != nil {
+			preRun(Pool)
 		}
-	}
-	if preRun != nil {
-		preRun(Pool)
-	}
-	m.Run()
-	if !onProduction {
-		err = cleanupTestDatabase(conn)
+		code := m.Run()
+		err = cleanupTestDatabase(Conn)
 		if err != nil {
-			log.Fatalln(err)
+			logger.L.Panic(err)
 		}
-	}
+		return code
+	}()
+	os.Exit(code)
 }
 
 func checkTableExists(conn *pgxpool.Conn, tableName string) (bool, error) {
@@ -118,12 +113,66 @@ func RunEmbededSQLFile(conn *pgxpool.Conn, filename string) error {
 	return err
 }
 
-func setupTestDatabase(conn *pgxpool.Conn) error {
-	return RunEmbededSQLFile(conn, "test_data.sql")
+func setupTestDatabase(conn *pgxpool.Conn) (err error) {
+	// explicitly locking the database, so database related tests will not run in parallel
+	// some randomly generated number to make sure there is no conflict with other application
+	_, err = conn.Exec(context.Background(), "SELECT pg_advisory_lock(4317656794910816416)")
+	if err != nil {
+		return err
+	}
+	onProduction, err := checkTableExists(conn, "meta")
+	if err != nil {
+		return err
+	}
+	if onProduction {
+		return fmt.Errorf("database is not empty testing database")
+	}
+	err = schema.InitDB(conn)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func cleanupTestDatabase(conn *pgxpool.Conn) error {
-	return RunEmbededSQLFile(conn, "test_cleanup.sql")
+	return RunEmbededSQLFile(conn, "test_cleanup_table.sql")
+}
+
+func CleanupTestData(conn *pgxpool.Conn) error {
+	return RunEmbededSQLFile(conn, "test_cleanup_data.sql")
+}
+
+func PrepareTestData(iscns []db.IscnInsert, nftClasses []db.NftClass, nfts []db.Nft, nftEvents []db.NftEvent, txs []string) error {
+	b := db.NewBatch(Conn, 10000)
+	for _, i := range iscns {
+		iscnId, err := iscntypes.ParseIscnId(i.Iscn)
+		if err != nil {
+			return err
+		}
+		i.IscnPrefix = iscnId.Prefix.String()
+		i.Version = int(iscnId.Version)
+		if i.Data == nil {
+			i.Data = []byte("{}")
+		}
+		i.Timestamp = i.Timestamp.UTC()
+		b.InsertIscn(i)
+	}
+	for _, c := range nftClasses {
+		c.Parent.Type = "ISCN"
+		c.CreatedAt = c.CreatedAt.UTC()
+		b.InsertNftClass(c)
+	}
+	for _, n := range nfts {
+		b.InsertNft(n)
+	}
+	for _, e := range nftEvents {
+		e.Timestamp = e.Timestamp.UTC()
+		b.InsertNftEvent(e)
+	}
+	for i, tx := range txs {
+		b.Batch.Queue("INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", 1, i, []byte(tx), []string{})
+	}
+	return b.Flush()
 }
 
 func DebugSQL(conn *pgxpool.Conn, ctx context.Context, sql string, args ...interface{}) (err error) {
