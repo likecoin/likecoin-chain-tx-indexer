@@ -110,6 +110,12 @@ func handleNftRanking(c *gin.Context) {
 		return
 	}
 
+	if (q.SoldAfter > 0 || q.SoldBefore > 0) && q.ApiAddress == "" {
+		c.AbortWithStatusJSON(400, gin.H{
+			"error": "api_address is required for sold_after and sold_before",
+		})
+	}
+
 	conn := getConn(c)
 	res, err := db.GetClassesRanking(conn, q, p)
 	if err != nil {

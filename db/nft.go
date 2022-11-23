@@ -96,12 +96,18 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 		LEFT JOIN nft as n ON c.class_id = n.class_id
 			AND ($1 = true OR n.owner != i.owner)
 			AND ($2::text[] IS NULL OR cardinality($2::text[]) = 0 OR n.owner != ALL($2))
+		LEFT JOIN nft_event as e
+			ON e.nft_id = n.nft_id
+			AND action = '/cosmos.nft.v1beta1.MsgSend'
+			AND ($14 != '' AND sender = $14)
 		WHERE ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR i.owner = ANY($4))
 			AND ($5 = '' OR i.data #>> '{"contentMetadata", "@type"}' = $5)
 			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR sid = ANY($6))
 			AND ($7 = '' OR sname = $7)
 			AND ($9 = 0 OR c.created_at > to_timestamp($9))
 			AND ($10 = 0 OR c.created_at < to_timestamp($10))
+			AND ($12 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($12)))
+			AND ($13 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($13)))
 		GROUP BY c.id
 	) AS t USING(id)
 	WHERE ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR ($8 && t.owners))
@@ -111,9 +117,14 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.IncludeOwner, ignoreListVariations,
-		p.Limit, creatorVariations, q.Type, stakeholderIdVariataions, q.StakeholderName,
-		collectorVariations, q.After, q.Before, q.AllIscnVersions)
+	rows, err := conn.Query(ctx, sql,
+		// $1 ~ $5
+		q.IncludeOwner, ignoreListVariations, p.Limit, creatorVariations, q.Type,
+		// $6 ~ $10
+		stakeholderIdVariataions, q.StakeholderName, collectorVariations, q.After, q.Before,
+		// $11 ~ 14
+		q.AllIscnVersions, q.SoldAfter, q.SoldBefore, q.ApiAddress,
+	)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft class ranking", "error", err, "q", q)
 		return QueryRankingResponse{}, fmt.Errorf("query nft class ranking error: %w", err)

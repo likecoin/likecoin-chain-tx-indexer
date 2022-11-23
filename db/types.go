@@ -256,6 +256,9 @@ type QueryRankingRequest struct {
 	IncludeOwner    bool     `form:"include_owner"`
 	IgnoreList      []string `form:"ignore_list"`
 	AllIscnVersions bool     `form:"all_iscn_versions"`
+	ApiAddress      string   `form:"api_address"`
+	SoldAfter       int64    `form:"sold_after"`
+	SoldBefore      int64    `form:"sold_before"`
 }
 
 type QueryRankingResponse struct {
