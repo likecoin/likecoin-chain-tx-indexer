@@ -436,8 +436,8 @@ func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatR
 	SELECT COUNT(DISTINCT(n.owner))
 	FROM iscn AS i
 	JOIN iscn_latest_version
-	ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-		AND ($3 = true OR iscn.version = iscn_latest_version.latest_version)
+	ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+		AND ($3 = true OR i.version = iscn_latest_version.latest_version)
 	JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	JOIN nft AS n ON c.class_id = n.class_id
 		AND ($2::text[] IS NULL OR n.owner != ALL($2))
