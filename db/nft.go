@@ -85,7 +85,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 	c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at, sold_count
 	FROM nft_class as c
 	JOIN (
-		SELECT c.id, count(n.id) as sold_count, array_remove(array_agg(DISTINCT n.owner), NULL) as owners
+		SELECT c.id, count(DISTINCT n.id) as sold_count, array_remove(array_agg(DISTINCT n.owner), NULL) as owners
 		FROM nft_class as c
 		JOIN iscn as i
 		ON i.iscn_id_prefix = c.parent_iscn_id_prefix
