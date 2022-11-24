@@ -91,7 +91,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 		ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-			AND ($11 = true OR i.version = iscn_latest_version.latest_version)
+			AND i.version = iscn_latest_version.latest_version
 		LEFT JOIN iscn_stakeholders ON i.id = iscn_pid
 		LEFT JOIN nft as n ON c.class_id = n.class_id
 			AND ($1 = true OR n.owner != i.owner)
