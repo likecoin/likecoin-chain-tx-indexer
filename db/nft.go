@@ -361,7 +361,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
-		WHERE $1::text[] IS NULL OR cardinality($1::text[]) = 0 OR i.owner = ANY($1)
+		WHERE $1::text[] IS NULL OR cardinality($1::text[]) = 0 OR n.owner = ANY($1)
 		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
 	) as r
 	GROUP BY owner
