@@ -5,6 +5,10 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 )
 
+var (
+	DEFAULT_API_ADDRESSES = []string{"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"}
+)
+
 func handleNftClass(c *gin.Context) {
 	var q db.QueryClassRequest
 
@@ -110,10 +114,8 @@ func handleNftRanking(c *gin.Context) {
 		return
 	}
 
-	if (q.SoldAfter > 0 || q.SoldBefore > 0) && q.ApiAddress == "" {
-		c.AbortWithStatusJSON(400, gin.H{
-			"error": "api_address is required for sold_after and sold_before",
-		})
+	if len(q.ApiAddresses) == 0 {
+		q.ApiAddresses = DEFAULT_API_ADDRESSES
 	}
 
 	conn := getConn(c)

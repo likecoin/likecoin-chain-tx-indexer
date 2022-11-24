@@ -79,51 +79,60 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
+	ApiAddressesVariations := utils.ConvertAddressArrayPrefixes(q.ApiAddresses, AddressPrefixes)
 	sql := `
-	SELECT c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
-	c.config, c.metadata, c.price,
-	c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at, sold_count
-	FROM nft_class as c
-	JOIN (
-		SELECT c.id, count(DISTINCT n.id) as sold_count, array_remove(array_agg(DISTINCT n.owner), NULL) as owners
-		FROM nft_class as c
-		JOIN iscn as i
-		ON i.iscn_id_prefix = c.parent_iscn_id_prefix
-		JOIN iscn_latest_version
-		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-			AND i.version = iscn_latest_version.latest_version
-		LEFT JOIN iscn_stakeholders ON i.id = iscn_pid
-		LEFT JOIN nft as n ON c.class_id = n.class_id
-			AND ($1 = true OR n.owner != i.owner)
-			AND ($2::text[] IS NULL OR cardinality($2::text[]) = 0 OR n.owner != ALL($2))
-		LEFT JOIN nft_event as e
+	SELECT
+		c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
+		c.config, c.metadata, c.price,
+		c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at,
+		COUNT(DISTINCT t.nft_id) AS sold_count
+	FROM (
+		SELECT DISTINCT ON (n.id)
+			n.nft_id,
+			c.id AS class_pid
+		FROM nft_class AS c
+		JOIN nft AS n
+			ON c.class_id = n.class_id
+		JOIN nft_event AS e
 			ON e.nft_id = n.nft_id
-			AND action = '/cosmos.nft.v1beta1.MsgSend'
-			AND ($14 != '' AND sender = $14)
-		WHERE ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR i.owner = ANY($4))
+		JOIN iscn AS i
+			ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN iscn_latest_version
+			ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+				AND i.version = iscn_latest_version.latest_version
+		LEFT JOIN iscn_stakeholders
+			ON i.id = iscn_pid
+		WHERE
+			e.action = '/cosmos.nft.v1beta1.MsgSend'
+			AND ($2 = true OR n.owner != i.owner)
+			AND ($3::text[] IS NULL OR cardinality($3::text[]) = 0 OR n.owner != ALL($3))
+			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR i.owner = ANY($4))
 			AND ($5 = '' OR i.data #>> '{"contentMetadata", "@type"}' = $5)
 			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR sid = ANY($6))
 			AND ($7 = '' OR sname = $7)
+			AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR n.owner = ANY($8))
 			AND ($9 = 0 OR c.created_at > to_timestamp($9))
 			AND ($10 = 0 OR c.created_at < to_timestamp($10))
-			AND ($12 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($12)))
-			AND ($13 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($13)))
-		GROUP BY c.id
-	) AS t USING(id)
-	WHERE ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR ($8 && t.owners))
+			AND ($11 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($11)))
+			AND ($12 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($12)))
+			AND e.sender = ANY($13::text[])
+	) AS t
+	JOIN nft_class AS c
+		ON c.id = t.class_pid
+	GROUP BY c.id
 	ORDER BY sold_count DESC
-	LIMIT $3
+	LIMIT $1
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
 	rows, err := conn.Query(ctx, sql,
 		// $1 ~ $5
-		q.IncludeOwner, ignoreListVariations, p.Limit, creatorVariations, q.Type,
+		p.Limit, q.IncludeOwner, ignoreListVariations, creatorVariations, q.Type,
 		// $6 ~ $10
-		stakeholderIdVariataions, q.StakeholderName, collectorVariations, q.After, q.Before,
-		// $11 ~ 14
-		q.AllIscnVersions, q.SoldAfter, q.SoldBefore, q.ApiAddress,
+		stakeholderIdVariataions, q.StakeholderName, collectorVariations, q.CreatedAfter, q.CreatedBefore,
+		// $11 ~ 13
+		q.After, q.Before, ApiAddressesVariations,
 	)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft class ranking", "error", err, "q", q)

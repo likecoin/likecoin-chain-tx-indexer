@@ -251,14 +251,13 @@ type QueryRankingRequest struct {
 	Creator         string   `form:"creator"`
 	Type            string   `form:"type"`
 	Collector       string   `form:"collector"`
-	After           int64    `form:"after"`
-	Before          int64    `form:"before"`
+	CreatedAfter    int64    `form:"created_after"`
+	CreatedBefore   int64    `form:"created_before"`
 	IncludeOwner    bool     `form:"include_owner"`
 	IgnoreList      []string `form:"ignore_list"`
-	AllIscnVersions bool     `form:"all_iscn_versions"`
-	ApiAddress      string   `form:"api_address"`
-	SoldAfter       int64    `form:"sold_after"`
-	SoldBefore      int64    `form:"sold_before"`
+	ApiAddresses    []string `form:"api_addresses"`
+	After           int64    `form:"after"`
+	Before          int64    `form:"before"`
 }
 
 type QueryRankingResponse struct {
