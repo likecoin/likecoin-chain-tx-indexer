@@ -80,7 +80,7 @@ func GetTimeoutContext() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 45*time.Second)
 }
 
-func GetConnPoolFromCmdArgs(cmd *cobra.Command) (pool *pgxpool.Pool, err error) {
+func GetConnPoolFromCmdArgs(cmd *cobra.Command) (*pgxpool.Pool, error) {
 	poolLock.Lock()
 	defer poolLock.Unlock()
 	if pool == nil {
