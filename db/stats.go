@@ -16,7 +16,7 @@ func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountRe
 	JOIN iscn as i ON c.parent_iscn_id_prefix = i.iscn_id_prefix
 	JOIN iscn_latest_version
 	ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-		AND ($3 = true OR i.version = iscn_latest_version.latest_version)
+		AND (i.version = iscn_latest_version.latest_version)
 	WHERE ($1 = true OR i.owner != n.owner)
 		AND ($2::text[] IS NULL OR n.owner != ALL($2))
 	`
@@ -24,7 +24,7 @@ func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountRe
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	err = conn.QueryRow(ctx, sql, q.IncludeOwner, ignoreListVariations, q.AllIscnVersions).Scan(&count.Count)
+	err = conn.QueryRow(ctx, sql, q.IncludeOwner, ignoreListVariations).Scan(&count.Count)
 	if err != nil {
 		err = fmt.Errorf("get nft count failed: %w", err)
 		logger.L.Error(err, q)
