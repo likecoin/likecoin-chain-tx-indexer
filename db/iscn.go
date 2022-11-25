@@ -48,8 +48,8 @@ func QueryIscn(conn *pgxpool.Conn, query IscnQuery, page PageRequest) (IscnRespo
 		page.After(), page.Before(), query.AllIscnVersions,
 	)
 	if err != nil {
-		logger.L.Errorw("Query ISCN failed", "error", err, "iscn_query", query)
-		return IscnResponse{}, fmt.Errorf("Query ISCN failed: %w", err)
+		logger.L.Errorw("query ISCN failed", "error", err, "iscn_query", query)
+		return IscnResponse{}, fmt.Errorf("query ISCN failed: %w", err)
 	}
 	defer rows.Close()
 
@@ -136,8 +136,8 @@ func QueryIscnSearch(conn *pgxpool.Conn, term string, pagination PageRequest, al
 		pagination.After(), pagination.Before(), allIscnVersions,
 	)
 	if err != nil {
-		logger.L.Errorw("Query ISCN failed", "error", err, "term", term)
-		return IscnResponse{}, fmt.Errorf("Query ISCN failed: %w", err)
+		logger.L.Errorw("query ISCN failed", "error", err, "term", term)
+		return IscnResponse{}, fmt.Errorf("query ISCN failed: %w", err)
 	}
 	defer rows.Close()
 	return parseIscn(rows, pagination.Limit)
@@ -151,13 +151,13 @@ func parseIscn(rows pgx.Rows, limit int) (IscnResponse, error) {
 		var data pgtype.JSONB
 		err := rows.Scan(&res.Pagination.NextKey, &iscn.Id, &iscn.Owner, &iscn.RecordTimestamp, &ipld, &data)
 		if err != nil {
-			logger.L.Errorw("Scan ISCN row failed", "error", err)
-			return res, fmt.Errorf("Scan ISCN failed: %w", err)
+			logger.L.Errorw("scan ISCN row failed", "error", err)
+			return res, fmt.Errorf("scan ISCN failed: %w", err)
 		}
 
 		if err = json.Unmarshal(data.Bytes, &iscn); err != nil {
-			logger.L.Errorw("Unmarshal ISCN data failed", "error", err, "data", string(data.Bytes))
-			return res, fmt.Errorf("Unmarshal ISCN data failed: %w", err)
+			logger.L.Errorw("unmarshal ISCN data failed", "error", err, "data", string(data.Bytes))
+			return res, fmt.Errorf("unmarshal ISCN data failed: %w", err)
 		}
 
 		res.Records = append(res.Records, iscnResponseRecord{

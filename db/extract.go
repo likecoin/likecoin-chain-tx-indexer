@@ -28,12 +28,12 @@ type EventHandler func(EventPayload) error
 func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished bool, err error) {
 	prevSyncedHeight, err := GetMetaHeight(conn, META_EXTRACTOR)
 	if err != nil {
-		return false, fmt.Errorf("Failed to get extractor synchonized height: %w", err)
+		return false, fmt.Errorf("failed to get extractor synchonized height: %w", err)
 	}
 
 	latestSyncingHeight, err := GetLatestHeight(conn)
 	if err != nil {
-		return false, fmt.Errorf("Failed to get latest height: %w", err)
+		return false, fmt.Errorf("failed to get latest height: %w", err)
 	}
 	if prevSyncedHeight == latestSyncingHeight {
 		return true, nil
@@ -57,6 +57,10 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 	eventString := getEventStrings(getHandlingEvents(handlers))
 
 	rows, err := conn.Query(ctx, sql, prevSyncedHeight, latestSyncingHeight, eventString)
+	if err != nil {
+		return false, fmt.Errorf("failed to query unprocessed txs: %w", err)
+
+	}
 	defer rows.Close()
 
 	batch := NewBatch(conn, int(LIMIT))
@@ -68,13 +72,13 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 		var txHash string
 		err := rows.Scan(&messageData, &eventData, &timestamp, &txHash)
 		if err != nil {
-			return false, fmt.Errorf("Failed to scan tx row on tx %s: %w", txHash, err)
+			return false, fmt.Errorf("failed to scan tx row on tx %s: %w", txHash, err)
 		}
 
 		var messages []json.RawMessage
 		err = messageData.AssignTo(&messages)
 		if err != nil {
-			return false, fmt.Errorf("Failed to unmarshal tx message on tx %s: %w", txHash, err)
+			return false, fmt.Errorf("failed to unmarshal tx message on tx %s: %w", txHash, err)
 		}
 		var events []struct {
 			Events types.StringEvents `json:"events"`
@@ -82,7 +86,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 
 		err = eventData.AssignTo(&events)
 		if err != nil {
-			return false, fmt.Errorf("Failed to unmarshal tx event on tx %s: %w", txHash, err)
+			return false, fmt.Errorf("failed to unmarshal tx event on tx %s: %w", txHash, err)
 		}
 
 		for i, event := range events {
@@ -113,7 +117,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 
 func getHandlingEvents(handlers map[string]EventHandler) types.StringEvents {
 	result := make(types.StringEvents, 0, len(handlers))
-	for action, _ := range handlers {
+	for action := range handlers {
 		result = append(result, types.StringEvent{
 			Type: "message",
 			Attributes: []types.Attribute{{

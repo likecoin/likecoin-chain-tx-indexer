@@ -329,7 +329,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 
 	rows, err := conn.Query(ctx, sql, creatorVariations, p.Offset, p.Limit, ignoreListVariations, q.AllIscnVersions)
 	if err != nil {
-		logger.L.Errorw("Failed to query collectors", "error", err, "q", q)
+		logger.L.Errorw("failed to query collectors", "error", err, "q", q)
 		err = fmt.Errorf("query supporters error: %w", err)
 		return
 	}
@@ -337,7 +337,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 
 	res.Collectors, err = parseAccountCollections(rows)
 	if err != nil {
-		err = fmt.Errorf("Scan collectors error: %w", err)
+		err = fmt.Errorf("scan collectors error: %w", err)
 		return
 	}
 	res.Pagination.Count = len(res.Collectors)
@@ -375,14 +375,14 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 
 	rows, err := conn.Query(ctx, sql, collectorVariations, p.Offset, p.Limit, ignoreListVariations, q.AllIscnVersions)
 	if err != nil {
-		logger.L.Errorw("Failed to query creators", "error", err, "q", q)
+		logger.L.Errorw("failed to query creators", "error", err, "q", q)
 		err = fmt.Errorf("query creators error: %w", err)
 		return
 	}
 
 	res.Creators, err = parseAccountCollections(rows)
 	if err != nil {
-		err = fmt.Errorf("Scan creators error: %w", err)
+		err = fmt.Errorf("scan creators error: %w", err)
 		return
 	}
 	res.Pagination.Count = len(res.Creators)
