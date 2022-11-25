@@ -14,9 +14,10 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	accountVariations := utils.ConvertAddressPrefixes(q.Account, AddressPrefixes)
 	iscnOwnerVariations := utils.ConvertAddressPrefixes(q.IscnOwner, AddressPrefixes)
 	sql := fmt.Sprintf(`
-	SELECT c.id, c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
-	c.config, c.metadata, c.price,
-	c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at,
+	SELECT DISTINCT ON (c.id)
+		c.id, c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
+		c.config, c.metadata, c.price,
+		c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at,
 	(
 		SELECT array_agg(row_to_json((n.*)))
 		FROM nft as n
@@ -26,12 +27,12 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	) as nfts
 	FROM nft_class as c
 	LEFT JOIN iscn AS i ON i.iscn_id_prefix = c.parent_iscn_id_prefix
-	JOIN iscn_latest_version
+	LEFT JOIN iscn_latest_version
 	ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-		AND ($8 = true OR i.version = iscn_latest_version.latest_version)
 	WHERE ($4 = '' OR c.parent_iscn_id_prefix = $4)
 		AND ($5::text[] IS NULL OR cardinality($5::text[]) = 0 OR c.parent_account = ANY($5))
 		AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR i.owner = ANY($6))
+		AND ($8 = true OR i.version = iscn_latest_version.latest_version)
 		AND ($1 = 0 OR c.id > $1)
 		AND ($2 = 0 OR c.id < $2)
 	ORDER BY c.id %s
