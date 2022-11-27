@@ -104,8 +104,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 		LEFT JOIN iscn_stakeholders
 			ON i.id = iscn_pid
 		WHERE
-			e.action = '/cosmos.nft.v1beta1.MsgSend'
-			AND ($2 = true OR n.owner != i.owner)
+			($2 = true OR n.owner != i.owner)
 			AND ($3::text[] IS NULL OR cardinality($3::text[]) = 0 OR n.owner != ALL($3))
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR i.owner = ANY($4))
 			AND ($5 = '' OR i.data #>> '{"contentMetadata", "@type"}' = $5)
@@ -114,6 +113,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 			AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR n.owner = ANY($8))
 			AND ($9 = 0 OR c.created_at > to_timestamp($9))
 			AND ($10 = 0 OR c.created_at < to_timestamp($10))
+			AND e.action = '/cosmos.nft.v1beta1.MsgSend'
 			AND ($11 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($11)))
 			AND ($12 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($12)))
 			AND e.sender = ANY($13::text[])
