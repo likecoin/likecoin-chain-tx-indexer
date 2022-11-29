@@ -267,7 +267,8 @@ type QueryRankingResponse struct {
 
 type NftClassRankingResponse struct {
 	NftClass
-	SoldCount int `json:"sold_count"`
+	SoldCount      int   `json:"sold_count"`
+	TotalSoldValue int64 `json:"total_sold_value"`
 }
 
 type QueryCollectorRequest struct {

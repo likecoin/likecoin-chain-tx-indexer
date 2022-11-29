@@ -695,12 +695,12 @@ func TestQueryNftRanking(t *testing.T) {
 		},
 	}
 	txs := []string{
-		`{"txhash":"A1","tx":{"body":{"memo":""}}}`,
-		`{"txhash":"A2","tx":{"body":{"memo":""}}}`,
-		`{"txhash":"B1","tx":{"body":{"memo":""}}}`,
-		`{"txhash":"B2","tx":{"body":{"memo":""}}}`,
-		`{"txhash":"C1","tx":{"body":{"memo":""}}}`,
-		`{"txhash":"C2","tx":{"body":{"memo":""}}}`,
+		`{"txhash":"A1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"1111"}]}]}]}}}`,
+		`{"txhash":"A2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"1000"}]}]}]}}}`,
+		`{"txhash":"B1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2222"}]}]}]}}}`,
+		`{"txhash":"B2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2000"}]}]}]}}}`,
+		`{"txhash":"C1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"3333"}]}]}]}}}`,
+		`{"txhash":"C2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2500"}]}]}]}}}`,
 	}
 	err := PrepareTestData(iscns, nftClasses, nfts, nftEvents, txs)
 	if err != nil {
@@ -709,77 +709,86 @@ func TestQueryNftRanking(t *testing.T) {
 	defer CleanupTestData(Conn)
 
 	testCases := []struct {
-		name       string
-		query      QueryRankingRequest
-		classIDs   []string
-		soldCounts []int
+		name            string
+		query           QueryRankingRequest
+		classIDs        []string
+		totalSoldValues []int64
+		soldCounts      []int
 	}{
 		{
-			name:       "empty request",
-			query:      QueryRankingRequest{},
-			classIDs:   []string{nftClasses[0].Id, nftClasses[1].Id},
-			soldCounts: []int{2, 1},
+			name:            "empty request",
+			query:           QueryRankingRequest{},
+			classIDs:        []string{nftClasses[0].Id, nftClasses[1].Id},
+			soldCounts:      []int{2, 1},
+			totalSoldValues: []int64{3000, 2500},
 		},
 		{
 			name: "query by creator (1) in old version of iscn",
 			// ADDR_01_LIKE is owner of old version, so should return no result
-			query:      QueryRankingRequest{Creator: ADDR_01_LIKE},
-			classIDs:   []string{},
-			soldCounts: []int{},
+			query: QueryRankingRequest{Creator: ADDR_01_LIKE},
 		},
 		{
-			name:       "query by creator (2)",
-			query:      QueryRankingRequest{Creator: ADDR_06_COSMOS},
-			classIDs:   []string{nftClasses[0].Id},
-			soldCounts: []int{2},
+			name:            "query by creator (2)",
+			query:           QueryRankingRequest{Creator: ADDR_06_COSMOS},
+			classIDs:        []string{nftClasses[0].Id},
+			soldCounts:      []int{2},
+			totalSoldValues: []int64{3000},
 		},
 		{
-			name:       "query by type",
-			query:      QueryRankingRequest{Type: "CreativeWorks"},
-			classIDs:   []string{nftClasses[0].Id},
-			soldCounts: []int{2},
+			name:            "query by type",
+			query:           QueryRankingRequest{Type: "CreativeWorks"},
+			classIDs:        []string{nftClasses[0].Id},
+			soldCounts:      []int{2},
+			totalSoldValues: []int64{3000},
 		},
 		{
-			name:       "query by stakeholder ID",
-			query:      QueryRankingRequest{StakeholderId: iscns[0].Stakeholders[0].Entity.Id},
-			classIDs:   []string{nftClasses[0].Id},
-			soldCounts: []int{2},
+			name:            "query by stakeholder ID",
+			query:           QueryRankingRequest{StakeholderId: iscns[0].Stakeholders[0].Entity.Id},
+			classIDs:        []string{nftClasses[0].Id},
+			soldCounts:      []int{2},
+			totalSoldValues: []int64{3000},
 		},
 		{
-			name:       "query by stakeholder name",
-			query:      QueryRankingRequest{StakeholderName: iscns[2].Stakeholders[1].Entity.Name},
-			classIDs:   []string{nftClasses[1].Id},
-			soldCounts: []int{1},
+			name:            "query by stakeholder name",
+			query:           QueryRankingRequest{StakeholderName: iscns[2].Stakeholders[1].Entity.Name},
+			classIDs:        []string{nftClasses[1].Id},
+			soldCounts:      []int{1},
+			totalSoldValues: []int64{2500},
 		},
 		{
-			name:       "query by collector",
-			query:      QueryRankingRequest{Collector: ADDR_03_COSMOS},
-			classIDs:   []string{nftClasses[0].Id, nftClasses[1].Id},
-			soldCounts: []int{1, 1},
+			name:            "query by collector",
+			query:           QueryRankingRequest{Collector: ADDR_03_COSMOS},
+			classIDs:        []string{nftClasses[1].Id, nftClasses[0].Id},
+			soldCounts:      []int{1, 1},
+			totalSoldValues: []int64{2500, 2000},
 		},
 		{
-			name:       "query created after",
-			query:      QueryRankingRequest{CreatedAfter: 1},
-			classIDs:   []string{nftClasses[1].Id},
-			soldCounts: []int{1},
+			name:            "query created after",
+			query:           QueryRankingRequest{CreatedAfter: 1},
+			classIDs:        []string{nftClasses[1].Id},
+			soldCounts:      []int{1},
+			totalSoldValues: []int64{2500},
 		},
 		{
-			name:       "query created before",
-			query:      QueryRankingRequest{CreatedBefore: 2},
-			classIDs:   []string{nftClasses[0].Id},
-			soldCounts: []int{2},
+			name:            "query created before",
+			query:           QueryRankingRequest{CreatedBefore: 2},
+			classIDs:        []string{nftClasses[0].Id},
+			soldCounts:      []int{2},
+			totalSoldValues: []int64{3000},
 		},
 		{
-			name:       "query sold after",
-			query:      QueryRankingRequest{After: 4},
-			classIDs:   []string{nftClasses[1].Id},
-			soldCounts: []int{1},
+			name:            "query sold after",
+			query:           QueryRankingRequest{After: 4},
+			classIDs:        []string{nftClasses[1].Id},
+			soldCounts:      []int{1},
+			totalSoldValues: []int64{2500},
 		},
 		{
-			name:       "query sold before",
-			query:      QueryRankingRequest{Before: 4},
-			classIDs:   []string{nftClasses[0].Id},
-			soldCounts: []int{1},
+			name:            "query sold before",
+			query:           QueryRankingRequest{Before: 4},
+			classIDs:        []string{nftClasses[0].Id},
+			soldCounts:      []int{1},
+			totalSoldValues: []int64{1000},
 		},
 	}
 
@@ -805,6 +814,10 @@ func TestQueryNftRanking(t *testing.T) {
 			}
 			if class.SoldCount != testCase.soldCounts[j] {
 				t.Errorf("test case #%02d (%s), class %d: expect sold count = %d, got %d. results = %#v", i, testCase.name, j, testCase.soldCounts[j], class.SoldCount, res.Classes)
+				continue
+			}
+			if class.TotalSoldValue != testCase.totalSoldValues[j] {
+				t.Errorf("test case #%02d (%s), class %d: expect total sold value = %d, got %d. results = %#v", i, testCase.name, j, testCase.totalSoldValues[j], class.TotalSoldValue, res.Classes)
 				continue
 			}
 		}

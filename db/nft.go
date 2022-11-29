@@ -86,16 +86,20 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 		c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
 		c.config, c.metadata, c.price,
 		c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at,
-		COUNT(DISTINCT t.nft_id) AS sold_count
+		COUNT(DISTINCT t.nft_id) AS sold_count,
+		SUM(t.price) AS total_sold_value
 	FROM (
 		SELECT DISTINCT ON (n.id)
 			n.nft_id,
-			c.id AS class_pid
+			c.id AS class_pid,
+			(txs.tx #>> '{"tx", "body", "messages", 0, "msgs", 0, "amount", 0, "amount"}')::bigint AS price
 		FROM nft_class AS c
 		JOIN nft AS n
 			ON c.class_id = n.class_id
 		JOIN nft_event AS e
 			ON e.nft_id = n.nft_id
+		JOIN txs
+			ON e.tx_hash = txs.tx ->> 'txhash'
 		JOIN iscn AS i
 			ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN iscn_latest_version
@@ -121,7 +125,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 	JOIN nft_class AS c
 		ON c.id = t.class_pid
 	GROUP BY c.id
-	ORDER BY sold_count DESC
+	ORDER BY total_sold_value DESC
 	LIMIT $1
 	`
 	ctx, cancel := GetTimeoutContext()
@@ -147,7 +151,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 			&c.Id, &c.Name, &c.Description, &c.Symbol, &c.URI, &c.URIHash,
 			&c.Config, &c.Metadata, &c.Price,
 			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account,
-			&c.CreatedAt, &c.SoldCount,
+			&c.CreatedAt, &c.SoldCount, &c.TotalSoldValue,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft class", "error", err)
 			return QueryRankingResponse{}, fmt.Errorf("query nft class data failed: %w", err)
