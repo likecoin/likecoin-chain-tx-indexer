@@ -33,6 +33,14 @@ func getUint(query url.Values, key string) (uint64, error) {
 	}
 }
 
+func getKey(query url.Values) (uint64, error) {
+	key, err := getUint(query, "pagination.key")
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse pagination.key to unsigned int: %w", err)
+	}
+	return key, nil
+}
+
 func getOffset(query url.Values) (uint64, error) {
 	offset, err := getUint(query, "pagination.offset")
 	if err != nil {
@@ -41,16 +49,16 @@ func getOffset(query url.Values) (uint64, error) {
 	return offset, nil
 }
 
-func getQueryOrder(query url.Values) (db.Order, error) {
+func getReverse(query url.Values) bool {
 	orderByStr := strings.ToUpper(query.Get("order_by"))
 	switch orderByStr {
-	case "", "ORDER_BY_UNSPECIFIED", "ORDER_BY_ASC", "ASC":
-		return db.ORDER_ASC, nil
 	case "ORDER_BY_DESC", "DESC":
-		return db.ORDER_DESC, nil
+		return true
+	case "", "ORDER_BY_UNSPECIFIED", "ORDER_BY_ASC", "ASC":
 	default:
-		return "", fmt.Errorf("available values for order_by: ORDER_BY_UNSPECIFIED, ORDER_BY_ASC, ORDER_BY_DESC")
+		return false
 	}
+	return false
 }
 
 func trimSingleQuotes(s string) (string, error) {

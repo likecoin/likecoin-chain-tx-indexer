@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -198,42 +199,43 @@ func QueryCount(conn *pgxpool.Conn, events types.StringEvents, height uint64) (u
 	return count, nil
 }
 
-func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, limit uint64, offset uint64, order Order) ([]*types.TxResponse, error) {
+func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, p PageRequest) ([]byte, []*types.TxResponse, error) {
 	sql := fmt.Sprintf(`
-		SELECT tx FROM txs
+		SELECT id, tx FROM txs
 		WHERE events @> $1
 		AND ($2 = 0 OR height = $2)
+		AND ($3 = 0 OR id > $3)
+		AND ($4 = 0 OR id < $4)
 		ORDER BY id %s
-		LIMIT $3
-		OFFSET $4
-	`, order)
+		LIMIT $5
+		OFFSET $6
+	`, p.Order())
 	eventStrings := getEventStrings(events)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	rows, err := conn.Query(ctx, sql, eventStrings, height, limit, offset)
+	rows, err := conn.Query(ctx, sql, eventStrings, height, p.After(), p.Before(), p.Limit, p.Offset)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer rows.Close()
-	return parseRows(rows, limit)
-}
-
-func parseRows(rows pgx.Rows, limit uint64) ([]*types.TxResponse, error) {
-	res := make([]*types.TxResponse, 0, limit)
+	res := make([]*types.TxResponse, 0)
+	id := uint64(0)
 	for rows.Next() {
 		var jsonb pgtype.JSONB
-		err := rows.Scan(&jsonb)
+		err := rows.Scan(&id, &jsonb)
 		if err != nil {
-			return nil, fmt.Errorf("cannot scan rows to JSON: %+v", rows)
+			return nil, nil, fmt.Errorf("cannot scan rows to JSON: %+v", rows)
 		}
 		var txRes types.TxResponse
 		err = encodingConfig.Marshaler.UnmarshalJSON(jsonb.Bytes, &txRes)
 		if err != nil {
-			return nil, fmt.Errorf("cannot unmarshal JSON to TxResponse: %+v", jsonb.Bytes)
+			return nil, nil, fmt.Errorf("cannot unmarshal JSON to TxResponse: %+v", jsonb.Bytes)
 		}
 		res = append(res, &txRes)
 	}
-	return res, nil
+	nextKey := make([]byte, 8)
+	binary.LittleEndian.PutUint64(nextKey, id)
+	return nextKey, res, nil
 }
 
 type Batch struct {

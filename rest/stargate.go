@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/gin-gonic/gin"
@@ -57,7 +56,9 @@ func handleStargateTxsSearch(c *gin.Context) {
 		return
 	}
 	offsetInTimesOfLimit := offset / limit * limit // Cosmos' bug? 29 / 10 * 10 = 20
-	order, err := getQueryOrder(q)
+	reverse := getReverse(q)
+
+	key, err := getKey(q)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
@@ -97,20 +98,22 @@ func handleStargateTxsSearch(c *gin.Context) {
 		}
 	}
 
-	var txResponses []*types.TxResponse
-	txResponses, err = db.QueryTxs(conn, events, height, limit, offsetInTimesOfLimit, order)
-
+	p := db.PageRequest{
+		Key:     key,
+		Limit:   int(limit),
+		Reverse: reverse,
+		Offset:  offsetInTimesOfLimit,
+	}
+	nextKey, txResponses, err := db.QueryTxs(conn, events, height, p)
 	if err != nil {
 		logger.L.Errorw("Cannot get txs from database", "events", events, "limit", limit, "offset", offset, "error", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	var pagination *query.PageResponse
-	if shouldCountTotal {
-		pagination = &query.PageResponse{
-			Total: totalCount,
-		}
+	pagination := &query.PageResponse{
+		Total:   totalCount,
+		NextKey: nextKey,
 	}
 	res := tx.GetTxsEventResponse{
 		TxResponses: txResponses,
