@@ -285,7 +285,8 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 		array_agg(json_build_object(
 			'iscn_id_prefix', iscn_id_prefix,
 			'class_id', class_id,
-			'count', count))
+			'count', count)),
+		COUNT(*) OVER() AS row_count
 	FROM (
 		SELECT n.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
 		FROM iscn as i
@@ -314,9 +315,9 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 	}
 	defer rows.Close()
 
-	res.Collectors, err = parseAccountCollections(rows)
+	res.Collectors, res.Pagination.Total, err = parseAccountCollections(rows)
 	if err != nil {
-		err = fmt.Errorf("Scan collectors error: %w", err)
+		err = fmt.Errorf("scan collectors error: %w", err)
 		return
 	}
 	res.Pagination.Count = len(res.Collectors)
@@ -331,7 +332,8 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 		array_agg(json_build_object(
 			'iscn_id_prefix', iscn_id_prefix,
 			'class_id', class_id,
-			'count', count))
+			'count', count)),
+		COUNT(*) OVER() AS row_count
 	FROM (
 		SELECT i.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
 		FROM iscn as i
@@ -354,25 +356,25 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 
 	rows, err := conn.Query(ctx, sql, collectorVariations, p.Offset, p.Limit, ignoreListVariations, q.AllIscnVersions)
 	if err != nil {
-		logger.L.Errorw("Failed to query creators", "error", err, "q", q)
+		logger.L.Errorw("ailed to query creators", "error", err, "q", q)
 		err = fmt.Errorf("query creators error: %w", err)
 		return
 	}
 
-	res.Creators, err = parseAccountCollections(rows)
+	res.Creators, res.Pagination.Total, err = parseAccountCollections(rows)
 	if err != nil {
-		err = fmt.Errorf("Scan creators error: %w", err)
+		err = fmt.Errorf("scan creators error: %w", err)
 		return
 	}
 	res.Pagination.Count = len(res.Creators)
 	return
 }
 
-func parseAccountCollections(rows pgx.Rows) (accounts []accountCollection, err error) {
+func parseAccountCollections(rows pgx.Rows) (accounts []accountCollection, rowCount int, err error) {
 	for rows.Next() {
 		var account accountCollection
 		var collections pgtype.JSONBArray
-		if err = rows.Scan(&account.Account, &account.Count, &collections); err != nil {
+		if err = rows.Scan(&account.Account, &account.Count, &collections, &rowCount); err != nil {
 			return
 		}
 		if err = collections.AssignTo(&account.Collections); err != nil {

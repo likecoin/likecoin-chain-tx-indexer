@@ -160,6 +160,7 @@ func (p *PageRequest) Order() Order {
 type PageResponse struct {
 	NextKey uint64 `json:"next_key,omitempty"`
 	Count   int    `json:"count,omitempty"`
+	Total   int    `json:"total,omitempty"`
 }
 
 type IscnResponse struct {
