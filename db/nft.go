@@ -356,7 +356,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 
 	rows, err := conn.Query(ctx, sql, collectorVariations, p.Offset, p.Limit, ignoreListVariations, q.AllIscnVersions)
 	if err != nil {
-		logger.L.Errorw("ailed to query creators", "error", err, "q", q)
+		logger.L.Errorw("failed to query creators", "error", err, "q", q)
 		err = fmt.Errorf("query creators error: %w", err)
 		return
 	}
