@@ -143,10 +143,12 @@ func MigrateIscnOwner(conn *pgxpool.Conn, batchSize uint64) error {
 				)
 				continue
 			}
-			batch.Queue(
-				`UPDATE iscn SET owner = $1 WHERE id = $2`,
-				convertedOwner, pkeyId,
-			)
+			if convertedOwner != owners[i] {
+				batch.Queue(
+					`UPDATE iscn SET owner = $1 WHERE id = $2`,
+					convertedOwner, pkeyId,
+				)
+			}
 		}
 		if batch.Len() > 0 {
 			results := conn.SendBatch(context.Background(), &batch)
@@ -218,10 +220,12 @@ func MigrateNftOwner(conn *pgxpool.Conn, batchSize uint64) error {
 				)
 				continue
 			}
-			batch.Queue(
-				`UPDATE nft SET owner = $1 WHERE id = $2`,
-				convertedOwner, pkeyId,
-			)
+			if convertedOwner != owners[i] {
+				batch.Queue(
+					`UPDATE nft SET owner = $1 WHERE id = $2`,
+					convertedOwner, pkeyId,
+				)
+			}
 		}
 		if batch.Len() > 0 {
 			results := conn.SendBatch(context.Background(), &batch)
@@ -304,14 +308,16 @@ func MigrateNftEventSenderAndReceiver(conn *pgxpool.Conn, batchSize uint64) erro
 				)
 				convertedReceiver = receivers[i]
 			}
-			batch.Queue(
-				`UPDATE nft_event
-				 SET
-					sender = $1,
-					receiver = $2
-				WHERE id = $3`,
-				convertedSender, convertedReceiver, pkeyId,
-			)
+			if convertedSender != senders[i] || convertedReceiver != receivers[i] {
+				batch.Queue(
+					`UPDATE nft_event
+					 SET
+						sender = $1,
+						receiver = $2
+					WHERE id = $3`,
+					convertedSender, convertedReceiver, pkeyId,
+				)
+			}
 		}
 		if batch.Len() > 0 {
 			results := conn.SendBatch(context.Background(), &batch)
