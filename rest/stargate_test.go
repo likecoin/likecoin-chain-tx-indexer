@@ -1,11 +1,12 @@
-package rest
+package rest_test
 
 import (
 	"encoding/json"
 	"net/http/httptest"
 	"testing"
 
-	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	. "github.com/likecoin/likecoin-chain-tx-indexer/rest"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
 
@@ -16,7 +17,7 @@ type Response struct {
 }
 
 func TestStargate(t *testing.T) {
-	b := NewBatch(Conn, 10000)
+	b := db.NewBatch(Conn, 10000)
 	b.Batch.Queue(
 		"INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", 1, 1,
 		[]byte(`

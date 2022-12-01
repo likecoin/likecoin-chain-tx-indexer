@@ -1,4 +1,4 @@
-package rest
+package rest_test
 
 import (
 	"encoding/json"
@@ -7,22 +7,23 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	. "github.com/likecoin/likecoin-chain-tx-indexer/rest"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
 
 func TestISCNCombine(t *testing.T) {
-	iscns := []IscnInsert{
+	iscns := []db.IscnInsert{
 		{
 			Iscn:  "iscn://testing/abcdef/1",
 			Owner: ADDR_01_LIKE,
-			Stakeholders: []Stakeholder{
+			Stakeholders: []db.Stakeholder{
 				{
-					Entity: Entity{Name: "alice", Id: ADDR_01_LIKE},
+					Entity: db.Entity{Name: "alice", Id: ADDR_01_LIKE},
 					Data:   []byte("{}"),
 				},
 				{
-					Entity: Entity{Name: "bob", Id: ADDR_02_LIKE},
+					Entity: db.Entity{Name: "bob", Id: ADDR_02_LIKE},
 					Data:   []byte("{}"),
 				},
 			},

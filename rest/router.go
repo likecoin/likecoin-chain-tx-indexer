@@ -26,12 +26,12 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string, defaultApiAd
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
 
-	router := getRouter(pool, defaultApiAddresses)
+	router := GetRouter(pool, defaultApiAddresses)
 	router.NoRoute(proxyHandler)
 	router.Run(listenAddr)
 }
 
-func getRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
+func GetRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
 	router := gin.New()
 	router.Use(withConn(pool), withDefaultApiAddresses(defaultApiAddresses))
 	nft := router.Group(NFT_ENDPOINT)
