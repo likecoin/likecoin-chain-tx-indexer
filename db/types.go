@@ -332,7 +332,7 @@ type QueryNftCountRequest struct {
 }
 
 type QueryNftTradeStatsRequest struct {
-	ApiAddress string `form:"api_address" binding:"required"`
+	ApiAddresses []string `form:"api_addresses"`
 }
 
 type QueryNftTradeStatsResponse struct {

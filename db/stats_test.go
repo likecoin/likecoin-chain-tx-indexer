@@ -172,7 +172,7 @@ func TestNftTradeStats(t *testing.T) {
 	defer CleanupTestData(Conn)
 
 	query := QueryNftTradeStatsRequest{
-		ApiAddress: ADDR_01_LIKE,
+		ApiAddresses: []string{ADDR_01_LIKE},
 	}
 	res, err := GetNftTradeStats(Conn, query)
 	if err != nil {

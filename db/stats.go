@@ -39,7 +39,7 @@ func GetNftTradeStats(conn *pgxpool.Conn, q QueryNftTradeStatsRequest) (res Quer
 	FROM txs
 	JOIN (
 		SELECT DISTINCT tx_hash FROM nft_event
-		WHERE sender = $1
+		WHERE sender = ANY($1::text[])
 		AND action = '/cosmos.nft.v1beta1.MsgSend'
 	) t
 	ON tx_hash = tx ->> 'txhash'::text
@@ -47,7 +47,7 @@ func GetNftTradeStats(conn *pgxpool.Conn, q QueryNftTradeStatsRequest) (res Quer
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	err = conn.QueryRow(ctx, sql, q.ApiAddress).Scan(
+	err = conn.QueryRow(ctx, sql, q.ApiAddresses).Scan(
 		&res.Count, &res.TotalVolume,
 	)
 	if err != nil {

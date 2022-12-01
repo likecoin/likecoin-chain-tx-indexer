@@ -28,6 +28,10 @@ func handleNftTradeStats(c *gin.Context) {
 		return
 	}
 
+	if len(q.ApiAddresses) == 0 {
+		q.ApiAddresses = getDefaultApiAddresses(c)
+	}
+
 	res, err := db.GetNftTradeStats(getConn(c), q)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
