@@ -16,7 +16,7 @@ var router *gin.Engine
 
 func TestMain(m *testing.M) {
 	SetupDbAndRunTest(m, func(pool *pgxpool.Pool) {
-		router = getRouter(pool)
+		router = getRouter(pool, nil)
 	})
 }
 

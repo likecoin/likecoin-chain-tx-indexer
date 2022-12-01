@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/pubsub"
+	"github.com/likecoin/likecoin-chain-tx-indexer/rest"
 )
 
 var Command = &cobra.Command{
@@ -17,8 +18,7 @@ var Command = &cobra.Command{
 }
 
 func init() {
-	Command.PersistentFlags().String("lcd-endpoint", "http://localhost:1317", "LikeCoin chain lite client RPC endpoint")
-	Command.PersistentFlags().String("listen-addr", "localhost:8997", "HTTP API serving address")
 	Command.AddCommand(PollerCommand, HTTPCommand)
+	rest.ConfigCmd(Command)
 	pubsub.ConfigCmd(Command)
 }

@@ -5,10 +5,6 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 )
 
-var (
-	DEFAULT_API_ADDRESSES = []string{"like17m4vwrnhjmd20uu7tst7nv0kap6ee7js69jfrs"}
-)
-
 func handleNftClass(c *gin.Context) {
 	var q db.QueryClassRequest
 
@@ -115,7 +111,7 @@ func handleNftRanking(c *gin.Context) {
 	}
 
 	if len(q.ApiAddresses) == 0 {
-		q.ApiAddresses = DEFAULT_API_ADDRESSES
+		q.ApiAddresses = getDefaultApiAddresses(c)
 	}
 
 	conn := getConn(c)

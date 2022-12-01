@@ -22,16 +22,21 @@ func ServeHTTP(cmd *cobra.Command) {
 		logger.L.Panicw("Cannot initialize database connection pool", "error", err)
 	}
 
-	listenAddr, err := cmd.Flags().GetString("listen-addr")
+	listenAddr, err := cmd.Flags().GetString(rest.CmdListenAddr)
 	if err != nil {
 		logger.L.Panicw("Cannot get listen address from command line parameters", "error", err)
 	}
-	lcdEndpoint, err := cmd.Flags().GetString("lcd-endpoint")
+	lcdEndpoint, err := cmd.Flags().GetString(rest.CmdLcdEndpoint)
 	if err != nil {
 		logger.L.Panicw("Cannot get lcd endpoint address from command line parameters", "error", err)
 	}
+	defaultApiAddresses, err := cmd.Flags().GetStringSlice(rest.CmdApiAddresses)
+	if err != nil {
+		logger.L.Panicw("Cannot get API sender addresses from command line parameters", "error", err)
+	}
+
 	if lcdEndpoint[len(lcdEndpoint)-1] == '/' {
 		lcdEndpoint = lcdEndpoint[:len(lcdEndpoint)-1]
 	}
-	rest.Run(pool, listenAddr, lcdEndpoint)
+	rest.Run(pool, listenAddr, lcdEndpoint, defaultApiAddresses)
 }
