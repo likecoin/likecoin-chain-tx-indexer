@@ -110,6 +110,10 @@ func handleNftRanking(c *gin.Context) {
 		return
 	}
 
+	if len(q.ApiAddresses) == 0 {
+		q.ApiAddresses = getDefaultApiAddresses(c)
+	}
+
 	conn := getConn(c)
 	res, err := db.GetClassesRanking(conn, q, p)
 	if err != nil {

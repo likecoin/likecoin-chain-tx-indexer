@@ -16,7 +16,7 @@ const LATEST_HEIGHT_ENDPOINT = "/indexer/height/latest"
 const NFT_ENDPOINT = "/likechain/likenft/v1"
 const ANALYSIS_ENDPOINT = "/statistics/nft"
 
-func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
+func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string, defaultApiAddresses []string) {
 	lcdURL, err := url.Parse(lcdEndpoint)
 	if err != nil {
 		logger.L.Panicw("Cannot parse lcd URL", "lcd_endpoint", lcdEndpoint, "error", err)
@@ -26,14 +26,14 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string) {
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
 
-	router := getRouter(pool)
+	router := GetRouter(pool, defaultApiAddresses)
 	router.NoRoute(proxyHandler)
 	router.Run(listenAddr)
 }
 
-func getRouter(pool *pgxpool.Pool) *gin.Engine {
+func GetRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
 	router := gin.New()
-	router.Use(withConn(pool))
+	router.Use(withConn(pool), withDefaultApiAddresses(defaultApiAddresses))
 	nft := router.Group(NFT_ENDPOINT)
 	{
 		nft.GET("/class", handleNftClass)
@@ -60,6 +60,29 @@ func getRouter(pool *pgxpool.Pool) *gin.Engine {
 	return router
 }
 
+func with(key string, value interface{}) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set(key, value)
+		c.Next()
+	}
+}
+
+func withPool(pool *pgxpool.Pool) gin.HandlerFunc {
+	return with("pool", pool)
+}
+
+func getPool(c *gin.Context) *pgxpool.Pool {
+	return c.MustGet("pool").(*pgxpool.Pool)
+}
+
+func withDefaultApiAddresses(defaultApiAddresses []string) gin.HandlerFunc {
+	return with("default-api-addresses", defaultApiAddresses)
+}
+
+func getDefaultApiAddresses(c *gin.Context) []string {
+	return c.MustGet("default-api-addresses").([]string)
+}
+
 func withConn(pool *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conn, err := db.AcquireFromPool(pool)
@@ -73,9 +96,6 @@ func withConn(pool *pgxpool.Pool) gin.HandlerFunc {
 	}
 }
 
-func withPool(pool *pgxpool.Pool) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("pool", pool)
-		c.Next()
-	}
+func getConn(c *gin.Context) *pgxpool.Conn {
+	return c.MustGet("conn").(*pgxpool.Conn)
 }

@@ -252,11 +252,13 @@ type QueryRankingRequest struct {
 	Creator         string   `form:"creator"`
 	Type            string   `form:"type"`
 	Collector       string   `form:"collector"`
-	After           int64    `form:"after"`
-	Before          int64    `form:"before"`
+	CreatedAfter    int64    `form:"created_after"`
+	CreatedBefore   int64    `form:"created_before"`
 	IncludeOwner    bool     `form:"include_owner"`
 	IgnoreList      []string `form:"ignore_list"`
-	AllIscnVersions bool     `form:"all_iscn_versions"`
+	ApiAddresses    []string `form:"api_addresses"`
+	After           int64    `form:"after"`
+	Before          int64    `form:"before"`
 }
 
 type QueryRankingResponse struct {
@@ -266,7 +268,8 @@ type QueryRankingResponse struct {
 
 type NftClassRankingResponse struct {
 	NftClass
-	SoldCount int `json:"sold_count"`
+	SoldCount      int   `json:"sold_count"`
+	TotalSoldValue int64 `json:"total_sold_value"`
 }
 
 type QueryCollectorRequest struct {
@@ -325,13 +328,12 @@ type QueryCountResponse struct {
 }
 
 type QueryNftCountRequest struct {
-	IncludeOwner    bool     `form:"include_owner"`
-	IgnoreList      []string `form:"ignore_list"`
-	AllIscnVersions bool     `form:"all_iscn_versions"`
+	IncludeOwner bool     `form:"include_owner"`
+	IgnoreList   []string `form:"ignore_list"`
 }
 
 type QueryNftTradeStatsRequest struct {
-	ApiAddress string `form:"api_address" binding:"required"`
+	ApiAddresses []string `form:"api_addresses"`
 }
 
 type QueryNftTradeStatsResponse struct {

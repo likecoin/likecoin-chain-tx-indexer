@@ -1,4 +1,4 @@
-package rest
+package rest_test
 
 import (
 	"io"
@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4/pgxpool"
 
+	. "github.com/likecoin/likecoin-chain-tx-indexer/rest"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
 
@@ -16,7 +17,7 @@ var router *gin.Engine
 
 func TestMain(m *testing.M) {
 	SetupDbAndRunTest(m, func(pool *pgxpool.Pool) {
-		router = getRouter(pool)
+		router = GetRouter(pool, nil)
 	})
 }
 

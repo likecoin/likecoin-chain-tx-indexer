@@ -8,13 +8,8 @@ import (
 )
 
 func TestExtract(t *testing.T) {
-	conn, err := AcquireFromPool(Pool)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.Release()
 	for i := 0; i < 2; i++ {
-		_, err := Extract(conn, handlers)
+		_, err := Extract(Conn, handlers)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain/v3/app"
 )
@@ -114,14 +113,6 @@ func getEvents(query url.Values) (events types.StringEvents, err error) {
 		}
 	}
 	return events, nil
-}
-
-func getConn(c *gin.Context) *pgxpool.Conn {
-	return c.MustGet("conn").(*pgxpool.Conn)
-}
-
-func getPool(c *gin.Context) *pgxpool.Pool {
-	return c.MustGet("pool").(*pgxpool.Pool)
 }
 
 func getPagination(c *gin.Context) (p db.PageRequest, err error) {

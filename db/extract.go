@@ -28,12 +28,12 @@ type EventHandler func(EventPayload) error
 func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished bool, err error) {
 	prevSyncedHeight, err := GetMetaHeight(conn, META_EXTRACTOR)
 	if err != nil {
-		return false, fmt.Errorf("Failed to get extractor synchonized height: %w", err)
+		return false, fmt.Errorf("failed to get extractor synchonized height: %w", err)
 	}
 
 	latestSyncingHeight, err := GetLatestHeight(conn)
 	if err != nil {
-		return false, fmt.Errorf("Failed to get latest height: %w", err)
+		return false, fmt.Errorf("failed to get latest height: %w", err)
 	}
 	if prevSyncedHeight == latestSyncingHeight {
 		return true, nil
@@ -57,6 +57,10 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 	eventString := getEventStrings(getHandlingEvents(handlers))
 
 	rows, err := conn.Query(ctx, sql, prevSyncedHeight, latestSyncingHeight, eventString)
+	if err != nil {
+		return false, fmt.Errorf("failed to query unprocessed txs: %w", err)
+
+	}
 	defer rows.Close()
 
 	batch := NewBatch(conn, int(LIMIT))
@@ -68,13 +72,13 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 		var txHash string
 		err := rows.Scan(&messageData, &eventData, &timestamp, &txHash)
 		if err != nil {
-			return false, fmt.Errorf("Failed to scan tx row on tx %s: %w", txHash, err)
+			return false, fmt.Errorf("failed to scan tx row on tx %s: %w", txHash, err)
 		}
 
 		var messages []json.RawMessage
 		err = messageData.AssignTo(&messages)
 		if err != nil {
-			return false, fmt.Errorf("Failed to unmarshal tx message on tx %s: %w", txHash, err)
+			return false, fmt.Errorf("failed to unmarshal tx message on tx %s: %w", txHash, err)
 		}
 		var events []struct {
 			Events types.StringEvents `json:"events"`
@@ -82,7 +86,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 
 		err = eventData.AssignTo(&events)
 		if err != nil {
-			return false, fmt.Errorf("Failed to unmarshal tx event on tx %s: %w", txHash, err)
+			return false, fmt.Errorf("failed to unmarshal tx event on tx %s: %w", txHash, err)
 		}
 
 		for i, event := range events {
@@ -113,7 +117,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 
 func getHandlingEvents(handlers map[string]EventHandler) types.StringEvents {
 	result := make(types.StringEvents, 0, len(handlers))
-	for action, _ := range handlers {
+	for action := range handlers {
 		result = append(result, types.StringEvent{
 			Type: "message",
 			Attributes: []types.Attribute{{
@@ -140,6 +144,10 @@ func (batch *Batch) InsertIscn(insert IscnInsert) {
 		stakeholderIDs = append(stakeholderIDs, s.Entity.Id)
 		stakeholderNames = append(stakeholderNames, s.Entity.Name)
 		stakeholderRawJSONs = append(stakeholderRawJSONs, s.Data)
+	}
+	convertedOwner, err := utils.ConvertAddressPrefix(insert.Owner, MainAddressPrefix)
+	if err == nil {
+		insert.Owner = convertedOwner
 	}
 	sql := `
 	WITH result AS (
@@ -220,6 +228,10 @@ func (batch *Batch) UpdateNftClass(c NftClass) {
 }
 
 func (batch *Batch) InsertNft(n Nft) {
+	convertedOwner, err := utils.ConvertAddressPrefix(n.Owner, MainAddressPrefix)
+	if err == nil {
+		n.Owner = convertedOwner
+	}
 	sql := `
 	INSERT INTO nft
 	(nft_id, class_id, owner, uri, uri_hash, metadata)
@@ -231,6 +243,14 @@ func (batch *Batch) InsertNft(n Nft) {
 }
 
 func (batch *Batch) InsertNftEvent(e NftEvent) {
+	convertedSender, err := utils.ConvertAddressPrefix(e.Sender, MainAddressPrefix)
+	if err == nil {
+		e.Sender = convertedSender
+	}
+	convertedReceiver, err := utils.ConvertAddressPrefix(e.Receiver, MainAddressPrefix)
+	if err == nil {
+		e.Receiver = convertedReceiver
+	}
 	sql := `
 	INSERT INTO nft_event
 	(action, class_id, nft_id, sender, receiver, events, tx_hash, timestamp)
