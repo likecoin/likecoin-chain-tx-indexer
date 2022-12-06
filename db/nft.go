@@ -106,7 +106,14 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 			ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
 				AND i.version = iscn_latest_version.latest_version
 		LEFT JOIN iscn_stakeholders
-			ON i.id = iscn_pid
+			ON (
+				-- this is for optimizing out a left join when stakeholder data is not needed
+				(
+					($6::text[] IS NOT NULL AND cardinality($6::text[]) > 0)
+					OR $7 != ''
+				)
+				AND i.id = iscn_pid
+			)
 		WHERE
 			($2 = true OR n.owner != i.owner)
 			AND ($3::text[] IS NULL OR cardinality($3::text[]) = 0 OR n.owner != ALL($3))
