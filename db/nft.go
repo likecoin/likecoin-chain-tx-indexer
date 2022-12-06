@@ -205,18 +205,21 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 	}
 	for rows.Next() {
 		var n NftResponse
-		c := &n.ClassData
+		var c NftClass
 		if err = rows.Scan(
 			&res.Pagination.NextKey, &n.NftId, &n.ClassId, &n.Owner, &n.Uri,
 			&n.UriHash, &n.Metadata, &n.Timestamp, &c.Name, &c.Description,
 			&c.Symbol, &c.URI, &c.URIHash, &c.Config, &c.Metadata,
-			&c.Price, &c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account, &c.CreatedAt,
+			&c.Price, &n.ClassParent.Type, &n.ClassParent.IscnIdPrefix, &n.ClassParent.Account, &c.CreatedAt,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft", "error", err, "q", q)
 			return QueryNftResponse{}, fmt.Errorf("query nft failed: %w", err)
 		}
-		c.Id = n.ClassId
-		n.ClassParent = c.Parent
+		if q.ExpandClasses {
+			c.Parent = n.ClassParent
+			c.Id = n.ClassId
+			n.ClassData = &c
+		}
 		res.Nfts = append(res.Nfts, n)
 	}
 	res.Pagination.Count = len(res.Nfts)
