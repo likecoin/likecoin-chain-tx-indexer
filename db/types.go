@@ -214,6 +214,7 @@ type QueryNftResponse struct {
 type NftResponse struct {
 	Nft
 	ClassParent NftClassParent `json:"class_parent"`
+	ClassData   NftClass       `json:"class_data"`
 }
 
 type QueryOwnerRequest struct {

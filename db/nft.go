@@ -172,8 +172,11 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResponse, error) {
 	ownerVariations := utils.ConvertAddressPrefixes(q.Owner, AddressPrefixes)
 	sql := fmt.Sprintf(`
-	SELECT n.id, n.nft_id, n.class_id, n.owner, n.uri, n.uri_hash, n.metadata,
-		e.timestamp, c.parent_type, c.parent_iscn_id_prefix, c.parent_account
+	SELECT
+		n.id, n.nft_id, n.class_id, n.owner, n.uri,
+		n.uri_hash, n.metadata, e.timestamp, c.name, c.description,
+		c.symbol, c.uri, c.uri_hash, c.config, c.metadata,
+		c.price, c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at
 	FROM nft as n
 	JOIN nft_class as c
 	ON n.class_id = c.class_id
@@ -202,13 +205,18 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 	}
 	for rows.Next() {
 		var n NftResponse
-		if err = rows.Scan(&res.Pagination.NextKey,
-			&n.NftId, &n.ClassId, &n.Owner, &n.Uri, &n.UriHash, &n.Metadata,
-			&n.Timestamp, &n.ClassParent.Type, &n.ClassParent.IscnIdPrefix, &n.ClassParent.Account,
+		c := &n.ClassData
+		if err = rows.Scan(
+			&res.Pagination.NextKey, &n.NftId, &n.ClassId, &n.Owner, &n.Uri,
+			&n.UriHash, &n.Metadata, &n.Timestamp, &c.Name, &c.Description,
+			&c.Symbol, &c.URI, &c.URIHash, &c.Config, &c.Metadata,
+			&c.Price, &c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account, &c.CreatedAt,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft", "error", err, "q", q)
 			return QueryNftResponse{}, fmt.Errorf("query nft failed: %w", err)
 		}
+		c.Id = n.ClassId
+		n.ClassParent = c.Parent
 		res.Nfts = append(res.Nfts, n)
 	}
 	res.Pagination.Count = len(res.Nfts)
