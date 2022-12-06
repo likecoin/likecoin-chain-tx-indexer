@@ -229,12 +229,36 @@ func TestQueryNftByOwner(t *testing.T) {
 		query := QueryNftRequest{Owner: testCase.owner}
 		res, err := GetNfts(Conn, query, p)
 		if err != nil {
-			t.Errorf("test case #%02d (owner = %s): GetNfts returned error: %#v", i, testCase.owner, err)
+			t.Errorf("test case #%02d (owner = %s, ExpandClasses = false): GetNfts returned error: %#v", i, testCase.owner, err)
 			continue
 		}
 		if len(res.Nfts) != testCase.count {
-			t.Errorf("test case #%02d (owner = %s): expect len(res.Nfts) = %d, got %d. results = %#v", i, testCase.owner, testCase.count, len(res.Nfts), res.Nfts)
+			t.Errorf("test case #%02d (owner = %s, ExpandClasses = false): expect len(res.Nfts) = %d, got %d. results = %#v", i, testCase.owner, testCase.count, len(res.Nfts), res.Nfts)
 			continue
+		}
+		for _, n := range res.Nfts {
+			if n.ClassData != nil {
+				t.Errorf("test case #%02d (owner = %s, ExpandClasses = false): ClassData should be nil. results = %#v", i, testCase.owner, res.Nfts)
+			}
+		}
+		query.ExpandClasses = true
+		res, err = GetNfts(Conn, query, p)
+		if err != nil {
+			t.Errorf("test case #%02d (owner = %s, ExpandClasses = true): GetNfts returned error: %#v", i, testCase.owner, err)
+			continue
+		}
+		if len(res.Nfts) != testCase.count {
+			t.Errorf("test case #%02d (owner = %s, ExpandClasses = true): expect len(res.Nfts) = %d, got %d. results = %#v", i, testCase.owner, testCase.count, len(res.Nfts), res.Nfts)
+			continue
+		}
+		for _, n := range res.Nfts {
+			if n.ClassData == nil {
+				t.Errorf("test case #%02d (owner = %s, ExpandClasses = true): ClassData should not be nil. results = %#v", i, testCase.owner, res.Nfts)
+			}
+			if n.ClassData.Id != n.ClassId {
+				t.Errorf("test case #%02d (owner = %s, ExpandClasses = true): NFT class ID not equal to the ID in expanded class data. results = %#v", i, testCase.owner, res.Nfts)
+				continue
+			}
 		}
 	}
 }
