@@ -203,7 +203,8 @@ type NftClassResponse struct {
 }
 
 type QueryNftRequest struct {
-	Owner string `form:"owner" binding:"required"`
+	Owner         string `form:"owner" binding:"required"`
+	ExpandClasses bool   `form:"expand_classes"`
 }
 
 type QueryNftResponse struct {
@@ -214,6 +215,7 @@ type QueryNftResponse struct {
 type NftResponse struct {
 	Nft
 	ClassParent NftClassParent `json:"class_parent"`
+	ClassData   *NftClass      `json:"class_data,omitempty"`
 }
 
 type QueryOwnerRequest struct {
