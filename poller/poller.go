@@ -12,7 +12,7 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 	"github.com/likecoin/likecoin-chain/v3/app"
-	"github.com/tendermint/go-amino"
+	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/bytes"
 
 	tmTypes "github.com/tendermint/tendermint/types"

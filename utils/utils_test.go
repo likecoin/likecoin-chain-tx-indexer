@@ -16,12 +16,12 @@ func equal(a, b []string) bool {
 
 func TestParseKeywords(t *testing.T) {
 	table := map[string][]string{
-		"":      []string{},
-		", ":    []string{},
-		"a, b":  []string{"a", "b"},
-		"a,bc":  []string{"a", "bc"},
-		"a,bc,": []string{"a", "bc"},
-		"  ":    []string{},
+		"":      {},
+		", ":    {},
+		"a, b":  {"a", "b"},
+		"a,bc":  {"a", "bc"},
+		"a,bc,": {"a", "bc"},
+		"  ":    {},
 	}
 	for k, v := range table {
 		if ans := ParseKeywords(k); !equal(ans, v) {
