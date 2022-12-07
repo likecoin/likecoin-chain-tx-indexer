@@ -70,7 +70,7 @@ func TestQueryNftClass(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name     string
@@ -211,7 +211,7 @@ func TestQueryNftByOwner(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		owner string
@@ -303,7 +303,7 @@ func TestOwnerByClassId(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		classId string
@@ -406,7 +406,7 @@ func TestNftEvents(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name    string
@@ -733,7 +733,7 @@ func TestQueryNftRanking(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name            string
@@ -890,7 +890,7 @@ func TestCollectors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name   string
@@ -1005,7 +1005,7 @@ func TestCreators(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name   string

@@ -122,7 +122,11 @@ func handleStargateTxsSearch(c *gin.Context) {
 
 	for _, txResponse := range txResponses {
 		var tx tx.Tx
-		tx.Unmarshal(txResponse.Tx.Value)
+		err := tx.Unmarshal(txResponse.Tx.Value)
+		if err != nil {
+			logger.L.Warn("Cannot unmarshal tx response", "tx", txResponse.Tx.Value, "error", err)
+			continue
+		}
 		res.Txs = append(res.Txs, &tx)
 	}
 
@@ -133,5 +137,5 @@ func handleStargateTxsSearch(c *gin.Context) {
 	}
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.Writer.WriteHeader(200)
-	c.Writer.Write(resJson)
+	_, _ = c.Writer.Write(resJson)
 }

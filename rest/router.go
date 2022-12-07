@@ -28,7 +28,7 @@ func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string, defaultApiAd
 
 	router := GetRouter(pool, defaultApiAddresses)
 	router.NoRoute(proxyHandler)
-	router.Run(listenAddr)
+	_ = router.Run(listenAddr)
 }
 
 func GetRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
@@ -65,14 +65,6 @@ func with(key string, value interface{}) gin.HandlerFunc {
 		c.Set(key, value)
 		c.Next()
 	}
-}
-
-func withPool(pool *pgxpool.Pool) gin.HandlerFunc {
-	return with("pool", pool)
-}
-
-func getPool(c *gin.Context) *pgxpool.Pool {
-	return c.MustGet("pool").(*pgxpool.Pool)
 }
 
 func withDefaultApiAddresses(defaultApiAddresses []string) gin.HandlerFunc {

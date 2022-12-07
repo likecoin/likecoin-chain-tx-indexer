@@ -74,7 +74,7 @@ func TestNftCount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name  string
@@ -169,7 +169,7 @@ func TestNftTradeStats(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	query := QueryNftTradeStatsRequest{
 		ApiAddresses: []string{ADDR_01_LIKE},
@@ -245,7 +245,7 @@ func TestNftCreatorCount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	res, err := GetNftCreatorCount(Conn)
 	if err != nil {
@@ -287,7 +287,7 @@ func TestNftOwnerCount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	res, err := GetNftOwnerCount(Conn)
 	if err != nil {
@@ -329,7 +329,7 @@ func TestNftOwnerList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name       string
