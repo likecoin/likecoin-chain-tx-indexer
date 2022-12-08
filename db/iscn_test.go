@@ -31,7 +31,7 @@ func TestIscnCombineQuery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	tables := []struct {
 		name string
@@ -163,7 +163,7 @@ func TestIscnQueryLatestVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	p := PageRequest{
 		Limit: 100,
@@ -296,7 +296,7 @@ func TestIscnList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	p := PageRequest{
 		Limit: 5,
@@ -345,7 +345,7 @@ func TestIscnPagination(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	p := PageRequest{Limit: 1}
 	res, err := QueryIscnList(Conn, p, true)

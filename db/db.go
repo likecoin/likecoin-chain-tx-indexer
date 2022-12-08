@@ -272,7 +272,7 @@ func (batch *Batch) InsertTx(txRes types.TxResponse, height int64, txIndex int) 
 	if err != nil {
 		return err
 	}
-	pubsub.Publish("NewTx", json.RawMessage(txResJSON))
+	_ = pubsub.Publish("NewTx", json.RawMessage(txResJSON))
 	logger.L.Infow("Processing transaction", "txhash", txRes.TxHash, "height", height, "index", txIndex)
 	batch.Batch.Queue("INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, txIndex, txResJSON, eventStrings)
 	batch.prevHeight = height

@@ -100,7 +100,7 @@ func handleAminoTxsSearch(c *gin.Context) {
 	searchTxsResult := types.NewSearchTxsResult(totalCount, uint64(len(txs)), page, limit, txs)
 
 	for _, txRes := range searchTxsResult.Txs {
-		packStdTxResponse(txRes)
+		_ = packStdTxResponse(txRes)
 	}
 
 	json, err := encodingConfig.Amino.MarshalJSON(searchTxsResult)
@@ -111,5 +111,5 @@ func handleAminoTxsSearch(c *gin.Context) {
 	}
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.Writer.WriteHeader(200)
-	c.Writer.Write(json)
+	_, _ = c.Writer.Write(json)
 }

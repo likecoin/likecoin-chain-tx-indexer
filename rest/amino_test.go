@@ -89,7 +89,7 @@ func TestAmino(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanupTestData(Conn)
+	defer func() { _ = CleanupTestData(Conn) }()
 
 	table := []struct {
 		query  string

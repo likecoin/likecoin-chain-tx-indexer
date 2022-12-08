@@ -36,5 +36,5 @@ func respondLatestHeight(c *gin.Context, latestHeight int64) {
 
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.Writer.WriteHeader(200)
-	c.Writer.Write(resJson)
+	_, _ = c.Writer.Write(resJson)
 }

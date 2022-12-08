@@ -1,0 +1,9 @@
+linters:
+  enable:
+    - gofmt
+    - goimports
+linters-settings:
+  gofmt:
+    simplify: true
+run:
+  deadline: 5m

@@ -1,0 +1,29 @@
+name: Run test cases
+
+on:
+  pull_request:
+    branches: ["*"]
+  push:
+    branches: ["*"]
+
+jobs:
+  lint:
+    name: Run test cases
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - name: Setup Postgres testing database
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql version: '12.3'
+          postgresql db: postgres_test
+          postgresql user: postgres
+          postgresql password: password
+      - name: Run test cases
+        env:
+          DB_PORT: '5432'
+        run: make test
