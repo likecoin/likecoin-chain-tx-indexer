@@ -2,9 +2,9 @@ name: Lint and Format Code
 
 on:
   pull_request:
-    branches: ["master"]
+    branches: ["*"]
   push:
-    branches: ["master"]
+    branches: ["*"]
 
 jobs:
   lint:
