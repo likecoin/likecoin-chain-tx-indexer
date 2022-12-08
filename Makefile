@@ -23,4 +23,7 @@ format:
 	find . -name '*.go' -type f -not -path "*.git*" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "*.git*" | xargs goimports -w
 
-.PHONY: build install-tools-golangci-lint install-tools-goimports install-tools lint format
+test:
+	go test --count=1 ./...
+
+.PHONY: build install-tools-golangci-lint install-tools-goimports install-tools lint format test
