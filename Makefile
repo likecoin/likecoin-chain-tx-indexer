@@ -3,6 +3,9 @@
 build:
 	go build -o indexer main.go
 
+build-image:
+	docker build -t likechain/tx-indexer .
+
 build-and-push:
 	docker buildx build -t likechain/tx-indexer:latest --platform linux/amd64 .
 	docker tag likechain/tx-indexer:latest us.gcr.io/likecoin-foundation/likechain-tx-indexer:latest
@@ -26,4 +29,4 @@ format:
 test:
 	go test --count=1 ./...
 
-.PHONY: build install-tools-golangci-lint install-tools-goimports install-tools lint format test
+.PHONY: build build-image build-and-push install-tools-golangci-lint install-tools-goimports install-tools lint format test

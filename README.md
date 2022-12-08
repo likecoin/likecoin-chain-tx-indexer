@@ -4,9 +4,9 @@ This is a tool for indexing transaction from [LikeCoin chain](https://github.com
 
 ## Build
 
-`go build -o indexer main.go`
+`make build`
 
-For Docker image, run `./build.sh` to build and tag the Docker image.
+For Docker image, run `make build-image` to build and tag the Docker image.
 
 ## Usage
 
@@ -73,15 +73,13 @@ You may run a testing Postgres database:
 docker compose run --rm -p 127.0.0.1:5433:5432 test-db
 ```
 
-Then run `go test --count=1 ./...`. The `--count=1` parameter is to ensure database tests won't be cached.
+Then run `make test`.
 
 Alternatively, provide an empty Postrgres database with environment variables:
 
 ```
 DB_NAME=my_pg_db DB_HOST=somewhere DB_PORT=15432 DB_USER=my_pg_user DB_PASS=my_password go test ./...
 ```
-
-If you really want to test on production server, you may add `TEST_ON_PRODUCTION=1` environment variable to enforce it.
 
 ### API Example
 
