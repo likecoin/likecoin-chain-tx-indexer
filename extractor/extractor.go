@@ -20,6 +20,8 @@ var handlers = map[string]db.EventHandler{
 	"update_class":                updateNftClass,
 	"mint_nft":                    mintNft,
 	"/cosmos.nft.v1beta1.MsgSend": sendNft,
+	"buy_nft":                     buyNft,
+	"sell_nft":                    sellNft,
 }
 
 func Run(pool *pgxpool.Pool) chan<- int64 {

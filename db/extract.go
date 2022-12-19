@@ -35,6 +35,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 	if err != nil {
 		return false, fmt.Errorf("failed to get latest height: %w", err)
 	}
+
 	if prevSyncedHeight == latestSyncingHeight {
 		return true, nil
 	}
@@ -54,7 +55,7 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 		AND events && $3
 	ORDER BY height ASC;
 	`
-	eventString := getEventStrings(getHandlingEvents(handlers))
+	eventString := utils.GetEventStrings(getHandlingEvents(handlers))
 
 	rows, err := conn.Query(ctx, sql, prevSyncedHeight, latestSyncingHeight, eventString)
 	if err != nil {
@@ -256,6 +257,6 @@ func (batch *Batch) InsertNftEvent(e NftEvent) {
 	(action, class_id, nft_id, sender, receiver, events, tx_hash, timestamp)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	ON CONFLICT DO NOTHING`
-	batch.Batch.Queue(sql, e.Action, e.ClassId, e.NftId, e.Sender, e.Receiver, getEventStrings(e.Events), e.TxHash, e.Timestamp)
+	batch.Batch.Queue(sql, e.Action, e.ClassId, e.NftId, e.Sender, e.Receiver, utils.GetEventStrings(e.Events), e.TxHash, e.Timestamp)
 	_ = pubsub.Publish("NewNFTEvent", e)
 }
