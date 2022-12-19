@@ -168,22 +168,6 @@ func GetLatestHeight(conn *pgxpool.Conn) (int64, error) {
 	return height, nil
 }
 
-func getEventStrings(events types.StringEvents) []string {
-	eventStrings := []string{}
-	for _, event := range events {
-		for _, attr := range event.Attributes {
-			s := fmt.Sprintf("%s.%s=\"%s\"", event.Type, attr.Key, attr.Value)
-			if len(s) < 8100 {
-				// Cosmos SDK indeed generate meaninglessly long event strings
-				// (e.g. in IBC client update, hex-encoding the whole header)
-				// These event strings are useless and can't be handled by Postgres GIN index
-				eventStrings = append(eventStrings, s)
-			}
-		}
-	}
-	return eventStrings
-}
-
 func QueryCount(conn *pgxpool.Conn, events types.StringEvents, height uint64) (uint64, error) {
 	sql := `
 		SELECT count(*) FROM txs
@@ -192,7 +176,7 @@ func QueryCount(conn *pgxpool.Conn, events types.StringEvents, height uint64) (u
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
-	eventStrings := getEventStrings(events)
+	eventStrings := utils.GetEventStrings(events)
 	row := conn.QueryRow(ctx, sql, eventStrings, height)
 	var count uint64
 	err := row.Scan(&count)
@@ -213,7 +197,7 @@ func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, p Pa
 		LIMIT $5
 		OFFSET $6
 	`, p.Order())
-	eventStrings := getEventStrings(events)
+	eventStrings := utils.GetEventStrings(events)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 	rows, err := conn.Query(ctx, sql, eventStrings, height, p.After(), p.Before(), p.Limit, p.Offset)
@@ -266,7 +250,7 @@ func (batch *Batch) InsertTx(txRes types.TxResponse, height int64, txIndex int) 
 	}
 	eventStrings := []string{}
 	for _, log := range txRes.Logs {
-		eventStrings = append(eventStrings, getEventStrings(log.Events)...)
+		eventStrings = append(eventStrings, utils.GetEventStrings(log.Events)...)
 	}
 	txResJSON, err := serializeTx(&txRes)
 	if err != nil {

@@ -3,8 +3,10 @@ package test
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 
 	"go.uber.org/zap/zapcore"
@@ -12,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	iscntypes "github.com/likecoin/likecoin-chain/v3/x/iscn/types"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
@@ -170,7 +173,29 @@ func PrepareTestData(iscns []db.IscnInsert, nftClasses []db.NftClass, nfts []db.
 		b.InsertNftEvent(e)
 	}
 	for i, tx := range txs {
-		b.Batch.Queue("INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", 1, i, []byte(tx), []string{})
+		height := 1
+		type Log struct {
+			Events sdk.StringEvents `json:"events,omitempty"`
+		}
+		logs := []Log{}
+		txStruct := struct {
+			Height string `json:"height,omitempty"`
+			Logs   []Log  `json:"logs,omitempty"`
+		}{}
+		err := json.Unmarshal([]byte(tx), &txStruct)
+		if err == nil {
+			logs = txStruct.Logs
+			h, err := strconv.Atoi(txStruct.Height)
+			if err == nil && h > 0 {
+				height = h
+			}
+		}
+
+		eventStrings := []string{}
+		for _, log := range logs {
+			eventStrings = append(eventStrings, utils.GetEventStrings(log.Events)...)
+		}
+		b.Batch.Queue("INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, i, []byte(tx), eventStrings)
 	}
 	return b.Flush()
 }
