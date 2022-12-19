@@ -262,7 +262,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	ignoreFromListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreFromList, AddressPrefixes)
 	ignoreToListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreToList, AddressPrefixes)
 	sql := fmt.Sprintf(`
-	SELECT e.id, action, e.class_id, e.nft_id, e.sender, e.receiver, e.timestamp, e.tx_hash, e.events, t.tx -> 'tx' -> 'body' ->> 'memo' AS memo
+	SELECT DISTINCT ON (e.id) e.id, action, e.class_id, e.nft_id, e.sender, e.receiver, e.timestamp, e.tx_hash, e.events, t.tx -> 'tx' -> 'body' ->> 'memo' AS memo
 	FROM nft_event as e
 	JOIN nft_class as c
 	ON e.class_id = c.class_id
