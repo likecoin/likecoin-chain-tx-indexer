@@ -104,17 +104,15 @@ func extractNftEvent(events types.StringEvents, typeField, classIdField, nftIdFi
 	}
 }
 
-func defineNftChangeOwnerEventHandler(typeField, classIdField, nftIdField, senderField, receiverField string) db.EventHandler {
-	return func(payload db.EventPayload) error {
-		e := extractNftEvent(payload.Events, typeField, classIdField, nftIdField, senderField, receiverField)
-		sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
-		payload.Batch.Batch.Queue(sql, e.Receiver, e.ClassId, e.NftId)
-		e.Attach(payload)
-		payload.Batch.InsertNftEvent(e)
-		return nil
-	}
+func changeNftOwnerFromEvent(payload db.EventPayload, e db.NftEvent) {
+	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
+	payload.Batch.Batch.Queue(sql, e.Receiver, e.ClassId, e.NftId)
+	e.Attach(payload)
+	payload.Batch.InsertNftEvent(e)
 }
 
-var sendNft = defineNftChangeOwnerEventHandler("cosmos.nft.v1beta1.EventSend", "class_id", "id", "sender", "receiver")
-var buyNft = defineNftChangeOwnerEventHandler("likechain.likenft.v1.EventBuyNFT", "class_id", "nft_id", "seller", "buyer")
-var sellNft = defineNftChangeOwnerEventHandler("likechain.likenft.v1.EventSellNFT", "class_id", "nft_id", "seller", "buyer")
+func sendNft(payload db.EventPayload) error {
+	e := extractNftEvent(payload.Events, "cosmos.nft.v1beta1.EventSend", "class_id", "id", "sender", "receiver")
+	changeNftOwnerFromEvent(payload, e)
+	return nil
+}

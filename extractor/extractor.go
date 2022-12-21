@@ -22,6 +22,12 @@ var handlers = map[string]db.EventHandler{
 	"/cosmos.nft.v1beta1.MsgSend": sendNft,
 	"buy_nft":                     buyNft,
 	"sell_nft":                    sellNft,
+	"create_listing":              createListing,
+	"update_listing":              updateListing,
+	"delete_listing":              deleteListing,
+	"create_offer":                createOffer,
+	"update_offer":                updateOffer,
+	"delete_offer":                deleteOffer,
 }
 
 func Run(pool *pgxpool.Pool) chan<- int64 {

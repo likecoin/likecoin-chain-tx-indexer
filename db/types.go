@@ -122,6 +122,15 @@ func (n *NftEvent) Attach(payload EventPayload) {
 	n.TxHash = payload.TxHash
 }
 
+type NftMarketplaceItem struct {
+	Type       string    `json:"action,omitempty"`
+	ClassId    string    `json:"class_id"`
+	NftId      string    `json:"nft_id"`
+	Creator    string    `json:"creator"`
+	Price      uint64    `json:"price,omitempty"`
+	Expiration time.Time `json:"expiration,omitempty"`
+}
+
 type LegacyPageRequest struct {
 	Key     uint64 `form:"key"`
 	Limit   int    `form:"limit,default=100" binding:"gte=1,lte=100"`
