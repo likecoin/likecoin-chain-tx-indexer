@@ -36,6 +36,8 @@ const DefaultDBPoolMin = 4
 const DefaultDBPoolMax = 32
 
 const META_EXTRACTOR = "extractor_v1"
+const META_BLOCK_HEIGHT = "latest_block_height"
+const META_BLOCK_TIME_EPOCH_NS = "latest_block_time_epoch_ns"
 
 var (
 	pool     *pgxpool.Pool = nil
@@ -148,24 +150,15 @@ func AcquireFromPool(pool *pgxpool.Pool) (*pgxpool.Conn, error) {
 }
 
 func GetLatestHeight(conn *pgxpool.Conn) (int64, error) {
-	ctx, cancel := GetTimeoutContext()
-	defer cancel()
-	rows, err := conn.Query(ctx, "SELECT max(height) FROM txs")
+	return GetMetaHeight(conn, META_BLOCK_HEIGHT)
+}
+
+func GetLatestBlockTime(conn *pgxpool.Conn) (time.Time, error) {
+	ns, err := GetMetaHeight(conn, META_BLOCK_TIME_EPOCH_NS)
 	if err != nil {
-		logger.L.Warnw("Cannot get latest height from Postgres", "error", err)
-		return 0, err
+		return time.Time{}, err
 	}
-	defer rows.Close()
-	if !rows.Next() {
-		return 0, nil
-	}
-	var height int64
-	err = rows.Scan(&height)
-	if err != nil {
-		// conversion failed, the `max` is NULL, i.e. no records
-		return 0, nil
-	}
-	return height, nil
+	return time.Unix(ns/1e9, ns%1e9).UTC(), nil
 }
 
 func QueryCount(conn *pgxpool.Conn, events types.StringEvents, height uint64) (uint64, error) {
@@ -261,6 +254,19 @@ func (batch *Batch) InsertTx(txRes types.TxResponse, height int64, txIndex int) 
 	batch.Batch.Queue("INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, txIndex, txResJSON, eventStrings)
 	batch.prevHeight = height
 	logger.L.Debugw("Processed height", "height", height, "batch_size", batch.Batch.Len())
+	return nil
+}
+
+func (batch *Batch) UpdateLatestBlockHeight(height int64) {
+	batch.UpdateMetaHeight(META_BLOCK_HEIGHT, height)
+}
+
+func (batch *Batch) UpdateLatestBlockTime(timeStr string) error {
+	t, err := time.Parse(time.RFC3339, timeStr)
+	if err != nil {
+		return err
+	}
+	batch.UpdateMetaHeight(META_BLOCK_TIME_EPOCH_NS, t.UTC().UnixNano())
 	return nil
 }
 

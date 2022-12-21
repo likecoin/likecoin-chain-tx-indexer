@@ -196,6 +196,7 @@ func PrepareTestData(iscns []db.IscnInsert, nftClasses []db.NftClass, nfts []db.
 			eventStrings = append(eventStrings, utils.GetEventStrings(log.Events)...)
 		}
 		b.Batch.Queue("INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, i, []byte(tx), eventStrings)
+		b.Batch.Queue("UPDATE meta SET height = $1 WHERE id = $2 AND height < $1", height, db.META_BLOCK_HEIGHT)
 	}
 	return b.Flush()
 }
