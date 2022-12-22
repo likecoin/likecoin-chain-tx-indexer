@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"go.uber.org/zap/zapcore"
 
@@ -146,11 +147,15 @@ func CleanupTestData(conn *pgxpool.Conn) error {
 }
 
 type DBTestData struct {
-	Iscns      []db.IscnInsert
-	NftClasses []db.NftClass
-	Nfts       []db.Nft
-	NftEvents  []db.NftEvent
-	Txs        []string
+	Iscns               []db.IscnInsert
+	NftClasses          []db.NftClass
+	Nfts                []db.Nft
+	NftEvents           []db.NftEvent
+	NftMarketplaceItems []db.NftMarketplaceItem
+	Txs                 []string
+	ExtractorHeight     int64
+	LatestBlockHeight   int64
+	LatestBlockTime     *time.Time
 }
 
 func InsertTestData(testData DBTestData) error {
@@ -180,6 +185,10 @@ func InsertTestData(testData DBTestData) error {
 		e.Timestamp = e.Timestamp.UTC()
 		b.InsertNftEvent(e)
 	}
+	for _, item := range testData.NftMarketplaceItems {
+		item.Expiration = item.Expiration.UTC()
+		b.InsertNFTMarketplaceItem(item)
+	}
 	for i, tx := range testData.Txs {
 		height := 1
 		type Log struct {
@@ -205,6 +214,15 @@ func InsertTestData(testData DBTestData) error {
 		}
 		b.Batch.Queue("INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, i, []byte(tx), eventStrings)
 		b.Batch.Queue("UPDATE meta SET height = $1 WHERE id = $2 AND height < $1", height, db.META_BLOCK_HEIGHT)
+	}
+	if testData.LatestBlockHeight != 0 {
+		b.UpdateMetaHeight(db.META_BLOCK_HEIGHT, testData.LatestBlockHeight)
+	}
+	if testData.LatestBlockTime != nil {
+		b.UpdateMetaHeight(db.META_BLOCK_TIME_EPOCH_NS, testData.LatestBlockTime.UTC().UnixNano())
+	}
+	if testData.ExtractorHeight != 0 {
+		b.UpdateMetaHeight(db.META_EXTRACTOR, testData.ExtractorHeight)
 	}
 	return b.Flush()
 }
