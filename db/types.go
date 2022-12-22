@@ -356,3 +356,15 @@ type QueryNftOwnerListResponse struct {
 	Owners     []OwnerResponse `json:"owners"`
 	Pagination PageResponse    `json:"pagination"`
 }
+
+type QueryNftMarketplaceItemsRequest struct {
+	Type    string `form:"type"`
+	ClassId string `form:"class_id"`
+	NftId   string `form:"nft_id"`
+	Creator string `form:"creator"`
+}
+
+type QueryNftMarketplaceItemsResponse struct {
+	Items      []NftMarketplaceItem `json:"items"`
+	Pagination PageResponse         `json:"pagination"`
+}
