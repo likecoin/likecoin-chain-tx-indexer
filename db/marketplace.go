@@ -30,7 +30,7 @@ func GetNftMarketplaceItems(conn *pgxpool.Conn, q QueryNftMarketplaceItemsReques
 			AND ($8 = '' OR class_id = $8)
 			AND ($9 = '' OR nft_id = $9)
 			AND ($10 = '' OR creator = $10)
-		ORDER BY expiration %s
+		ORDER BY price %s
 		LIMIT $6
 	`, p.Order())
 	ctx, cancel := GetTimeoutContext()
