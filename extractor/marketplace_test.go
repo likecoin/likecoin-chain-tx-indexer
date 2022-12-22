@@ -246,7 +246,10 @@ func TestListing(t *testing.T) {
 			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000002), expiration.Add(2*time.Second).Format(time.RFC3339),
 		),
 	}
-	InsertTestData(DBTestData{Txs: txs})
+	err = InsertTestData(DBTestData{Txs: txs})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	finished, err = Extract(Conn, handlers)
 	require.NoError(t, err)
@@ -280,7 +283,10 @@ func TestListing(t *testing.T) {
 			ADDR_02_LIKE, nftClasses[0].Id, nfts[1].NftId,
 		),
 	}
-	InsertTestData(DBTestData{Txs: txs})
+	err = InsertTestData(DBTestData{Txs: txs})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	finished, err = Extract(Conn, handlers)
 	require.NoError(t, err)
@@ -308,7 +314,10 @@ func TestListing(t *testing.T) {
 			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_01_LIKE,
 		),
 	}
-	InsertTestData(DBTestData{Txs: txs})
+	err = InsertTestData(DBTestData{Txs: txs})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	finished, err = Extract(Conn, handlers)
 	require.NoError(t, err)
@@ -419,7 +428,10 @@ func TestOffer(t *testing.T) {
 			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000002), expiration.Add(2*time.Second).Format(time.RFC3339),
 		),
 	}
-	InsertTestData(DBTestData{Txs: txs})
+	err = InsertTestData(DBTestData{Txs: txs})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	finished, err = Extract(Conn, handlers)
 	require.NoError(t, err)
@@ -453,7 +465,10 @@ func TestOffer(t *testing.T) {
 			ADDR_01_LIKE, nftClasses[0].Id, nfts[1].NftId,
 		),
 	}
-	InsertTestData(DBTestData{Txs: txs})
+	err = InsertTestData(DBTestData{Txs: txs})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	finished, err = Extract(Conn, handlers)
 	require.NoError(t, err)
@@ -481,7 +496,10 @@ func TestOffer(t *testing.T) {
 			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_02_LIKE,
 		),
 	}
-	InsertTestData(DBTestData{Txs: txs})
+	err = InsertTestData(DBTestData{Txs: txs})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	finished, err = Extract(Conn, handlers)
 	require.NoError(t, err)

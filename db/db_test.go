@@ -16,7 +16,8 @@ func TestMain(m *testing.M) {
 func TestBlockTime(t *testing.T) {
 	timeStr := "2018-01-01T00:00:00Z"
 	b := NewBatch(Conn, 10000)
-	b.UpdateLatestBlockTime(timeStr)
+	err := b.UpdateLatestBlockTime(timeStr)
+	require.NoError(t, err)
 	b.Flush()
 	blockTime, err := GetLatestBlockTime(Conn)
 	require.NoError(t, err)

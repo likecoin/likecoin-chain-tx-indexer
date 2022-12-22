@@ -37,11 +37,11 @@ func insertIscn(payload db.EventPayload) error {
 	events := payload.Events
 	var data iscnMessage
 	if err := json.Unmarshal(message, &data); err != nil {
-		return fmt.Errorf("Failed to unmarshal iscn: %w", err)
+		return fmt.Errorf("failed to unmarshal iscn: %w", err)
 	}
 	var record iscnData
 	if err := json.Unmarshal(data.Record, &record); err != nil {
-		return fmt.Errorf("Failed to unmarshal iscn: %w", err)
+		return fmt.Errorf("failed to unmarshal iscn: %w", err)
 	}
 	stakeholders := []db.Stakeholder{}
 	for _, stakeholderRawJSON := range record.Stakeholders {
