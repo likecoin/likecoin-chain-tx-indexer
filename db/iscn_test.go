@@ -27,7 +27,7 @@ func TestIscnCombineQuery(t *testing.T) {
 		Keywords:     []string{"apple", "boy"},
 		Fingerprints: []string{"hash://unknown/asdf", "hash://unknown/qwer"},
 	}
-	err := PrepareTestData([]IscnInsert{iscn}, nil, nil, nil, nil)
+	err := InsertTestData(DBTestData{Iscns: []IscnInsert{iscn}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,7 +159,7 @@ func TestIscnQueryLatestVersion(t *testing.T) {
 			Owner: ADDR_02_LIKE,
 		},
 	}
-	err := PrepareTestData(iscns, nil, nil, nil, nil)
+	err := InsertTestData(DBTestData{Iscns: iscns})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,7 +292,7 @@ func TestIscnList(t *testing.T) {
 		{Iscn: "iscn://testing/eeeeee/1"},
 		{Iscn: "iscn://testing/ffffff/1"},
 	}
-	err := PrepareTestData(iscns, nil, nil, nil, nil)
+	err := InsertTestData(DBTestData{Iscns: iscns})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -341,7 +341,7 @@ func TestIscnPagination(t *testing.T) {
 		{Iscn: "iscn://testing/iiiiii/1", Timestamp: time.Unix(8, 0)},
 		{Iscn: "iscn://testing/jjjjjj/1", Timestamp: time.Unix(9, 0)},
 	}
-	err := PrepareTestData(iscns, nil, nil, nil, nil)
+	err := InsertTestData(DBTestData{Iscns: iscns})
 	if err != nil {
 		t.Fatal(err)
 	}

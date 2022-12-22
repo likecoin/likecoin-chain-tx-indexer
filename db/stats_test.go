@@ -70,7 +70,7 @@ func TestNftCount(t *testing.T) {
 			Owner:   ADDR_03_COSMOS,
 		},
 	}
-	err := PrepareTestData(iscns, nftClasses, nfts, nil, nil)
+	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,7 +165,7 @@ func TestNftTradeStats(t *testing.T) {
 		`{"txhash":"C1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"3333"}]}]}]}}}`,
 		`{"txhash":"C2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"3000"}]}]}]}}}`,
 	}
-	err := PrepareTestData(nil, nil, nil, nftEvents, txs)
+	err := InsertTestData(DBTestData{NftEvents: nftEvents, Txs: txs})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -241,7 +241,7 @@ func TestNftCreatorCount(t *testing.T) {
 			Sender:  ADDR_03_LIKE,
 		},
 	}
-	err := PrepareTestData(nil, nil, nil, nftEvents, nil)
+	err := InsertTestData(DBTestData{NftEvents: nftEvents})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,7 +283,7 @@ func TestNftOwnerCount(t *testing.T) {
 			Owner: ADDR_03_LIKE,
 		},
 	}
-	err := PrepareTestData(nil, nil, nfts, nil, nil)
+	err := InsertTestData(DBTestData{Nfts: nfts})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -325,7 +325,7 @@ func TestNftOwnerList(t *testing.T) {
 			Owner: ADDR_03_LIKE,
 		},
 	}
-	err := PrepareTestData(nil, nil, nfts, nil, nil)
+	err := InsertTestData(DBTestData{Nfts: nfts})
 	if err != nil {
 		t.Fatal(err)
 	}

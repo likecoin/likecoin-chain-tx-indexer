@@ -31,7 +31,7 @@ func TestISCNCombine(t *testing.T) {
 			Fingerprints: []string{"hash://unknown/asdf", "hash://unknown/qwer"},
 		},
 	}
-	err := PrepareTestData(iscns, nil, nil, nil, nil)
+	err := InsertTestData(DBTestData{Iscns: iscns})
 	if err != nil {
 		t.Fatal(err)
 	}

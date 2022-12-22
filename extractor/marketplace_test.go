@@ -34,7 +34,12 @@ func TestBuyNft(t *testing.T) {
 	txs := []string{
 		fmt.Sprintf(`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgBuyNFT","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","seller":"%[4]s","price":"100000000000"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"likechain.likenft.v1.EventBuyNFT","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[4]s\""},{"key":"buyer","value":"\"%[1]s\""},{"key":"price","value":"\"100000000000\""}]},{"type":"message","attributes":[{"key":"action","value":"buy_nft"},{"key":"sender","value":"%[1]s"}]}]}]}`, ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_01_LIKE),
 	}
-	err := PrepareTestData(iscns, nftClasses, nfts, nil, txs)
+	err := InsertTestData(DBTestData{
+		Iscns:      iscns,
+		NftClasses: nftClasses,
+		Nfts:       nfts,
+		Txs:        txs,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +106,12 @@ func TestSellNft(t *testing.T) {
 		`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"memo":"AAAAAA"}}}`,
 		fmt.Sprintf(`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgSellNFT","creator":"%[4]s","class_id":"%[2]s","nft_id":"%[3]s","buyer":"%[1]s","price":"100000000000"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"likechain.likenft.v1.EventSellNFT","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[4]s\""},{"key":"buyer","value":"\"%[1]s\""},{"key":"price","value":"\"100000000000\""}]},{"type":"message","attributes":[{"key":"action","value":"sell_nft"},{"key":"sender","value":"%[4]s"}]}]}]}`, ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_01_LIKE),
 	}
-	err := PrepareTestData(iscns, nftClasses, nfts, nil, txs)
+	err := InsertTestData(DBTestData{
+		Iscns:      iscns,
+		NftClasses: nftClasses,
+		Nfts:       nfts,
+		Txs:        txs,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

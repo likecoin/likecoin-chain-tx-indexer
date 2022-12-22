@@ -145,9 +145,17 @@ func CleanupTestData(conn *pgxpool.Conn) error {
 	return RunEmbededSQLFile(conn, "test_cleanup_data.sql")
 }
 
-func PrepareTestData(iscns []db.IscnInsert, nftClasses []db.NftClass, nfts []db.Nft, nftEvents []db.NftEvent, txs []string) error {
+type DBTestData struct {
+	Iscns      []db.IscnInsert
+	NftClasses []db.NftClass
+	Nfts       []db.Nft
+	NftEvents  []db.NftEvent
+	Txs        []string
+}
+
+func InsertTestData(testData DBTestData) error {
 	b := db.NewBatch(Conn, 10000)
-	for _, i := range iscns {
+	for _, i := range testData.Iscns {
 		iscnId, err := iscntypes.ParseIscnId(i.Iscn)
 		if err != nil {
 			return err
@@ -160,19 +168,19 @@ func PrepareTestData(iscns []db.IscnInsert, nftClasses []db.NftClass, nfts []db.
 		i.Timestamp = i.Timestamp.UTC()
 		b.InsertIscn(i)
 	}
-	for _, c := range nftClasses {
+	for _, c := range testData.NftClasses {
 		c.Parent.Type = "ISCN"
 		c.CreatedAt = c.CreatedAt.UTC()
 		b.InsertNftClass(c)
 	}
-	for _, n := range nfts {
+	for _, n := range testData.Nfts {
 		b.InsertNft(n)
 	}
-	for _, e := range nftEvents {
+	for _, e := range testData.NftEvents {
 		e.Timestamp = e.Timestamp.UTC()
 		b.InsertNftEvent(e)
 	}
-	for i, tx := range txs {
+	for i, tx := range testData.Txs {
 		height := 1
 		type Log struct {
 			Events sdk.StringEvents `json:"events,omitempty"`

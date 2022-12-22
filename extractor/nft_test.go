@@ -34,7 +34,12 @@ func TestSendNft(t *testing.T) {
 	txs := []string{
 		fmt.Sprintf(`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/cosmos.nft.v1beta1.MsgSend","sender":"%[4]s","class_id":"%[2]s","id":"%[3]s","receiver":"%[1]s"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"id","value":"\"%[3]s\""},{"key":"sender","value":"\"%[4]s\""},{"key":"receiver","value":"\"%[1]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]}]}`, ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_01_LIKE),
 	}
-	err := PrepareTestData(iscns, nftClasses, nfts, nil, txs)
+	err := InsertTestData(DBTestData{
+		Iscns:      iscns,
+		NftClasses: nftClasses,
+		Nfts:       nfts,
+		Txs:        txs,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
