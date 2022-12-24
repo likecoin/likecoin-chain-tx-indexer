@@ -1,6 +1,7 @@
 package rest_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
@@ -29,15 +30,17 @@ func TestMarketplace(t *testing.T) {
 			Parent: db.NftClassParent{IscnIdPrefix: prefixA},
 		},
 		{
-			Id:     "nftlike1bbbbbb",
-			Parent: db.NftClassParent{IscnIdPrefix: prefixA},
+			Id:       "nftlike1bbbbbb",
+			Parent:   db.NftClassParent{IscnIdPrefix: prefixA},
+			Metadata: json.RawMessage(`"name=a"`),
 		},
 	}
 	nfts := []db.Nft{
 		{
-			NftId:   "testing-nft-91301",
-			ClassId: nftClasses[0].Id,
-			Owner:   ADDR_01_LIKE,
+			NftId:    "testing-nft-91301",
+			ClassId:  nftClasses[0].Id,
+			Owner:    ADDR_01_LIKE,
+			Metadata: json.RawMessage(`"name=91301"`),
 		},
 		{
 			NftId:   "testing-nft-91302",
@@ -136,27 +139,26 @@ func TestMarketplace(t *testing.T) {
 	defer func() { _ = CleanupTestData(Conn) }()
 
 	table := []struct {
-		name       string
-		query      string
-		shouldFail bool
-		length     int
-		response   db.QueryNftMarketplaceItemsResponse
+		name          string
+		query         string
+		shouldFail    bool
+		length        int
+		items         []db.NftMarketplaceItem
+		pagination    db.PageResponse
+		classMetadata []json.RawMessage
+		nftMetadata   []json.RawMessage
 	}{
 		{
 			name:   "query all listings",
 			query:  "type=listing",
 			length: 3,
-			response: db.QueryNftMarketplaceItemsResponse{
-				Items: []db.NftMarketplaceItem{marketplaceItems[0], marketplaceItems[1], marketplaceItems[2]},
-			},
+			items:  []db.NftMarketplaceItem{marketplaceItems[0], marketplaceItems[1], marketplaceItems[2]},
 		},
 		{
 			name:   "query all offers",
 			query:  "type=offer",
 			length: 3,
-			response: db.QueryNftMarketplaceItemsResponse{
-				Items: []db.NftMarketplaceItem{marketplaceItems[4], marketplaceItems[6], marketplaceItems[7]},
-			},
+			items:  []db.NftMarketplaceItem{marketplaceItems[4], marketplaceItems[6], marketplaceItems[7]},
 		},
 		{
 			name:       "no type",
@@ -169,67 +171,69 @@ func TestMarketplace(t *testing.T) {
 			shouldFail: true,
 		},
 		{
-			name:     "listings by creator",
-			query:    "type=listing&creator=" + ADDR_01_LIKE,
-			length:   1,
-			response: db.QueryNftMarketplaceItemsResponse{Items: []db.NftMarketplaceItem{marketplaceItems[0]}},
+			name:   "listings by creator",
+			query:  "type=listing&creator=" + ADDR_01_LIKE,
+			length: 1,
+			items:  []db.NftMarketplaceItem{marketplaceItems[0]},
 		},
 		{
-			name:     "offers by creator",
-			query:    "type=offer&creator=" + ADDR_01_LIKE,
-			length:   1,
-			response: db.QueryNftMarketplaceItemsResponse{Items: []db.NftMarketplaceItem{marketplaceItems[4]}},
+			name:   "offers by creator",
+			query:  "type=offer&creator=" + ADDR_01_LIKE,
+			length: 1,
+			items:  []db.NftMarketplaceItem{marketplaceItems[4]},
 		},
 		{
 			name:   "listings by class ID",
 			query:  "type=listing&class_id=" + nftClasses[0].Id,
 			length: 2,
-			response: db.QueryNftMarketplaceItemsResponse{
-				Items: []db.NftMarketplaceItem{marketplaceItems[0], marketplaceItems[1]},
-			},
+			items:  []db.NftMarketplaceItem{marketplaceItems[0], marketplaceItems[1]},
 		},
 		{
-			name:     "offers by class ID",
-			query:    "type=offer&class_id=" + nftClasses[1].Id,
-			length:   1,
-			response: db.QueryNftMarketplaceItemsResponse{Items: []db.NftMarketplaceItem{marketplaceItems[6]}},
+			name:   "offers by class ID",
+			query:  "type=offer&class_id=" + nftClasses[1].Id,
+			length: 1,
+			items:  []db.NftMarketplaceItem{marketplaceItems[6]},
 		},
 		{
-			name:     "listings by NFT ID",
-			query:    "type=listing&nft_id=" + nfts[1].NftId,
-			length:   1,
-			response: db.QueryNftMarketplaceItemsResponse{Items: []db.NftMarketplaceItem{marketplaceItems[1]}},
+			name:   "listings by NFT ID",
+			query:  "type=listing&nft_id=" + nfts[1].NftId,
+			length: 1,
+			items:  []db.NftMarketplaceItem{marketplaceItems[1]},
 		},
 		{
-			name:     "offers by NFT ID",
-			query:    "type=offer&nft_id=" + nfts[1].NftId,
-			length:   1,
-			response: db.QueryNftMarketplaceItemsResponse{Items: []db.NftMarketplaceItem{marketplaceItems[4]}},
+			name:   "offers by NFT ID",
+			query:  "type=offer&nft_id=" + nfts[1].NftId,
+			length: 1,
+			items:  []db.NftMarketplaceItem{marketplaceItems[4]},
 		},
 		{
 			name:   "limit",
 			query:  "type=listing&pagination.limit=2",
 			length: 2,
-			response: db.QueryNftMarketplaceItemsResponse{
-				Items: []db.NftMarketplaceItem{marketplaceItems[0], marketplaceItems[1]},
-				Pagination: db.PageResponse{
-					NextKey: uint64(marketplaceItems[1].Expiration.UnixNano()),
-				},
+			items:  []db.NftMarketplaceItem{marketplaceItems[0], marketplaceItems[1]},
+			pagination: db.PageResponse{
+				NextKey: uint64(marketplaceItems[1].Expiration.UnixNano()),
 			},
 		},
 		{
-			name:     "after",
-			query:    fmt.Sprintf("type=listing&pagination.key=%d", marketplaceItems[1].Expiration.UnixNano()),
-			length:   1,
-			response: db.QueryNftMarketplaceItemsResponse{Items: []db.NftMarketplaceItem{marketplaceItems[2]}},
+			name:   "after",
+			query:  fmt.Sprintf("type=listing&pagination.key=%d", marketplaceItems[1].Expiration.UnixNano()),
+			length: 1,
+			items:  []db.NftMarketplaceItem{marketplaceItems[2]},
 		},
 		{
 			name:   "reverse",
 			query:  "type=listing&pagination.reverse=true",
 			length: 3,
-			response: db.QueryNftMarketplaceItemsResponse{
-				Items: []db.NftMarketplaceItem{marketplaceItems[2], marketplaceItems[1], marketplaceItems[0]},
-			},
+			items:  []db.NftMarketplaceItem{marketplaceItems[2], marketplaceItems[1], marketplaceItems[0]},
+		},
+		{
+			name:          "expand",
+			query:         "type=listing&expand=true",
+			length:        3,
+			items:         []db.NftMarketplaceItem{marketplaceItems[0], marketplaceItems[1], marketplaceItems[2]},
+			classMetadata: []json.RawMessage{nftClasses[0].Metadata, nftClasses[0].Metadata, nftClasses[1].Metadata},
+			nftMetadata:   []json.RawMessage{nfts[0].Metadata, nfts[1].Metadata, nfts[2].Metadata},
 		},
 	}
 	for _, v := range table {
@@ -245,11 +249,25 @@ func TestMarketplace(t *testing.T) {
 			err := json.Unmarshal([]byte(body), &res)
 			require.NoError(t, err)
 			require.Len(t, res.Items, v.length)
-			for i, item := range v.response.Items {
-				require.Equal(t, item, res.Items[i])
+			for i, item := range v.items {
+				require.Equal(t, item.ClassId, res.Items[i].ClassId)
+				require.Equal(t, item.NftId, res.Items[i].NftId)
+				require.Equal(t, item.Creator, res.Items[i].Creator)
+				require.Equal(t, item.Price, res.Items[i].Price)
+				require.Equal(t, item.Expiration, res.Items[i].Expiration)
 			}
-			if v.response.Pagination.NextKey != 0 {
-				require.Equal(t, v.response.Pagination.NextKey, res.Pagination.NextKey)
+			for i, classMetadata := range v.classMetadata {
+				if classMetadata != nil {
+					require.Equal(t, 0, bytes.Compare(classMetadata, res.Items[i].ClassMetadata), "%s <-> %s", classMetadata, res.Items[i].ClassMetadata)
+				}
+			}
+			for i, nftMetadata := range v.nftMetadata {
+				if nftMetadata != nil {
+					require.Equal(t, 0, bytes.Compare(nftMetadata, res.Items[i].NftMetadata), "%s <-> %s", nftMetadata, res.Items[i].NftMetadata)
+				}
+			}
+			if v.pagination.NextKey != 0 {
+				require.Equal(t, v.pagination.NextKey, res.Pagination.NextKey)
 			}
 		})
 	}

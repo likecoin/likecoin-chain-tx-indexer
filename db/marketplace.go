@@ -21,15 +21,21 @@ func GetNftMarketplaceItems(conn *pgxpool.Conn, q QueryNftMarketplaceItemsReques
 	beforeTime := time.Unix(int64(before/1e9), int64(before%1e9)).UTC()
 	sql := fmt.Sprintf(`
 		SELECT
-			type, class_id, nft_id, creator, price, expiration
-		FROM nft_marketplace
-		WHERE (expiration > $1)
-			AND ($2::bigint = 0 OR expiration > $3)
-			AND ($4::bigint = 0 OR expiration < $5)
-			AND (type = $7)
-			AND ($8 = '' OR class_id = $8)
-			AND ($9 = '' OR nft_id = $9)
-			AND ($10 = '' OR creator = $10)
+			m.type, m.class_id, m.nft_id, m.creator, m.price, m.expiration,
+			c.metadata AS class_metadata,
+			n.metadata AS nft_metadata
+		FROM nft_marketplace m
+		LEFT JOIN nft_class c
+			ON ($11 = true AND m.class_id = c.class_id)
+		LEFT JOIN nft n
+			ON ($11 = true AND m.nft_id = n.nft_id)
+		WHERE (m.expiration > $1)
+			AND ($2::bigint = 0 OR m.expiration > $3)
+			AND ($4::bigint = 0 OR m.expiration < $5)
+			AND (m.type = $7)
+			AND ($8 = '' OR m.class_id = $8)
+			AND ($9 = '' OR m.nft_id = $9)
+			AND ($10 = '' OR m.creator = $10)
 		ORDER BY price %s
 		LIMIT $6
 	`, p.Order())
@@ -39,24 +45,23 @@ func GetNftMarketplaceItems(conn *pgxpool.Conn, q QueryNftMarketplaceItemsReques
 		ctx, sql,
 		// $1 ~ $7
 		blockTime, after, afterTime, before, beforeTime, p.Limit, q.Type,
-		// $8 ~ $10
-		q.ClassId, q.NftId, q.Creator,
+		// $8 ~ $11
+		q.ClassId, q.NftId, q.Creator, q.Expand,
 	)
 	if err != nil {
 		logger.L.Errorw("Failed to query database query for GetMarketplaceItems", "error", err, "q", q)
 		return QueryNftMarketplaceItemsResponse{}, fmt.Errorf("failed to query database query for GetMarketplaceItems: %w", err)
 	}
 
-	res := QueryNftMarketplaceItemsResponse{
-		Items: []NftMarketplaceItem{},
-	}
+	var res QueryNftMarketplaceItemsResponse
 	for rows.Next() {
-		var item NftMarketplaceItem
+		var item NftMarketplaceItemResponse
 		if err = rows.Scan(
 			&item.Type, &item.ClassId, &item.NftId, &item.Creator, &item.Price, &item.Expiration,
+			&item.ClassMetadata, &item.NftMetadata,
 		); err != nil {
-			logger.L.Errorw("Failed to scan row into NftMarketplaceItem", "error", err)
-			return QueryNftMarketplaceItemsResponse{}, fmt.Errorf("failed to scan row into NftMarketplaceItem: %w", err)
+			logger.L.Errorw("Failed to scan row into NftMarketplaceItemResponse", "error", err)
+			return QueryNftMarketplaceItemsResponse{}, fmt.Errorf("failed to scan row into NftMarketplaceItemResponse: %w", err)
 		}
 		item.Expiration = item.Expiration.UTC()
 		res.Pagination.NextKey = uint64(item.Expiration.UnixNano())

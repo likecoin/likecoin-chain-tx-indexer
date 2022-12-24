@@ -362,9 +362,16 @@ type QueryNftMarketplaceItemsRequest struct {
 	ClassId string `form:"class_id"`
 	NftId   string `form:"nft_id"`
 	Creator string `form:"creator"`
+	Expand  bool   `form:"expand"`
+}
+
+type NftMarketplaceItemResponse struct {
+	NftMarketplaceItem
+	ClassMetadata json.RawMessage `json:"class_metadata"`
+	NftMetadata   json.RawMessage `json:"nft_metadata"`
 }
 
 type QueryNftMarketplaceItemsResponse struct {
-	Items      []NftMarketplaceItem `json:"items"`
-	Pagination PageResponse         `json:"pagination"`
+	Items      []NftMarketplaceItemResponse `json:"items"`
+	Pagination PageResponse                 `json:"pagination"`
 }
