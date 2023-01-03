@@ -183,13 +183,13 @@ func TestMarketplace(t *testing.T) {
 		},
 		{
 			name:   "listings by NFT ID",
-			query:  QueryNftMarketplaceItemsRequest{Type: "listing", NftId: nfts[1].NftId},
+			query:  QueryNftMarketplaceItemsRequest{Type: "listing", ClassId: nftClasses[0].Id, NftId: nfts[1].NftId},
 			length: 1,
 			items:  []NftMarketplaceItem{marketplaceItems[1]},
 		},
 		{
 			name:   "offers by NFT ID",
-			query:  QueryNftMarketplaceItemsRequest{Type: "offer", NftId: nfts[1].NftId},
+			query:  QueryNftMarketplaceItemsRequest{Type: "offer", ClassId: nftClasses[0].Id, NftId: nfts[1].NftId},
 			length: 1,
 			items:  []NftMarketplaceItem{marketplaceItems[4]},
 		},

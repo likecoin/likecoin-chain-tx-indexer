@@ -39,9 +39,11 @@ CREATE INDEX idx_nft_marketplace_class_id ON nft_marketplace (
   price
 );
 
+-- NFT ID is not unique, so we need to include the class ID
 CREATE INDEX idx_nft_marketplace_nft_id ON nft_marketplace (
   type,
   nft_id,
+  class_id,
   expiration,
   price
 );
