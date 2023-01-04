@@ -270,6 +270,7 @@ type QueryRankingRequest struct {
 	ApiAddresses    []string `form:"api_addresses"`
 	After           int64    `form:"after"`
 	Before          int64    `form:"before"`
+	OrderBy         string   `form:"order_by"`
 }
 
 type QueryRankingResponse struct {
