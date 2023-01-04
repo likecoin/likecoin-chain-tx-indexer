@@ -11,6 +11,11 @@ build-and-push:
 	docker tag likechain/tx-indexer:latest us.gcr.io/likecoin-foundation/likechain-tx-indexer:latest
 	docker -- push us.gcr.io/likecoin-foundation/likechain-tx-indexer:latest
 
+build-and-push-develop:
+	docker buildx build -t likechain/tx-indexer:latest --platform linux/amd64 .
+	docker tag likechain/tx-indexer:latest us.gcr.io/likecoin-develop/likechain-tx-indexer:latest
+	docker -- push us.gcr.io/likecoin-develop/likechain-tx-indexer:latest
+
 install-tools-golangci-lint:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
 
