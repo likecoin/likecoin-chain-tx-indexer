@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
+
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/pubsub"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
@@ -259,4 +260,29 @@ func (batch *Batch) InsertNftEvent(e NftEvent) {
 	ON CONFLICT DO NOTHING`
 	batch.Batch.Queue(sql, e.Action, e.ClassId, e.NftId, e.Sender, e.Receiver, utils.GetEventStrings(e.Events), e.TxHash, e.Timestamp)
 	_ = pubsub.Publish("NewNFTEvent", e)
+}
+
+func (batch *Batch) InsertNFTMarketplaceItem(item NftMarketplaceItem) {
+	sql := `
+	INSERT INTO nft_marketplace (type, class_id, nft_id, creator, price, expiration)
+	VALUES ($1, $2, $3, $4, $5, $6)
+	ON CONFLICT (type, class_id, nft_id, creator) DO UPDATE SET
+		price = EXCLUDED.price,
+		expiration = EXCLUDED.expiration
+	`
+	batch.Batch.Queue(sql, item.Type, item.ClassId, item.NftId, item.Creator, item.Price, item.Expiration)
+	_ = pubsub.Publish("NewNFTMarketplaceItem", item)
+}
+
+func (batch *Batch) DeleteNFTMarketplaceItem(item NftMarketplaceItem) {
+	sql := `
+	DELETE FROM nft_marketplace
+	WHERE
+		type = $1 AND
+		class_id = $2 AND
+		nft_id = $3 AND
+		creator = $4
+	`
+	batch.Batch.Queue(sql, item.Type, item.ClassId, item.NftId, item.Creator)
+	_ = pubsub.Publish("DeleteNFTMarketplaceItem", item)
 }

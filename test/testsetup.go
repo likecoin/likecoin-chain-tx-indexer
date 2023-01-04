@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"go.uber.org/zap/zapcore"
 
@@ -145,9 +146,21 @@ func CleanupTestData(conn *pgxpool.Conn) error {
 	return RunEmbededSQLFile(conn, "test_cleanup_data.sql")
 }
 
-func PrepareTestData(iscns []db.IscnInsert, nftClasses []db.NftClass, nfts []db.Nft, nftEvents []db.NftEvent, txs []string) error {
+type DBTestData struct {
+	Iscns               []db.IscnInsert
+	NftClasses          []db.NftClass
+	Nfts                []db.Nft
+	NftEvents           []db.NftEvent
+	NftMarketplaceItems []db.NftMarketplaceItem
+	Txs                 []string
+	ExtractorHeight     int64
+	LatestBlockHeight   int64
+	LatestBlockTime     *time.Time
+}
+
+func InsertTestData(testData DBTestData) error {
 	b := db.NewBatch(Conn, 10000)
-	for _, i := range iscns {
+	for _, i := range testData.Iscns {
 		iscnId, err := iscntypes.ParseIscnId(i.Iscn)
 		if err != nil {
 			return err
@@ -160,19 +173,23 @@ func PrepareTestData(iscns []db.IscnInsert, nftClasses []db.NftClass, nfts []db.
 		i.Timestamp = i.Timestamp.UTC()
 		b.InsertIscn(i)
 	}
-	for _, c := range nftClasses {
+	for _, c := range testData.NftClasses {
 		c.Parent.Type = "ISCN"
 		c.CreatedAt = c.CreatedAt.UTC()
 		b.InsertNftClass(c)
 	}
-	for _, n := range nfts {
+	for _, n := range testData.Nfts {
 		b.InsertNft(n)
 	}
-	for _, e := range nftEvents {
+	for _, e := range testData.NftEvents {
 		e.Timestamp = e.Timestamp.UTC()
 		b.InsertNftEvent(e)
 	}
-	for i, tx := range txs {
+	for _, item := range testData.NftMarketplaceItems {
+		item.Expiration = item.Expiration.UTC()
+		b.InsertNFTMarketplaceItem(item)
+	}
+	for i, tx := range testData.Txs {
 		height := 1
 		type Log struct {
 			Events sdk.StringEvents `json:"events,omitempty"`
@@ -196,6 +213,16 @@ func PrepareTestData(iscns []db.IscnInsert, nftClasses []db.NftClass, nfts []db.
 			eventStrings = append(eventStrings, utils.GetEventStrings(log.Events)...)
 		}
 		b.Batch.Queue("INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", height, i, []byte(tx), eventStrings)
+		b.Batch.Queue("UPDATE meta SET height = $1 WHERE id = $2 AND height < $1", height, db.META_BLOCK_HEIGHT)
+	}
+	if testData.LatestBlockHeight != 0 {
+		b.UpdateMetaHeight(db.META_BLOCK_HEIGHT, testData.LatestBlockHeight)
+	}
+	if testData.LatestBlockTime != nil {
+		b.UpdateMetaHeight(db.META_BLOCK_TIME_EPOCH_NS, testData.LatestBlockTime.UTC().UnixNano())
+	}
+	if testData.ExtractorHeight != 0 {
+		b.UpdateMetaHeight(db.META_EXTRACTOR, testData.ExtractorHeight)
 	}
 	return b.Flush()
 }

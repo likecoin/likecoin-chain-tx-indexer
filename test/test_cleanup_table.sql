@@ -6,3 +6,4 @@ DROP TABLE iscn;
 DROP TABLE nft_event;
 DROP TABLE nft;
 DROP TABLE nft_class;
+DROP TABLE nft_marketplace;

@@ -52,7 +52,8 @@ type CosmosCallContext struct {
 type BlockResult struct {
 	Block struct {
 		Header struct {
-			Height int64 `json:"height"`
+			Height int64  `json:"height"`
+			Time   string `json:"time"`
 		} `json:"header"`
 		Data struct {
 			Txs tmTypes.Txs `json:"txs"`
@@ -102,12 +103,12 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 	}
 	defer conn.Release()
 	batch := db.NewBatch(conn, batchSize)
-	blockResult, err := GetBlock(ctx, 0)
+	latestBlockResult, err := GetBlock(ctx, 0)
 	if err != nil {
 		// TODO: retry
 		return 0, fmt.Errorf("cannot get latest block from lcd: %w", err)
 	}
-	maxHeight := blockResult.Block.Header.Height
+	maxHeight := latestBlockResult.Block.Header.Height
 	if maxHeight-lastHeight > batchMaxHeightDiff {
 		maxHeight = lastHeight + batchMaxHeightDiff
 	}
@@ -136,6 +137,9 @@ func poll(pool *pgxpool.Pool, ctx *CosmosCallContext, lastHeight int64) (int64, 
 			}
 		}
 	}
+	batch.UpdateLatestBlockHeight(maxHeight)
+	// error is ignored since fail to update block time is not critical
+	_ = batch.UpdateLatestBlockTime(latestBlockResult.Block.Header.Time)
 	err = batch.Flush()
 	if err != nil {
 		return 0, fmt.Errorf("cannot flush transaction batch, error = %w, batch = %v", err, batch)

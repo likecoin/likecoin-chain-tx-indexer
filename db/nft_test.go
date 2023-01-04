@@ -66,7 +66,7 @@ func TestQueryNftClass(t *testing.T) {
 			ClassId: nftClasses[2].Id,
 		},
 	}
-	err := PrepareTestData(iscns, nftClasses, nfts, nil, nil)
+	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,7 +207,12 @@ func TestQueryNftByOwner(t *testing.T) {
 			Timestamp: time.Unix(1, 0),
 		},
 	}
-	err := PrepareTestData(iscns, nftClasses, nfts, nftEvents, nil)
+	err := InsertTestData(DBTestData{
+		Iscns:      iscns,
+		NftClasses: nftClasses,
+		Nfts:       nfts,
+		NftEvents:  nftEvents,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -299,7 +304,7 @@ func TestOwnerByClassId(t *testing.T) {
 			Owner:   ADDR_03_LIKE,
 		},
 	}
-	err := PrepareTestData(nil, nil, nfts, nil, nil)
+	err := InsertTestData(DBTestData{Nfts: nfts})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -402,7 +407,7 @@ func TestNftEvents(t *testing.T) {
 		`{"txhash":"BBBBBB","tx":{"body":{"memo":"BBBBBB"}}}`,
 		`{"txhash":"CCCCCC","tx":{"body":{"memo":"CCCCCC"}}}`,
 	}
-	err := PrepareTestData(nil, nftClasses, nil, nftEvents, txs)
+	err := InsertTestData(DBTestData{NftClasses: nftClasses, NftEvents: nftEvents, Txs: txs})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -729,7 +734,13 @@ func TestQueryNftRanking(t *testing.T) {
 		`{"txhash":"C1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"3333"}]}]}]}}}`,
 		`{"txhash":"C2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2500"}]}]}]}}}`,
 	}
-	err := PrepareTestData(iscns, nftClasses, nfts, nftEvents, txs)
+	err := InsertTestData(DBTestData{
+		Iscns:      iscns,
+		NftClasses: nftClasses,
+		Nfts:       nfts,
+		NftEvents:  nftEvents,
+		Txs:        txs,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -886,7 +897,7 @@ func TestCollectors(t *testing.T) {
 			Owner:   ADDR_03_LIKE,
 		},
 	}
-	err := PrepareTestData(iscns, nftClasses, nfts, nil, nil)
+	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1001,7 +1012,7 @@ func TestCreators(t *testing.T) {
 			Owner:   ADDR_03_LIKE,
 		},
 	}
-	err := PrepareTestData(iscns, nftClasses, nfts, nil, nil)
+	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
 	if err != nil {
 		t.Fatal(err)
 	}
