@@ -18,12 +18,3 @@ func ParseKeywords(keyword string) []string {
 	}
 	return res
 }
-
-func GuardRankingOrderBy(orderBy string) string {
-	switch orderBy {
-	case "total_sold_value", "sold_count":
-		return orderBy
-	default:
-		return "total_sold_value"
-	}
-}

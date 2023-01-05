@@ -81,7 +81,12 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	ApiAddressesVariations := utils.ConvertAddressArrayPrefixes(q.ApiAddresses, AddressPrefixes)
-	orderBy := utils.GuardRankingOrderBy(q.OrderBy)
+	orderBy := q.OrderBy
+	switch orderBy {
+	case "total_sold_value", "sold_count":
+	default:
+		orderBy = "total_sold_value"
+	}
 	sql := fmt.Sprintf(`
 	SELECT
 		c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,

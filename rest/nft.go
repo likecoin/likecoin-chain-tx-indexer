@@ -104,6 +104,12 @@ func handleNftRanking(c *gin.Context) {
 		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
 		return
 	}
+
+	if q.OrderBy != "" && q.OrderBy != "total_sold_value" && q.OrderBy != "sold_count" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "order_by should either be total_sold_value or sold_count"})
+		return
+	}
+
 	p, err := getPagination(c)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err})
