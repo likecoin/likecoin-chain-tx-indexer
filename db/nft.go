@@ -81,7 +81,13 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	ApiAddressesVariations := utils.ConvertAddressArrayPrefixes(q.ApiAddresses, AddressPrefixes)
-	sql := `
+	orderBy := q.OrderBy
+	switch orderBy {
+	case "total_sold_value", "sold_count":
+	default:
+		orderBy = "total_sold_value"
+	}
+	sql := fmt.Sprintf(`
 	SELECT
 		c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
 		c.config, c.metadata, c.price,
@@ -132,9 +138,9 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 	JOIN nft_class AS c
 		ON c.id = t.class_pid
 	GROUP BY c.id
-	ORDER BY total_sold_value DESC
+	ORDER BY %[1]s DESC
 	LIMIT $1
-	`
+	`, orderBy)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
@@ -143,7 +149,7 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 		p.Limit, q.IncludeOwner, ignoreListVariations, creatorVariations, q.Type,
 		// $6 ~ $10
 		stakeholderIdVariataions, q.StakeholderName, collectorVariations, q.CreatedAfter, q.CreatedBefore,
-		// $11 ~ 13
+		// $11 ~ $13
 		q.After, q.Before, ApiAddressesVariations,
 	)
 	if err != nil {
