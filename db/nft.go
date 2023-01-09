@@ -349,7 +349,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
 	) as r
 	GROUP BY owner
-	ORDER BY total DESC
+	ORDER BY total DESC, owner DESC
 	OFFSET $2
 	LIMIT $3
 	`
