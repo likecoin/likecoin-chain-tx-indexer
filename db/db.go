@@ -213,8 +213,11 @@ func QueryTxs(conn *pgxpool.Conn, events types.StringEvents, height uint64, p Pa
 		}
 		res = append(res, &txRes)
 	}
-	nextKey := make([]byte, 8)
-	binary.LittleEndian.PutUint64(nextKey, id)
+	var nextKey []byte
+	if id > 0 {
+		nextKey := make([]byte, 8)
+		binary.LittleEndian.PutUint64(nextKey, id)
+	}
 	return nextKey, res, nil
 }
 
