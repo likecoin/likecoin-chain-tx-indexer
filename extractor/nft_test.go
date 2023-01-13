@@ -13,6 +13,7 @@ import (
 )
 
 func TestSendNft(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	iscns := []IscnInsert{
 		{
@@ -45,7 +46,6 @@ func TestSendNft(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	ownersRes, err := GetOwners(Conn, QueryOwnerRequest{
 		ClassId: nftClasses[0].Id,
@@ -84,6 +84,7 @@ func TestSendNft(t *testing.T) {
 }
 
 func TestMintNft(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	iscns := []IscnInsert{
 		{
@@ -118,7 +119,6 @@ func TestMintNft(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	finished, err := Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)

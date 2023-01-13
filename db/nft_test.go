@@ -14,6 +14,7 @@ import (
 )
 
 func TestQueryNftClass(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	prefixB := "iscn://testing/bbbbbb"
 	iscns := []IscnInsert{
@@ -74,7 +75,6 @@ func TestQueryNftClass(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name     string
@@ -177,6 +177,7 @@ NEXT_TESTCASE:
 }
 
 func TestQueryNftByOwner(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/aaaaaa/1",
@@ -220,7 +221,6 @@ func TestQueryNftByOwner(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		owner string
@@ -276,6 +276,7 @@ NEXT_TESTCASE:
 }
 
 func TestOwnerByClassId(t *testing.T) {
+	defer CleanupTestData(Conn)
 	nfts := []Nft{
 		{
 			NftId:   "testing-nft-1123123098",
@@ -312,7 +313,6 @@ func TestOwnerByClassId(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		classId string
@@ -369,6 +369,7 @@ NEXT_TESTCASE:
 }
 
 func TestNftEvents(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/aaaaaa/1",
@@ -434,7 +435,6 @@ func TestNftEvents(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name    string
@@ -697,6 +697,7 @@ func TestNftEvents(t *testing.T) {
 }
 
 func TestQueryNftRanking(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	prefixB := "iscn://testing/bbbbbb"
 	iscns := []IscnInsert{
@@ -826,7 +827,6 @@ func TestQueryNftRanking(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name            string
@@ -944,6 +944,7 @@ func TestQueryNftRanking(t *testing.T) {
 	}
 }
 func TestCollectors(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/aaaaaa/1",
@@ -983,7 +984,6 @@ func TestCollectors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name   string
@@ -1067,6 +1067,7 @@ NEXT_TESTCASE:
 }
 
 func TestCreators(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/aaaaaa/1",
@@ -1106,7 +1107,6 @@ func TestCreators(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name   string

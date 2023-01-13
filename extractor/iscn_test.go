@@ -14,6 +14,7 @@ import (
 )
 
 func TestIscnVersion(t *testing.T) {
+	defer CleanupTestData(Conn)
 	table := []struct {
 		iscn    string
 		version int
@@ -39,6 +40,7 @@ func TestIscnVersion(t *testing.T) {
 }
 
 func TestIscn(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscnIdPrefix := "iscn://testing/ISCNAAAAAA"
 	iscnId1 := iscnIdPrefix + "/1"
 	ipld := "ipldxxxxxxxxxx"
@@ -68,7 +70,6 @@ func TestIscn(t *testing.T) {
 		Txs: txs,
 	})
 	require.NoError(t, err)
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	finished, err := Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)

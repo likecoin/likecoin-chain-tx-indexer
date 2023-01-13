@@ -13,6 +13,7 @@ import (
 )
 
 func TestMarketplace(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	iscns := []IscnInsert{
 		{
@@ -133,7 +134,6 @@ func TestMarketplace(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	table := []struct {
 		name          string

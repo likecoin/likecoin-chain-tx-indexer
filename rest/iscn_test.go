@@ -13,6 +13,7 @@ import (
 )
 
 func TestISCNCombine(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []db.IscnInsert{
 		{
 			Iscn:  "iscn://testing/abcdef/1",
@@ -35,7 +36,6 @@ func TestISCNCombine(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	table := []struct {
 		name    string

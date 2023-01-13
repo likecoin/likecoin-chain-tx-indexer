@@ -9,6 +9,7 @@ import (
 )
 
 func TestAmino(t *testing.T) {
+	defer CleanupTestData(Conn)
 	b := db.NewBatch(Conn, 10000)
 	b.Batch.Queue(
 		"INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", 1, 1,
@@ -89,7 +90,6 @@ func TestAmino(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	table := []struct {
 		query  string

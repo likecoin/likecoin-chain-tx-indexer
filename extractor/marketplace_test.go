@@ -13,6 +13,7 @@ import (
 )
 
 func TestBuyNftOwnership(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	iscns := []IscnInsert{
 		{
@@ -45,7 +46,6 @@ func TestBuyNftOwnership(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	ownersRes, err := GetOwners(Conn, QueryOwnerRequest{
 		ClassId: nftClasses[0].Id,
@@ -84,6 +84,7 @@ func TestBuyNftOwnership(t *testing.T) {
 }
 
 func TestSellNftOwnership(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	iscns := []IscnInsert{
 		{
@@ -117,7 +118,6 @@ func TestSellNftOwnership(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	ownersRes, err := GetOwners(Conn, QueryOwnerRequest{
 		ClassId: nftClasses[0].Id,
@@ -156,6 +156,7 @@ func TestSellNftOwnership(t *testing.T) {
 }
 
 func TestListing(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	iscns := []IscnInsert{
 		{
@@ -203,7 +204,6 @@ func TestListing(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	ownersRes, err := GetOwners(Conn, QueryOwnerRequest{
 		ClassId: nftClasses[0].Id,
@@ -350,6 +350,7 @@ func TestListing(t *testing.T) {
 }
 
 func TestOffer(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	iscns := []IscnInsert{
 		{
@@ -397,7 +398,6 @@ func TestOffer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	ownersRes, err := GetOwners(Conn, QueryOwnerRequest{
 		ClassId: nftClasses[0].Id,
