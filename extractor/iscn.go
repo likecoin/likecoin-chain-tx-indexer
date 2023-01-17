@@ -58,7 +58,7 @@ func insertIscn(payload db.EventPayload) error {
 	iscn := db.IscnInsert{
 		Iscn:         utils.GetEventsValue(events, "iscn_record", "iscn_id"),
 		IscnPrefix:   utils.GetEventsValue(events, "iscn_record", "iscn_id_prefix"),
-		Version:      getIscnVersion(utils.GetEventsValue(events, "iscn_record", "iscn_id")),
+		Version:      GetIscnVersion(utils.GetEventsValue(events, "iscn_record", "iscn_id")),
 		Owner:        utils.GetEventsValue(events, "iscn_record", "owner"),
 		Name:         record.ContentMetadata.Name,
 		Description:  record.ContentMetadata.Description,
@@ -84,7 +84,7 @@ func transferIscn(payload db.EventPayload) error {
 	return nil
 }
 
-func getIscnVersion(iscn string) int {
+func GetIscnVersion(iscn string) int {
 	arr := strings.Split(iscn, "/")
 	last := arr[len(arr)-1]
 	result, err := strconv.Atoi(last)
