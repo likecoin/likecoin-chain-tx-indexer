@@ -18,7 +18,7 @@ func parseMessage(payload db.EventPayload) (db.NftMarketplaceItem, error) {
 		Price      string    `json:"price"`
 		Expiration time.Time `json:"expiration"`
 	}
-	err := json.Unmarshal(payload.Message, &item)
+	err := json.Unmarshal(payload.GetMessage(), &item)
 	if err != nil {
 		return db.NftMarketplaceItem{}, fmt.Errorf("failed to unmarshal marketplace related message: %w", err)
 	}
@@ -94,25 +94,25 @@ func updateOffer(payload db.EventPayload) error {
 }
 
 func buyNft(payload db.EventPayload) error {
-	e := extractNftEvent(payload.Events, "likechain.likenft.v1.EventBuyNFT", "class_id", "nft_id", "seller", "buyer")
+	e := extractNftEvent(payload.GetEvents(), "likechain.likenft.v1.EventBuyNFT", "class_id", "nft_id", "seller", "buyer")
 	payload.Batch.DeleteNFTMarketplaceItem(db.NftMarketplaceItem{
 		Type:    "listing",
 		ClassId: e.ClassId,
 		NftId:   e.NftId,
 		Creator: e.Sender,
 	})
-	changeNftOwnerFromEvent(payload, e)
+	transferNftOwnershipFromEvent(payload, e)
 	return nil
 }
 
 func sellNft(payload db.EventPayload) error {
-	e := extractNftEvent(payload.Events, "likechain.likenft.v1.EventSellNFT", "class_id", "nft_id", "seller", "buyer")
+	e := extractNftEvent(payload.GetEvents(), "likechain.likenft.v1.EventSellNFT", "class_id", "nft_id", "seller", "buyer")
 	payload.Batch.DeleteNFTMarketplaceItem(db.NftMarketplaceItem{
 		Type:    "offer",
 		ClassId: e.ClassId,
 		NftId:   e.NftId,
 		Creator: e.Receiver,
 	})
-	changeNftOwnerFromEvent(payload, e)
+	transferNftOwnershipFromEvent(payload, e)
 	return nil
 }

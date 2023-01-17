@@ -1,4 +1,4 @@
-package extractor
+package extractor_test
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/extractor"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
 
@@ -59,7 +60,7 @@ func TestBuyNftOwnership(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, eventRes.Events)
 
-	finished, err := Extract(Conn, handlers)
+	finished, err := Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
 	require.True(t, finished)
 
@@ -131,7 +132,7 @@ func TestSellNftOwnership(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, eventRes.Events)
 
-	finished, err := Extract(Conn, handlers)
+	finished, err := Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
 	require.True(t, finished)
 
@@ -214,7 +215,7 @@ func TestListing(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, itemsRes.Items)
 
-	finished, err := Extract(Conn, handlers)
+	finished, err := Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
 	require.True(t, finished)
 
@@ -251,7 +252,7 @@ func TestListing(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	finished, err = Extract(Conn, handlers)
+	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
 	require.True(t, finished)
 
@@ -288,7 +289,7 @@ func TestListing(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	finished, err = Extract(Conn, handlers)
+	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
 	require.True(t, finished)
 
@@ -319,7 +320,7 @@ func TestListing(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	finished, err = Extract(Conn, handlers)
+	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
 	require.True(t, finished)
 
@@ -396,7 +397,7 @@ func TestOffer(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, itemsRes.Items)
 
-	finished, err := Extract(Conn, handlers)
+	finished, err := Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
 	require.True(t, finished)
 
@@ -433,7 +434,7 @@ func TestOffer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	finished, err = Extract(Conn, handlers)
+	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
 	require.True(t, finished)
 
@@ -470,7 +471,7 @@ func TestOffer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	finished, err = Extract(Conn, handlers)
+	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
 	require.True(t, finished)
 
@@ -501,7 +502,7 @@ func TestOffer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	finished, err = Extract(Conn, handlers)
+	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
 	require.True(t, finished)
 

@@ -113,11 +113,13 @@ type NftEvent struct {
 	TxHash    string             `json:"tx_hash"`
 	Timestamp time.Time          `json:"timestamp"`
 	Memo      string             `json:"memo"`
+	Price     uint64             `json:"price,omitempty"`
 }
 
 func (n *NftEvent) Attach(payload EventPayload) {
-	n.Action = utils.GetEventsValue(payload.Events, "message", "action")
-	n.Events = payload.Events
+	events := payload.GetEvents()
+	n.Action = utils.GetEventsValue(events, "message", "action")
+	n.Events = events
 	n.Timestamp = payload.Timestamp
 	n.TxHash = payload.TxHash
 }

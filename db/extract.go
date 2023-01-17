@@ -17,16 +17,30 @@ import (
 
 var LIMIT = int64(utils.EnvInt("EXTRACTOR_LIMIT", 10000))
 
-type EventPayload struct {
-	Batch     *Batch
-	Message   []byte
-	Events    types.StringEvents
-	Timestamp time.Time
-	TxHash    string
+type EventsList []struct {
+	Events types.StringEvents `json:"events"`
 }
-type EventHandler func(EventPayload) error
 
-func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished bool, err error) {
+type EventPayload struct {
+	Batch      *Batch
+	Messages   []json.RawMessage
+	Index      int
+	EventsList EventsList
+	Timestamp  time.Time
+	TxHash     string
+}
+
+func (payload EventPayload) GetMessage() json.RawMessage {
+	return payload.Messages[payload.Index]
+}
+
+func (payload EventPayload) GetEvents() types.StringEvents {
+	return payload.EventsList[payload.Index].Events
+}
+
+type Extractor func(payload EventPayload) error
+
+func Extract(conn *pgxpool.Conn, extractor Extractor) (finished bool, err error) {
 	prevSyncedHeight, err := GetMetaHeight(conn, META_EXTRACTOR)
 	if err != nil {
 		return false, fmt.Errorf("failed to get extractor synchonized height: %w", err)
@@ -46,19 +60,18 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 		finished = true
 	}
 
-	ctx, _ := GetTimeoutContext()
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
 
 	sql := `
 	SELECT tx #> '{"tx", "body", "messages"}' AS messages, tx -> 'logs' AS logs, tx -> 'timestamp', tx -> 'txhash'
 	FROM txs
 	WHERE height > $1
 		AND height <= $2
-		AND events && $3
 	ORDER BY height ASC;
 	`
-	eventString := utils.GetEventStrings(getHandlingEvents(handlers))
 
-	rows, err := conn.Query(ctx, sql, prevSyncedHeight, latestSyncingHeight, eventString)
+	rows, err := conn.Query(ctx, sql, prevSyncedHeight, latestSyncingHeight)
 	if err != nil {
 		return false, fmt.Errorf("failed to query unprocessed txs: %w", err)
 
@@ -82,29 +95,25 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 		if err != nil {
 			return false, fmt.Errorf("failed to unmarshal tx message on tx %s: %w", txHash, err)
 		}
-		var events []struct {
-			Events types.StringEvents `json:"events"`
-		}
-
-		err = eventData.AssignTo(&events)
+		var eventsList EventsList
+		err = eventData.AssignTo(&eventsList)
 		if err != nil {
 			return false, fmt.Errorf("failed to unmarshal tx event on tx %s: %w", txHash, err)
 		}
 
-		for i, event := range events {
-			action := utils.GetEventsValue(event.Events, "message", "action")
-			if handler, ok := handlers[action]; ok {
-				payload := EventPayload{
-					Batch:     &batch,
-					Message:   messages[i],
-					Events:    event.Events,
-					Timestamp: timestamp,
-					TxHash:    strings.Trim(txHash, "\""),
-				}
-				err = handler(payload)
-				if err != nil {
-					logger.L.Errorw("Handle message failed", "action", action, "error", err, "payload", payload)
-				}
+		for i := range eventsList {
+			// TODO: split authz messages and events
+			payload := EventPayload{
+				Batch:      &batch,
+				Index:      i,
+				Messages:   messages,
+				EventsList: eventsList,
+				Timestamp:  timestamp,
+				TxHash:     strings.Trim(txHash, "\""),
+			}
+			err = extractor(payload)
+			if err != nil {
+				logger.L.Errorw("Handle message failed", "error", err, "payload", payload)
 			}
 		}
 	}
@@ -115,20 +124,6 @@ func Extract(conn *pgxpool.Conn, handlers map[string]EventHandler) (finished boo
 	}
 	logger.L.Infof("Extractor synced height: %d", latestSyncingHeight)
 	return finished, nil
-}
-
-func getHandlingEvents(handlers map[string]EventHandler) types.StringEvents {
-	result := make(types.StringEvents, 0, len(handlers))
-	for action := range handlers {
-		result = append(result, types.StringEvent{
-			Type: "message",
-			Attributes: []types.Attribute{{
-				Key:   "action",
-				Value: action,
-			}},
-		})
-	}
-	return result
 }
 
 func GetMetaHeight(conn *pgxpool.Conn, key string) (int64, error) {
@@ -255,10 +250,10 @@ func (batch *Batch) InsertNftEvent(e NftEvent) {
 	}
 	sql := `
 	INSERT INTO nft_event
-	(action, class_id, nft_id, sender, receiver, events, tx_hash, timestamp)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	(action, class_id, nft_id, sender, receiver, events, tx_hash, timestamp, price)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	ON CONFLICT DO NOTHING`
-	batch.Batch.Queue(sql, e.Action, e.ClassId, e.NftId, e.Sender, e.Receiver, utils.GetEventStrings(e.Events), e.TxHash, e.Timestamp)
+	batch.Batch.Queue(sql, e.Action, e.ClassId, e.NftId, e.Sender, e.Receiver, utils.GetEventStrings(e.Events), e.TxHash, e.Timestamp, e.Price)
 	_ = pubsub.Publish("NewNFTEvent", e)
 }
 
