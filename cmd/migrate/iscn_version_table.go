@@ -4,12 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
-	"github.com/likecoin/likecoin-chain-tx-indexer/db/schema"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db/schema/parallel"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
-)
-
-const (
-	CmdBatchSize = "batch-size"
 )
 
 var MigrationSetupIscnVersionTableCommand = &cobra.Command{
@@ -29,7 +25,7 @@ var MigrationSetupIscnVersionTableCommand = &cobra.Command{
 			logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
 		}
 		defer conn.Release()
-		return schema.MigrateSetupIscnVersionTable(conn, batchSize)
+		return parallel.MigrateSetupIscnVersionTable(conn, batchSize)
 	},
 }
 

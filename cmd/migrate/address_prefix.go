@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
-	"github.com/likecoin/likecoin-chain-tx-indexer/db/schema"
+	"github.com/likecoin/likecoin-chain-tx-indexer/db/schema/parallel"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
@@ -34,7 +34,7 @@ var MigrationAddressPrefixCommand = &cobra.Command{
 			return err
 		}
 		defer conn.Release()
-		return schema.MigrateAddressPrefix(conn, batchSize)
+		return parallel.MigrateAddressPrefix(conn, batchSize)
 	},
 }
 
@@ -47,7 +47,7 @@ var MigrateIscnOwnerCommand = &cobra.Command{
 			return err
 		}
 		defer conn.Release()
-		return schema.MigrateIscnOwner(conn, batchSize)
+		return parallel.MigrateIscnOwner(conn, batchSize)
 	},
 }
 
@@ -60,7 +60,7 @@ var MigrateNftOwner = &cobra.Command{
 			return err
 		}
 		defer conn.Release()
-		return schema.MigrateNftOwner(conn, batchSize)
+		return parallel.MigrateNftOwner(conn, batchSize)
 	},
 }
 
@@ -73,7 +73,7 @@ var MigrateNftEventSenderAndReceiver = &cobra.Command{
 			return err
 		}
 		defer conn.Release()
-		return schema.MigrateNftEventSenderAndReceiver(conn, batchSize)
+		return parallel.MigrateNftEventSenderAndReceiver(conn, batchSize)
 	},
 }
 
