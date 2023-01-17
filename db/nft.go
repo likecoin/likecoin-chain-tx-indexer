@@ -345,7 +345,9 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
-		WHERE $1::text[] IS NULL OR cardinality($1::text[]) = 0 OR i.owner = ANY($1)
+		WHERE 
+			($6 = true OR n.owner != i.owner)
+			AND ($1::text[] IS NULL OR cardinality($1::text[]) = 0 OR i.owner = ANY($1))
 		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
 	) as r
 	GROUP BY owner
@@ -356,7 +358,9 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, creatorVariations, p.Offset, p.Limit, ignoreListVariations, q.AllIscnVersions)
+	rows, err := conn.Query(ctx, sql,
+		creatorVariations, p.Offset, p.Limit, ignoreListVariations, q.AllIscnVersions,
+		q.IncludeOwner)
 	if err != nil {
 		logger.L.Errorw("failed to query collectors", "error", err, "q", q)
 		err = fmt.Errorf("query supporters error: %w", err)
@@ -392,7 +396,9 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
-		WHERE $1::text[] IS NULL OR cardinality($1::text[]) = 0 OR n.owner = ANY($1)
+		WHERE 
+			($6 = true OR n.owner != i.owner)
+			AND ($1::text[] IS NULL OR cardinality($1::text[]) = 0 OR n.owner = ANY($1))
 		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
 	) as r
 	GROUP BY owner
@@ -403,7 +409,9 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, collectorVariations, p.Offset, p.Limit, ignoreListVariations, q.AllIscnVersions)
+	rows, err := conn.Query(ctx, sql,
+		collectorVariations, p.Offset, p.Limit, ignoreListVariations, q.AllIscnVersions,
+		q.IncludeOwner)
 	if err != nil {
 		logger.L.Errorw("failed to query creators", "error", err, "q", q)
 		err = fmt.Errorf("query creators error: %w", err)
