@@ -116,3 +116,14 @@ func sellNft(payload db.EventPayload) error {
 	transferNftOwnershipFromEvent(payload, e)
 	return nil
 }
+
+func init() {
+	eventExtractor.Register("message", "action", "buy_nft", buyNft)
+	eventExtractor.Register("message", "action", "sell_nft", sellNft)
+	eventExtractor.Register("message", "action", "create_listing", createListing)
+	eventExtractor.Register("message", "action", "update_listing", updateListing)
+	eventExtractor.Register("message", "action", "delete_listing", deleteListing)
+	eventExtractor.Register("message", "action", "create_offer", createOffer)
+	eventExtractor.Register("message", "action", "update_offer", updateOffer)
+	eventExtractor.Register("message", "action", "delete_offer", deleteOffer)
+}

@@ -149,3 +149,10 @@ func sendNft(payload db.EventPayload) error {
 	transferNftOwnershipFromEvent(payload, e)
 	return nil
 }
+
+func init() {
+	eventExtractor.Register("message", "action", "new_class", createNftClass)
+	eventExtractor.Register("message", "action", "update_class", updateNftClass)
+	eventExtractor.Register("message", "action", "mint_nft", mintNft)
+	eventExtractor.Register("message", "action", "/cosmos.nft.v1beta1.MsgSend", sendNft)
+}

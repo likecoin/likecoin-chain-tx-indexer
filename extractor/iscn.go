@@ -93,3 +93,12 @@ func getIscnVersion(iscn string) int {
 	}
 	return result
 }
+
+func init() {
+	eventExtractor.Register("message", "action", "create_iscn_record", insertIscn)
+	eventExtractor.Register("message", "action", "/likechain.iscn.MsgCreateIscnRecord", insertIscn)
+	eventExtractor.Register("message", "action", "update_iscn_record", insertIscn)
+	eventExtractor.Register("message", "action", "/likechain.iscn.MsgUpdateIscnRecord", insertIscn)
+	eventExtractor.Register("message", "action", "msg_change_iscn_record_ownership", transferIscn)
+	eventExtractor.Register("message", "action", "/likechain.iscn.MsgChangeIscnRecordOwnership", transferIscn)
+}

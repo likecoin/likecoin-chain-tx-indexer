@@ -5,6 +5,8 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 )
 
+var eventExtractor = NewEventExtractor()
+
 type EventExtractor struct {
 	extractorsMap map[string]map[string]map[string][]db.Extractor
 }
