@@ -909,28 +909,36 @@ func TestCollectors(t *testing.T) {
 		owners []string
 		counts []int
 	}{
+		// HACK: default IncludeOwner is true when binding to form
 		{
 			name:   "empty query",
-			query:  QueryCollectorRequest{},
+			query:  QueryCollectorRequest{IncludeOwner: true},
 			owners: []string{nfts[1].Owner, nfts[0].Owner},
 			counts: []int{2, 1},
 		},
 		{
+			name:   "query with IncludeOwner = false",
+			query:  QueryCollectorRequest{IncludeOwner: false},
+			owners: []string{nfts[1].Owner},
+			counts: []int{2},
+		},
+		{
 			name:   "query by creator, AllIscnVersions = false",
-			query:  QueryCollectorRequest{Creator: ADDR_01_COSMOS},
+			query:  QueryCollectorRequest{Creator: ADDR_01_COSMOS, IncludeOwner: true},
 			owners: []string{},
 			counts: []int{},
 		},
 		{
 			name:   "query by creator, AllIscnVersions = true",
-			query:  QueryCollectorRequest{Creator: ADDR_01_COSMOS, AllIscnVersions: true},
+			query:  QueryCollectorRequest{Creator: ADDR_01_COSMOS, IncludeOwner: true, AllIscnVersions: true},
 			owners: []string{nfts[0].Owner, nfts[1].Owner},
 			counts: []int{1, 1},
 		},
 		{
 			name: "query with ignore list",
 			query: QueryCollectorRequest{
-				IgnoreList: []string{ADDR_03_COSMOS},
+				IgnoreList:   []string{ADDR_03_COSMOS},
+				IncludeOwner: true,
 			},
 			owners: []string{nfts[0].Owner},
 			counts: []int{1},
@@ -1024,21 +1032,28 @@ func TestCreators(t *testing.T) {
 		owners []string
 		counts []int
 	}{
+		// HACK: default IncludeOwner is true when binding to form
 		{
 			name:   "query by collector (0), AllIscnVersions = false",
-			query:  QueryCreatorRequest{Collector: nfts[0].Owner},
+			query:  QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: true},
 			owners: []string{iscns[1].Owner},
 			counts: []int{1},
 		},
 		{
+			name:   "query by collector (0), AllIscnVersions = false, IncludeOwner = false",
+			query:  QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: false},
+			owners: []string{},
+			counts: []int{},
+		},
+		{
 			name:   "query by collector (1), AllIscnVersions = false",
-			query:  QueryCreatorRequest{Collector: nfts[1].Owner},
+			query:  QueryCreatorRequest{Collector: nfts[1].Owner, IncludeOwner: true},
 			owners: []string{iscns[1].Owner, iscns[2].Owner},
 			counts: []int{1, 1},
 		},
 		{
 			name:   "query by collector (1), AllIscnVersions = true",
-			query:  QueryCreatorRequest{Collector: nfts[1].Owner, AllIscnVersions: true},
+			query:  QueryCreatorRequest{Collector: nfts[1].Owner, IncludeOwner: true, AllIscnVersions: true},
 			owners: []string{iscns[0].Owner, iscns[1].Owner, iscns[2].Owner},
 			counts: []int{1, 1, 1},
 		},
