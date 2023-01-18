@@ -184,11 +184,11 @@ func TestListing(t *testing.T) {
 	expiration := time.Unix(1700000000, 0).UTC()
 	txs := []string{
 		fmt.Sprintf(
-			`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateListing","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_listing"}]}]}]}`,
+			`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateListing","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_listing"}]},{"type":"likechain.likenft.v1.EventCreateListing","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[1]s\""}]}]}]}`,
 			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000000), expiration.Format(time.RFC3339),
 		),
 		fmt.Sprintf(
-			`{"txhash":"AAAAAB","height":"1235","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateListing","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAB"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_listing"}]}]}]}`,
+			`{"txhash":"AAAAAB","height":"1235","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateListing","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAB"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_listing"}]},{"type":"likechain.likenft.v1.EventCreateListing","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[1]s\""}]}]}]}`,
 			ADDR_02_LIKE, nftClasses[0].Id, nfts[1].NftId, uint64(100000000001), expiration.Add(1*time.Second).Format(time.RFC3339),
 		),
 	}
@@ -243,7 +243,7 @@ func TestListing(t *testing.T) {
 
 	txs = []string{
 		fmt.Sprintf(
-			`{"txhash":"AAAAAC","height":"1236","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgUpdateListing","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAC"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"update_listing"}]}]}]}`,
+			`{"txhash":"AAAAAC","height":"1236","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgUpdateListing","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAC"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"update_listing"}]},{"type":"likechain.likenft.v1.EventUpdateListing","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[1]s\""}]}]}]}`,
 			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000002), expiration.Add(2*time.Second).Format(time.RFC3339),
 		),
 	}
@@ -280,7 +280,7 @@ func TestListing(t *testing.T) {
 
 	txs = []string{
 		fmt.Sprintf(
-			`{"txhash":"AAAAAD","height":"1237","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgDeleteListing","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s"}],"memo":"AAAAAD"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"delete_listing"}]}]}]}`,
+			`{"txhash":"AAAAAD","height":"1237","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgDeleteListing","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s"}],"memo":"AAAAAD"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"delete_listing"}]},{"type":"likechain.likenft.v1.EventDeleteListing","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[1]s\""}]}]}]}`,
 			ADDR_02_LIKE, nftClasses[0].Id, nfts[1].NftId,
 		),
 	}
@@ -311,7 +311,7 @@ func TestListing(t *testing.T) {
 
 	txs = []string{
 		fmt.Sprintf(
-			`{"txhash":"AAAAAE","height":"1238","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgBuyNFT","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","seller":"%[4]s","price":"100000000002"}],"memo":"AAAAAE"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"likechain.likenft.v1.EventBuyNFT","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[4]s\""},{"key":"buyer","value":"\"%[1]s\""},{"key":"price","value":"\"100000000002\""}]},{"type":"message","attributes":[{"key":"action","value":"buy_nft"},{"key":"sender","value":"%[1]s"}]}]}]}`,
+			`{"txhash":"AAAAAE","height":"1238","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgBuyNFT","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","seller":"%[4]s","price":"100000000002"}],"memo":"AAAAAE"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"likechain.likenft.v1.EventBuyNFT","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[4]s\""},{"key":"buyer","value":"\"%[1]s\""},{"key":"price","value":"\"100000000002\""}]},{"type":"likechain.likenft.v1.EventDeleteListing","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[4]s\""}]},{"type":"message","attributes":[{"key":"action","value":"buy_nft"},{"key":"sender","value":"%[1]s"}]}]}]}`,
 			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_01_LIKE,
 		),
 	}
@@ -335,6 +335,18 @@ func TestListing(t *testing.T) {
 	itemsRes, err = GetNftMarketplaceItems(Conn, QueryNftMarketplaceItemsRequest{Type: "listing"}, PageRequest{Limit: 10})
 	require.NoError(t, err)
 	require.Empty(t, itemsRes.Items)
+
+	eventsRes, err := GetNftEvents(Conn,
+		QueryEventsRequest{
+			ClassId:    nftClasses[0].Id,
+			NftId:      nfts[0].NftId,
+			ActionType: []string{"buy_nft"},
+		},
+		PageRequest{Limit: 1, Reverse: true},
+	)
+	require.NoError(t, err)
+	require.Len(t, eventsRes.Events, 1)
+	require.Equal(t, uint64(100000000002), eventsRes.Events[0].Price)
 }
 
 func TestOffer(t *testing.T) {
@@ -366,11 +378,11 @@ func TestOffer(t *testing.T) {
 	expiration := time.Unix(1700000000, 0).UTC()
 	txs := []string{
 		fmt.Sprintf(
-			`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateOffer","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_offer"}]}]}]}`,
+			`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateOffer","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_offer"}]},{"type":"likechain.likenft.v1.EventCreateOffer","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[1]s\""}]}]}]}`,
 			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000000), expiration.Format(time.RFC3339),
 		),
 		fmt.Sprintf(
-			`{"txhash":"AAAAAB","height":"1235","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateOffer","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAB"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_offer"}]}]}]}`,
+			`{"txhash":"AAAAAB","height":"1235","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateOffer","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAB"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_offer"}]},{"type":"likechain.likenft.v1.EventCreateOffer","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[1]s\""}]}]}]}`,
 			ADDR_01_LIKE, nftClasses[0].Id, nfts[1].NftId, uint64(100000000001), expiration.Add(1*time.Second).Format(time.RFC3339),
 		),
 	}
@@ -425,7 +437,7 @@ func TestOffer(t *testing.T) {
 
 	txs = []string{
 		fmt.Sprintf(
-			`{"txhash":"AAAAAC","height":"1236","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgUpdateOffer","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAC"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"update_offer"}]}]}]}`,
+			`{"txhash":"AAAAAC","height":"1236","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgUpdateOffer","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAC"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"update_offer"}]},{"type":"likechain.likenft.v1.EventUpdateOffer","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[1]s\""}]}]}]}`,
 			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000002), expiration.Add(2*time.Second).Format(time.RFC3339),
 		),
 	}
@@ -462,7 +474,7 @@ func TestOffer(t *testing.T) {
 
 	txs = []string{
 		fmt.Sprintf(
-			`{"txhash":"AAAAAD","height":"1237","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgDeleteOffer","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s"}],"memo":"AAAAAD"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"delete_offer"}]}]}]}`,
+			`{"txhash":"AAAAAD","height":"1237","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgDeleteOffer","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s"}],"memo":"AAAAAD"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"delete_offer"}]},{"type":"likechain.likenft.v1.EventDeleteOffer","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[1]s\""}]}]}]}`,
 			ADDR_01_LIKE, nftClasses[0].Id, nfts[1].NftId,
 		),
 	}
@@ -493,7 +505,7 @@ func TestOffer(t *testing.T) {
 
 	txs = []string{
 		fmt.Sprintf(
-			`{"txhash":"AAAAAE","height":"1238","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgSellNFT","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","seller":"%[4]s","price":"100000000002"}],"memo":"AAAAAE"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"likechain.likenft.v1.EventSellNFT","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[4]s\""},{"key":"seller","value":"\"%[1]s\""},{"key":"price","value":"\"100000000002\""}]},{"type":"message","attributes":[{"key":"action","value":"sell_nft"},{"key":"sender","value":"%[1]s"}]}]}]}`,
+			`{"txhash":"AAAAAE","height":"1238","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgSellNFT","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","buyer":"%[4]s","price":"100000000002"}],"memo":"AAAAAE"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"likechain.likenft.v1.EventSellNFT","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[4]s\""},{"key":"seller","value":"\"%[1]s\""},{"key":"price","value":"\"100000000002\""}]},{"type":"likechain.likenft.v1.EventDeleteOffer","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[4]s\""}]},{"type":"message","attributes":[{"key":"action","value":"sell_nft"},{"key":"sender","value":"%[1]s"}]}]}]}`,
 			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_02_LIKE,
 		),
 	}
@@ -517,4 +529,16 @@ func TestOffer(t *testing.T) {
 	itemsRes, err = GetNftMarketplaceItems(Conn, QueryNftMarketplaceItemsRequest{Type: "offer"}, PageRequest{Limit: 10})
 	require.NoError(t, err)
 	require.Empty(t, itemsRes.Items)
+
+	eventsRes, err := GetNftEvents(Conn,
+		QueryEventsRequest{
+			ClassId:    nftClasses[0].Id,
+			NftId:      nfts[0].NftId,
+			ActionType: []string{"sell_nft"},
+		},
+		PageRequest{Limit: 1, Reverse: true},
+	)
+	require.NoError(t, err)
+	require.Len(t, eventsRes.Events, 1)
+	require.Equal(t, uint64(100000000002), eventsRes.Events[0].Price)
 }

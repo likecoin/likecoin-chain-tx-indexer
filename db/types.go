@@ -118,6 +118,7 @@ type NftEvent struct {
 
 func (n *NftEvent) Attach(payload EventPayload) {
 	events := payload.GetEvents()
+	// TODO: remote this as we don't want to rely on message.action
 	n.Action = utils.GetEventsValue(events, "message", "action")
 	n.Events = events
 	n.Timestamp = payload.Timestamp

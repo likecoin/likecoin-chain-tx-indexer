@@ -7,29 +7,76 @@ import (
 
 var eventExtractor = NewEventExtractor()
 
+type EventProcessor func(payload db.EventPayload, event *types.StringEvent) error
+
 type EventExtractor struct {
-	extractorsMap map[string]map[string]map[string][]db.Extractor
+	typeKeyValueMap map[string]map[string]map[string][]EventProcessor
+	typeKeyMap      map[string]map[string][]EventProcessor
+	typeMap         map[string][]EventProcessor
+	wildcards       []EventProcessor
 }
 
 func NewEventExtractor() *EventExtractor {
 	return &EventExtractor{
-		extractorsMap: make(map[string]map[string]map[string][]db.Extractor),
+		typeKeyValueMap: make(map[string]map[string]map[string][]EventProcessor),
+		typeKeyMap:      make(map[string]map[string][]EventProcessor),
+		typeMap:         make(map[string][]EventProcessor),
 	}
 }
 
-func (extractor *EventExtractor) Register(eventType, key, value string, extractors ...db.Extractor) {
-	if _, ok := extractor.extractorsMap[eventType]; !ok {
-		extractor.extractorsMap[eventType] = make(map[string]map[string][]db.Extractor)
+func (e *EventExtractor) RegisterTypeKeyValue(eventType, key, value string, processor EventProcessor) {
+	if _, ok := e.typeKeyValueMap[eventType]; !ok {
+		e.typeKeyValueMap[eventType] = make(map[string]map[string][]EventProcessor)
 	}
-	if _, ok := extractor.extractorsMap[eventType][key]; !ok {
-		extractor.extractorsMap[eventType][key] = make(map[string][]db.Extractor)
+	if _, ok := e.typeKeyValueMap[eventType][key]; !ok {
+		e.typeKeyValueMap[eventType][key] = make(map[string][]EventProcessor)
 	}
-	extractor.extractorsMap[eventType][key][value] = append(extractor.extractorsMap[eventType][key][value], extractors...)
+	e.typeKeyValueMap[eventType][key][value] = append(e.typeKeyValueMap[eventType][key][value], processor)
 }
 
-func (extractor *EventExtractor) extractValue(extractors []db.Extractor, payload db.EventPayload) error {
-	for _, extractor := range extractors {
-		err := extractor(payload)
+func (e *EventExtractor) RegisterTypeKey(eventType, key string, processor EventProcessor) {
+	if _, ok := e.typeKeyMap[eventType]; !ok {
+		e.typeKeyMap[eventType] = make(map[string][]EventProcessor)
+	}
+	e.typeKeyMap[eventType][key] = append(e.typeKeyMap[eventType][key], processor)
+}
+
+func (e *EventExtractor) RegisterType(eventType string, processor EventProcessor) {
+	e.typeMap[eventType] = append(e.typeMap[eventType], processor)
+}
+
+func (e *EventExtractor) RegisterAll(processor EventProcessor) {
+	e.wildcards = append(e.wildcards, processor)
+}
+
+// TODO: deprecate this once all extractors are migrated to use Processor instead of db.Extractor
+func (e *EventExtractor) RegisterExtractor(eventType, key, value string, extractor db.Extractor) {
+	processor := func(payload db.EventPayload, event *types.StringEvent) error {
+		return extractor(payload)
+	}
+	e.RegisterTypeKeyValue(eventType, key, value, processor)
+}
+
+func (e *EventExtractor) runProcessors(payload db.EventPayload, event *types.StringEvent, processors []EventProcessor) error {
+	for _, processor := range processors {
+		if err := processor(payload, event); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *EventExtractor) extractTypeKeyValue(payload db.EventPayload, event *types.StringEvent) error {
+	kvMap := e.typeKeyValueMap[event.Type]
+	if kvMap == nil {
+		return nil
+	}
+	for _, attribute := range event.Attributes {
+		vMap := kvMap[attribute.Key]
+		if vMap == nil {
+			continue
+		}
+		err := e.runProcessors(payload, event, vMap[attribute.Value])
 		if err != nil {
 			return err
 		}
@@ -37,12 +84,13 @@ func (extractor *EventExtractor) extractValue(extractors []db.Extractor, payload
 	return nil
 }
 
-func (extractor *EventExtractor) extractKey(subMap map[string][]db.Extractor, value string, payload db.EventPayload) error {
-	if subMap == nil {
+func (e *EventExtractor) extractTypeKey(payload db.EventPayload, event *types.StringEvent) error {
+	kMap := e.typeKeyMap[event.Type]
+	if kMap == nil {
 		return nil
 	}
-	for _, v := range []string{value, ""} {
-		err := extractor.extractValue(subMap[v], payload)
+	for _, attribute := range event.Attributes {
+		err := e.runProcessors(payload, event, kMap[attribute.Key])
 		if err != nil {
 			return err
 		}
@@ -50,30 +98,36 @@ func (extractor *EventExtractor) extractKey(subMap map[string][]db.Extractor, va
 	return nil
 }
 
-func (extractor *EventExtractor) extractType(subMap map[string]map[string][]db.Extractor, attributes []types.Attribute, payload db.EventPayload) error {
-	if subMap == nil {
-		return nil
-	}
-	for _, attribute := range attributes {
-		for _, key := range []string{attribute.Key, ""} {
-			err := extractor.extractKey(subMap[key], attribute.Value, payload)
-			if err != nil {
-				return err
-			}
-		}
+func (e *EventExtractor) extractType(payload db.EventPayload, event *types.StringEvent) error {
+	err := e.runProcessors(payload, event, e.typeMap[event.Type])
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func (extractor *EventExtractor) Extract(payload db.EventPayload) error {
+func (e *EventExtractor) extractAll(payload db.EventPayload) error {
+	err := e.runProcessors(payload, nil, e.wildcards)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *EventExtractor) Extract(payload db.EventPayload) error {
 	events := payload.GetEvents()
 	for _, event := range events {
-		for _, eventType := range []string{event.Type, ""} {
-			err := extractor.extractType(extractor.extractorsMap[eventType], event.Attributes, payload)
+		type extractFuncType = func(db.EventPayload, *types.StringEvent) error
+		for _, extractFunc := range []extractFuncType{e.extractTypeKeyValue, e.extractTypeKey, e.extractType} {
+			err := extractFunc(payload, &event)
 			if err != nil {
 				return err
 			}
 		}
+	}
+	err := e.extractAll(payload)
+	if err != nil {
+		return err
 	}
 	return nil
 }

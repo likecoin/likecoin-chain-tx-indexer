@@ -46,13 +46,21 @@ func ParseEvents(query []string) (events types.StringEvents, err error) {
 	return events, nil
 }
 
+func GetEventValue(event *types.StringEvent, key string) string {
+	for _, attr := range event.Attributes {
+		if attr.Key == key {
+			return strings.Trim(attr.Value, "\"")
+		}
+	}
+	return ""
+}
+
 func GetEventsValue(events types.StringEvents, t string, key string) string {
 	for _, event := range events {
 		if event.Type == t {
-			for _, attr := range event.Attributes {
-				if attr.Key == key {
-					return strings.Trim(attr.Value, "\"")
-				}
+			value := GetEventValue(&event, key)
+			if value != "" {
+				return value
 			}
 		}
 	}
