@@ -288,6 +288,7 @@ type QueryCollectorRequest struct {
 	Creator         string   `form:"creator"`
 	IgnoreList      []string `form:"ignore_list"`
 	AllIscnVersions bool     `form:"all_iscn_versions"`
+	IncludeOwner    bool     `form:"include_owner,default=true"`
 }
 
 type QueryCollectorResponse struct {
@@ -299,6 +300,7 @@ type QueryCreatorRequest struct {
 	Collector       string   `form:"collector"`
 	IgnoreList      []string `form:"ignore_list"`
 	AllIscnVersions bool     `form:"all_iscn_versions"`
+	IncludeOwner    bool     `form:"include_owner,default=true"`
 }
 
 type QueryCreatorResponse struct {
