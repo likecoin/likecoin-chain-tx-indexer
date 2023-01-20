@@ -12,6 +12,113 @@ import (
 	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
 
+func TestCreateAndUpdateNft(t *testing.T) {
+	defer CleanupTestData(Conn)
+	prefixA := "iscn://testing/aaaaaa"
+	iscns := []IscnInsert{
+		{
+			Iscn:  "iscn://testing/aaaaaa/1",
+			Owner: ADDR_01_LIKE,
+		},
+	}
+	classId := "likenft1abcdef"
+	name := "test nft class"
+	symbol := "TEST"
+	uri := "https://testing.com/aaaaaa"
+	uriHash := "asdf"
+	metadata := `{"a": "b", "c": "d"}`
+	description := "testing NFT new class"
+	timestamp := time.Unix(1234567890, 0).UTC()
+	config := `{"burnable": true, "max_supply": "0", "blind_box_config": null}`
+	txs := []string{
+		fmt.Sprintf(`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"memo":"AAAAAA","messages":[{"@type":"/likechain.likenft.v1.MsgNewClass","input":{"name":"%[4]s","symbol":"%[5]s","uri":"%[6]s","uri_hash":"%[7]s","config":%[11]s,"metadata":%[8]s,"description":"%[9]s"},"parent":{"type":"ISCN","iscn_id_prefix":"%[2]s"},"creator":"%[1]s"}]}},"logs":[{"log":"","events":[{"type":"likechain.likenft.v1.EventNewClass","attributes":[{"key":"parent_iscn_id_prefix","value":"\"%[2]s\""},{"key":"parent_account","value":"\"\""},{"key":"class_id","value":"\"%[3]s\""}]},{"type":"message","attributes":[{"key":"action","value":"new_class"},{"key":"sender","value":"%[1]s"}]}],"msg_index":0}],"timestamp":"%[10]s"}`,
+			ADDR_01_LIKE, prefixA, classId, name, symbol,
+			uri, uriHash, metadata, description, timestamp.Format(time.RFC3339),
+			config,
+		),
+	}
+	err := InsertTestData(DBTestData{
+		Iscns: iscns,
+		Txs:   txs,
+	})
+	require.NoError(t, err)
+
+	finished, err := Extract(Conn, extractor.ExtractFunc)
+	require.NoError(t, err)
+	require.True(t, finished)
+
+	pagination := PageRequest{Limit: 10}
+	res, err := GetClasses(Conn, QueryClassRequest{}, pagination)
+	require.NoError(t, err)
+	require.Len(t, res.Classes, 1)
+
+	require.Equal(t, classId, res.Classes[0].Id)
+	require.Equal(t, name, res.Classes[0].Name)
+	require.Equal(t, symbol, res.Classes[0].Symbol)
+	require.Equal(t, uri, res.Classes[0].URI)
+	require.Equal(t, uriHash, res.Classes[0].URIHash)
+	require.Equal(t, description, res.Classes[0].Description)
+	require.Equal(t, metadata, string(res.Classes[0].Metadata))
+	require.Equal(t, timestamp, res.Classes[0].CreatedAt.UTC())
+	require.Equal(t, config, string(res.Classes[0].Config))
+
+	eventRes, err := GetNftEvents(Conn, QueryEventsRequest{
+		ActionType: []string{"new_class"},
+		ClassId:    classId,
+	}, pagination)
+	require.NoError(t, err)
+	require.Len(t, eventRes.Events, 1)
+	require.Equal(t, ADDR_01_LIKE, eventRes.Events[0].Sender)
+
+	name = "updated test nft class"
+	symbol = "TEST-UPDATED"
+	uri = "https://testing.com/updated"
+	uriHash = "updated"
+	metadata = `{"e": "f", "g": "h"}`
+	description = "updated testing NFT new class"
+	updateTimestamp := time.Unix(1234567891, 0).UTC()
+	config = `{"burnable": false, "max_supply": "1", "blind_box_config": null}`
+	txs = []string{
+		fmt.Sprintf(`{"txhash":"AAAAAB","height":"1235","tx":{"body":{"memo":"AAAAAB","messages":[{"@type":"/likechain.likenft.v1.MsgUpdateClass","class_id":"%[3]s","input":{"name":"%[4]s","symbol":"%[5]s","uri":"%[6]s","uri_hash":"%[7]s","config":%[11]s,"metadata":%[8]s,"description":"%[9]s"},"creator":"%[1]s"}]}},"logs":[{"log":"","events":[{"type":"likechain.likenft.v1.EventUpdateClass","attributes":[{"key":"parent_iscn_id_prefix","value":"\"%[2]s\""},{"key":"parent_account","value":"\"\""},{"key":"class_id","value":"\"%[3]s\""}]},{"type":"message","attributes":[{"key":"action","value":"update_class"},{"key":"sender","value":"%[1]s"}]}],"msg_index":0}],"timestamp":"%[10]s"}`,
+			ADDR_01_LIKE, prefixA, classId, name, symbol,
+			uri, uriHash, metadata, description, updateTimestamp.Format(time.RFC3339),
+			config,
+		),
+	}
+	err = InsertTestData(DBTestData{
+		Iscns: iscns,
+		Txs:   txs,
+	})
+	require.NoError(t, err)
+
+	finished, err = Extract(Conn, extractor.ExtractFunc)
+	require.NoError(t, err)
+	require.True(t, finished)
+
+	pagination = PageRequest{Limit: 10}
+	res, err = GetClasses(Conn, QueryClassRequest{}, pagination)
+	require.NoError(t, err)
+	require.Len(t, res.Classes, 1)
+
+	require.Equal(t, classId, res.Classes[0].Id)
+	require.Equal(t, name, res.Classes[0].Name)
+	require.Equal(t, symbol, res.Classes[0].Symbol)
+	require.Equal(t, uri, res.Classes[0].URI)
+	require.Equal(t, uriHash, res.Classes[0].URIHash)
+	require.Equal(t, description, res.Classes[0].Description)
+	require.Equal(t, metadata, string(res.Classes[0].Metadata))
+	require.Equal(t, timestamp, res.Classes[0].CreatedAt.UTC())
+	require.Equal(t, config, string(res.Classes[0].Config))
+
+	eventRes, err = GetNftEvents(Conn, QueryEventsRequest{
+		ActionType: []string{"update_class"},
+		ClassId:    classId,
+	}, pagination)
+	require.NoError(t, err)
+	require.Len(t, eventRes.Events, 1)
+	require.Equal(t, ADDR_01_LIKE, eventRes.Events[0].Sender)
+}
+
 func TestSendNft(t *testing.T) {
 	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"

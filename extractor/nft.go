@@ -15,7 +15,6 @@ type nftClassMessage struct {
 	Creator string      `json:"creator"`
 }
 
-// TODO: test case
 func createNftClass(payload db.EventPayload, event *types.StringEvent) error {
 	var message nftClassMessage
 	if err := json.Unmarshal(payload.GetMessage(), &message); err != nil {
@@ -36,7 +35,6 @@ func createNftClass(payload db.EventPayload, event *types.StringEvent) error {
 	return nil
 }
 
-// TODO: test case
 func updateNftClass(payload db.EventPayload, event *types.StringEvent) error {
 	var message nftClassMessage
 	if err := json.Unmarshal(payload.GetMessage(), &message); err != nil {
