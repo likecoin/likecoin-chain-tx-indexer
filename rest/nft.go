@@ -83,8 +83,8 @@ func handleNftEvents(c *gin.Context) {
 		return
 	}
 
-	if form.ClassId == "" && form.IscnIdPrefix == "" && form.Sender == "" && form.Receiver == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "must provide either class_id, iscn_id_prefix, sender or receiver"})
+	if form.ClassId == "" && form.IscnIdPrefix == "" && form.Sender == "" && form.Receiver == "" && form.Creator == "" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "must provide either class_id, iscn_id_prefix, sender, receiver or creator"})
 		return
 	}
 	conn := getConn(c)

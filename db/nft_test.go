@@ -365,6 +365,20 @@ NEXT_TESTCASE:
 }
 
 func TestNftEvents(t *testing.T) {
+	iscns := []IscnInsert{
+		{
+			Iscn:  "iscn://testing/aaaaaa/1",
+			Owner: ADDR_01_LIKE,
+		},
+		{
+			Iscn:  "iscn://testing/aaaaaa/2",
+			Owner: ADDR_02_LIKE,
+		},
+		{
+			Iscn:  "iscn://testing/bbbbbb/1",
+			Owner: ADDR_03_LIKE,
+		},
+	}
 	nftClasses := []NftClass{
 		{
 			Id:     "likenft1aaaaaa",
@@ -407,7 +421,12 @@ func TestNftEvents(t *testing.T) {
 		`{"txhash":"BBBBBB","tx":{"body":{"memo":"BBBBBB"}}}`,
 		`{"txhash":"CCCCCC","tx":{"body":{"memo":"CCCCCC"}}}`,
 	}
-	err := InsertTestData(DBTestData{NftClasses: nftClasses, NftEvents: nftEvents, Txs: txs})
+	err := InsertTestData(DBTestData{
+		Iscns:      iscns,
+		NftClasses: nftClasses,
+		NftEvents:  nftEvents,
+		Txs:        txs,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -634,6 +653,19 @@ func TestNftEvents(t *testing.T) {
 				}
 			},
 		},
+		{
+			"query by creator", QueryEventsRequest{Creator: iscns[1].Owner}, 2,
+			func(i int, events []NftEvent) {
+				for _, e := range events {
+					if e.ClassId != nftClasses[0].Id {
+						t.Errorf(`test case #%02d: expect classId = %s (with ISCN Prefix %s), got classId = %s. events = %#v`,
+							i, nftClasses[0].Id, nftClasses[0].Parent.IscnIdPrefix, e.ClassId, events)
+						return
+					}
+				}
+			},
+		},
+		{"query by old creator", QueryEventsRequest{Creator: ADDR_01_LIKE}, 0, nil},
 		{"query by non existing iscn ID prefix", QueryEventsRequest{IscnIdPrefix: "iscn://testing/notexist"}, 0, nil},
 		{"query by non existing class ID", QueryEventsRequest{ClassId: "likenft1notexist"}, 0, nil},
 		{"query by non existing NFT ID", QueryEventsRequest{ClassId: nftClasses[0].Id, NftId: "notexist"}, 0, nil},

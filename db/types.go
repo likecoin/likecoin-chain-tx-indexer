@@ -248,6 +248,7 @@ type QueryEventsRequest struct {
 	IscnIdPrefix   string   `form:"iscn_id_prefix"`
 	Sender         string   `form:"sender"`
 	Receiver       string   `form:"receiver"`
+	Creator        string   `form:"creator"`
 	Verbose        bool     `form:"verbose"`
 	ActionType     []string `form:"action_type"`
 	IgnoreFromList []string `form:"ignore_from_list"`
