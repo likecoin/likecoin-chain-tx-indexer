@@ -590,9 +590,55 @@ func TestNftEvents(t *testing.T) {
 				}
 			},
 		},
+		{
+			"query by sender with like prefix (0)", QueryEventsRequest{Sender: ADDR_01_LIKE}, 1,
+			func(i int, events []NftEvent) {
+				for _, e := range events {
+					if e.Sender != ADDR_01_LIKE {
+						t.Errorf(`test case #%02d: expect sender = %s, got sender = %s. events = %#v`, i, ADDR_01_LIKE, e.Sender, events)
+						return
+					}
+				}
+			},
+		},
+		{
+			"query by sender with cosmos prefix (1)", QueryEventsRequest{Sender: ADDR_02_COSMOS}, 1,
+			func(i int, events []NftEvent) {
+				for _, e := range events {
+					if e.Sender != ADDR_02_LIKE {
+						t.Errorf(`test case #%02d: expect sender = %s, got sender = %s. events = %#v`, i, ADDR_02_LIKE, e.Sender, events)
+						return
+					}
+				}
+			},
+		},
+		{
+			"query by receiver with cosmos prefix (0)", QueryEventsRequest{Receiver: ADDR_02_COSMOS}, 1,
+			func(i int, events []NftEvent) {
+				for _, e := range events {
+					if e.Receiver != ADDR_02_LIKE {
+						t.Errorf(`test case #%02d: expect receiver = %s, got receiver = %s. events = %#v`, i, ADDR_02_LIKE, e.Receiver, events)
+						return
+					}
+				}
+			},
+		},
+		{
+			"query by receiver with like prefix (1)", QueryEventsRequest{Receiver: ADDR_03_LIKE}, 1,
+			func(i int, events []NftEvent) {
+				for _, e := range events {
+					if e.Receiver != ADDR_03_LIKE {
+						t.Errorf(`test case #%02d: expect receiver = %s, got receiver = %s. events = %#v`, i, ADDR_03_LIKE, e.Receiver, events)
+						return
+					}
+				}
+			},
+		},
 		{"query by non existing iscn ID prefix", QueryEventsRequest{IscnIdPrefix: "iscn://testing/notexist"}, 0, nil},
 		{"query by non existing class ID", QueryEventsRequest{ClassId: "likenft1notexist"}, 0, nil},
 		{"query by non existing NFT ID", QueryEventsRequest{ClassId: nftClasses[0].Id, NftId: "notexist"}, 0, nil},
+		{"query by non existing sender", QueryEventsRequest{Sender: ADDR_04_LIKE}, 0, nil},
+		{"query by non existing receiver", QueryEventsRequest{Receiver: ADDR_04_LIKE}, 0, nil},
 	}
 
 	p := PageRequest{
