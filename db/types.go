@@ -246,6 +246,8 @@ type QueryEventsRequest struct {
 	ClassId        string   `form:"class_id"`
 	NftId          string   `form:"nft_id"`
 	IscnIdPrefix   string   `form:"iscn_id_prefix"`
+	Sender         string   `form:"sender"`
+	Receiver       string   `form:"receiver"`
 	Verbose        bool     `form:"verbose"`
 	ActionType     []string `form:"action_type"`
 	IgnoreFromList []string `form:"ignore_from_list"`

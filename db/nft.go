@@ -277,6 +277,8 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	WHERE ($4 = '' OR e.class_id = $4)
 		AND (nft_id = '' OR $5 = '' OR nft_id = $5)
 		AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
+		AND ($10 = '' OR e.sender = $10)
+		AND ($11 = '' OR e.receiver = $11)
 		AND ($1 = 0 OR e.id > $1)
 		AND ($2 = 0 OR e.id < $2)
 		AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR e.action = ANY($7))
@@ -292,7 +294,8 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	rows, err := conn.Query(
 		ctx, sql,
 		p.After(), p.Before(), p.Limit, q.ClassId, q.NftId,
-		q.IscnIdPrefix, q.ActionType, ignoreFromListVariations, ignoreToListVariations,
+		q.IscnIdPrefix, q.ActionType, ignoreFromListVariations, ignoreToListVariations, q.Sender,
+		q.Receiver,
 	)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft events", "error", err)
