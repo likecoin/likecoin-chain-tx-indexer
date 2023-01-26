@@ -267,6 +267,8 @@ func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, err
 func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (QueryEventsResponse, error) {
 	ignoreFromListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreFromList, AddressPrefixes)
 	ignoreToListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreToList, AddressPrefixes)
+	senderVariations := utils.ConvertAddressPrefixes(q.Sender, AddressPrefixes)
+	receiverVariations := utils.ConvertAddressPrefixes(q.Receiver, AddressPrefixes)
 	sql := fmt.Sprintf(`
 	SELECT DISTINCT ON (e.id) e.id, action, e.class_id, e.nft_id, e.sender, e.receiver, e.timestamp, e.tx_hash, e.events, t.tx -> 'tx' -> 'body' ->> 'memo' AS memo
 	FROM nft_event as e
@@ -277,8 +279,8 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	WHERE ($4 = '' OR e.class_id = $4)
 		AND (nft_id = '' OR $5 = '' OR nft_id = $5)
 		AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
-		AND ($10 = '' OR e.sender = $10)
-		AND ($11 = '' OR e.receiver = $11)
+		AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.sender = ANY($10))
+		AND ($11::text[] IS NULL OR cardinality($11::text[]) = 0 OR e.receiver = ANY($11))
 		AND ($1 = 0 OR e.id > $1)
 		AND ($2 = 0 OR e.id < $2)
 		AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR e.action = ANY($7))
@@ -294,8 +296,8 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	rows, err := conn.Query(
 		ctx, sql,
 		p.After(), p.Before(), p.Limit, q.ClassId, q.NftId,
-		q.IscnIdPrefix, q.ActionType, ignoreFromListVariations, ignoreToListVariations, q.Sender,
-		q.Receiver,
+		q.IscnIdPrefix, q.ActionType, ignoreFromListVariations, ignoreToListVariations, senderVariations,
+		receiverVariations,
 	)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft events", "error", err)
