@@ -10,12 +10,21 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
+func attachNftEvent(e *db.NftEvent, payload *Payload) {
+	events := payload.GetEvents()
+	// TODO: remove this as we don't want to rely on message.action
+	e.Action = utils.GetEventsValue(events, "message", "action")
+	e.Events = events
+	e.Timestamp = payload.Timestamp
+	e.TxHash = payload.TxHash
+}
+
 type nftClassMessage struct {
 	Input   db.NftClass `json:"input"`
 	Creator string      `json:"creator"`
 }
 
-func createNftClass(payload db.EventPayload, event *types.StringEvent) error {
+func createNftClass(payload *Payload, event *types.StringEvent) error {
 	var message nftClassMessage
 	if err := json.Unmarshal(payload.GetMessage(), &message); err != nil {
 		return fmt.Errorf("failed to unmarshal NFT class message: %w", err)
@@ -30,12 +39,12 @@ func createNftClass(payload db.EventPayload, event *types.StringEvent) error {
 		ClassId: c.Id,
 		Sender:  message.Creator,
 	}
-	e.Attach(payload)
+	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)
 	return nil
 }
 
-func updateNftClass(payload db.EventPayload, event *types.StringEvent) error {
+func updateNftClass(payload *Payload, event *types.StringEvent) error {
 	var message nftClassMessage
 	if err := json.Unmarshal(payload.GetMessage(), &message); err != nil {
 		return fmt.Errorf("failed to unmarshal NFT class message: %w", err)
@@ -48,7 +57,7 @@ func updateNftClass(payload db.EventPayload, event *types.StringEvent) error {
 		ClassId: c.Id,
 		Sender:  message.Creator,
 	}
-	e.Attach(payload)
+	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)
 	return nil
 }
@@ -68,7 +77,7 @@ func getNftParent(event *types.StringEvent) db.NftClassParent {
 	return p
 }
 
-func mintNft(payload db.EventPayload, event *types.StringEvent) error {
+func mintNft(payload *Payload, event *types.StringEvent) error {
 	var message struct {
 		Input db.Nft
 	}
@@ -87,7 +96,7 @@ func mintNft(payload db.EventPayload, event *types.StringEvent) error {
 		NftId:   nft.NftId,
 		Sender:  nft.Owner,
 	}
-	e.Attach(payload)
+	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)
 	return nil
 }
@@ -120,7 +129,7 @@ func extractNftEvent(event *types.StringEvent, classIdField, nftIdField, senderF
 }
 
 // TODO: test case
-func sendNft(payload db.EventPayload, event *types.StringEvent) error {
+func sendNft(payload *Payload, event *types.StringEvent) error {
 	e := extractNftEvent(event, "class_id", "id", "sender", "receiver")
 	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
 	payload.Batch.Batch.Queue(sql, e.Receiver, e.ClassId, e.NftId)
@@ -139,7 +148,7 @@ func sendNft(payload db.EventPayload, event *types.StringEvent) error {
 	if action == "/cosmos.authz.v1beta1.MsgExec" {
 		e.Price = extractPriceFromEvents(events)
 	}
-	e.Attach(payload)
+	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)
 	return nil
 }

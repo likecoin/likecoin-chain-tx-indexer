@@ -13,7 +13,7 @@ import (
 )
 
 // TODO: handle Authz by extracting corresponding message from MsgExec sub-messages
-func parseMessage(payload db.EventPayload) (db.NftMarketplaceItem, error) {
+func parseMessage(payload *Payload) (db.NftMarketplaceItem, error) {
 	var item struct {
 		ClassId    string    `json:"class_id"`
 		NftId      string    `json:"nft_id"`
@@ -41,7 +41,7 @@ func parseMessage(payload db.EventPayload) (db.NftMarketplaceItem, error) {
 	}, nil
 }
 
-func createListing(payload db.EventPayload, event *types.StringEvent) error {
+func createListing(payload *Payload, event *types.StringEvent) error {
 	item, err := parseMessage(payload)
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func createListing(payload db.EventPayload, event *types.StringEvent) error {
 	return nil
 }
 
-func deleteListing(payload db.EventPayload, event *types.StringEvent) error {
+func deleteListing(payload *Payload, event *types.StringEvent) error {
 	item := db.NftMarketplaceItem{
 		Type:    "listing",
 		ClassId: utils.GetEventValue(event, "class_id"),
@@ -62,14 +62,14 @@ func deleteListing(payload db.EventPayload, event *types.StringEvent) error {
 	return nil
 }
 
-func updateListing(payload db.EventPayload, event *types.StringEvent) error {
+func updateListing(payload *Payload, event *types.StringEvent) error {
 	err := deleteListing(payload, event)
 	if err != nil {
 		return err
 	}
 	return createListing(payload, event)
 }
-func createOffer(payload db.EventPayload, event *types.StringEvent) error {
+func createOffer(payload *Payload, event *types.StringEvent) error {
 	item, err := parseMessage(payload)
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func createOffer(payload db.EventPayload, event *types.StringEvent) error {
 	return nil
 }
 
-func deleteOffer(payload db.EventPayload, event *types.StringEvent) error {
+func deleteOffer(payload *Payload, event *types.StringEvent) error {
 	item := db.NftMarketplaceItem{
 		Type:    "offer",
 		ClassId: utils.GetEventValue(event, "class_id"),
@@ -90,7 +90,7 @@ func deleteOffer(payload db.EventPayload, event *types.StringEvent) error {
 	return nil
 }
 
-func updateOffer(payload db.EventPayload, event *types.StringEvent) error {
+func updateOffer(payload *Payload, event *types.StringEvent) error {
 	err := deleteOffer(payload, event)
 	if err != nil {
 		return err
@@ -108,12 +108,12 @@ func getPriceFromEvent(event *types.StringEvent) uint64 {
 	return price
 }
 
-func marketplaceDeal(payload db.EventPayload, event *types.StringEvent) error {
+func marketplaceDeal(payload *Payload, event *types.StringEvent) error {
 	e := extractNftEvent(event, "class_id", "nft_id", "seller", "buyer")
 	e.Price = getPriceFromEvent(event)
 	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
 	payload.Batch.Batch.Queue(sql, e.Receiver, e.ClassId, e.NftId)
-	e.Attach(payload)
+	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)
 	return nil
 }

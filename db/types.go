@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
 type Stakeholder struct {
@@ -114,15 +113,6 @@ type NftEvent struct {
 	Timestamp time.Time          `json:"timestamp"`
 	Memo      string             `json:"memo"`
 	Price     uint64             `json:"price,omitempty"`
-}
-
-func (n *NftEvent) Attach(payload EventPayload) {
-	events := payload.GetEvents()
-	// TODO: remove this as we don't want to rely on message.action
-	n.Action = utils.GetEventsValue(events, "message", "action")
-	n.Events = events
-	n.Timestamp = payload.Timestamp
-	n.TxHash = payload.TxHash
 }
 
 type NftMarketplaceItem struct {

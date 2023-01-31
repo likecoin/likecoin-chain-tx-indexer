@@ -21,24 +21,19 @@ type EventsList []struct {
 	Events types.StringEvents `json:"events"`
 }
 
-type EventPayload struct {
+type EventContext struct {
 	Batch      *Batch
 	Messages   []json.RawMessage
-	Index      int
 	EventsList EventsList
 	Timestamp  time.Time
 	TxHash     string
+
+	// If the event is from authz, we process it by making a psuedo EventContext
+	// for each authz message, and then set this field to the original EventContext
+	AuthzParent *EventContext
 }
 
-func (payload EventPayload) GetMessage() json.RawMessage {
-	return payload.Messages[payload.Index]
-}
-
-func (payload EventPayload) GetEvents() types.StringEvents {
-	return payload.EventsList[payload.Index].Events
-}
-
-type Extractor func(payload EventPayload) error
+type Extractor func(ctx EventContext) error
 
 func Extract(conn *pgxpool.Conn, extractor Extractor) (finished bool, err error) {
 	prevSyncedHeight, err := GetMetaHeight(conn, META_EXTRACTOR)
@@ -101,20 +96,16 @@ func Extract(conn *pgxpool.Conn, extractor Extractor) (finished bool, err error)
 			return false, fmt.Errorf("failed to unmarshal tx event on tx %s: %w", txHash, err)
 		}
 
-		for i := range eventsList {
-			// TODO: split authz messages and events
-			payload := EventPayload{
-				Batch:      &batch,
-				Index:      i,
-				Messages:   messages,
-				EventsList: eventsList,
-				Timestamp:  timestamp,
-				TxHash:     strings.Trim(txHash, "\""),
-			}
-			err = extractor(payload)
-			if err != nil {
-				logger.L.Errorw("Handle message failed", "error", err, "payload", payload)
-			}
+		ctx := EventContext{
+			Batch:      &batch,
+			Messages:   messages,
+			EventsList: eventsList,
+			Timestamp:  timestamp,
+			TxHash:     strings.Trim(txHash, "\""),
+		}
+		err = extractor(ctx)
+		if err != nil {
+			logger.L.Errorw("Handle message failed", "error", err, "context", ctx)
 		}
 	}
 	batch.UpdateMetaHeight(META_EXTRACTOR, latestSyncingHeight)

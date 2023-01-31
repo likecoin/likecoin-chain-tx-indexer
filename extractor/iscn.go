@@ -34,7 +34,7 @@ func (q iscnData) Marshal() ([]byte, error) {
 	return json.Marshal(q)
 }
 
-func insertIscn(payload db.EventPayload, event *types.StringEvent) error {
+func insertIscn(payload *Payload, event *types.StringEvent) error {
 	message := payload.GetMessage()
 	var data iscnMessage
 	if err := json.Unmarshal(message, &data); err != nil {
@@ -75,7 +75,7 @@ func insertIscn(payload db.EventPayload, event *types.StringEvent) error {
 	return nil
 }
 
-func transferIscn(payload db.EventPayload, event *types.StringEvent) error {
+func transferIscn(payload *Payload, event *types.StringEvent) error {
 	events := payload.GetEvents()
 	iscnId := utils.GetEventValue(event, "iscn_id")
 	newOwner := utils.GetEventValue(event, "owner")

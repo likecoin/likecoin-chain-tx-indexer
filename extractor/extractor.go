@@ -10,7 +10,7 @@ import (
 )
 
 // TODO: wrap eventExtractor.Extract for authz pre-processing
-var ExtractFunc = eventExtractor.Extract
+var ExtractFunc db.Extractor
 
 // TODO: should we make extractor synchronous with poller instead of async?
 func Run(pool *pgxpool.Pool) chan<- int64 {
@@ -46,4 +46,8 @@ func Run(pool *pgxpool.Pool) chan<- int64 {
 		}
 	}()
 	return trigger
+}
+
+func init() {
+	ExtractFunc = eventExtractor.Extract
 }
