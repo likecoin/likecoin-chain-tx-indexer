@@ -108,7 +108,7 @@ func extractPriceFromEvents(events types.StringEvents) uint64 {
 	}
 	coin, err := types.ParseCoinNormalized(priceStr)
 	if err != nil {
-		logger.L.Warnw("Failed to parse price from event", "price_str", priceStr)
+		logger.L.Warnw("Failed to parse price from event", "price_str", priceStr, "error", err)
 		return 0
 	}
 	return coin.Amount.Uint64()
@@ -128,7 +128,6 @@ func extractNftEvent(event *types.StringEvent, classIdField, nftIdField, senderF
 	return e
 }
 
-// TODO: test case
 func sendNft(payload *Payload, event *types.StringEvent) error {
 	e := extractNftEvent(event, "class_id", "id", "sender", "receiver")
 	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
@@ -142,7 +141,7 @@ func sendNft(payload *Payload, event *types.StringEvent) error {
 	// We want to identify this case and extract the "price" from the transaction.
 
 	// We assume the first message is the authz message with token send
-	// TODO: all price extraction should follow API address set in CLI / config
+	// TODO: also check if authz grantee is API address
 	events := payload.EventsList[0].Events
 	action := utils.GetEventsValue(events, "message", "action")
 	if action == "/cosmos.authz.v1beta1.MsgExec" {
