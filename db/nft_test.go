@@ -766,6 +766,7 @@ func TestQueryNftRanking(t *testing.T) {
 			Action:    ACTION_MINT,
 			TxHash:    "A1",
 			Timestamp: time.Unix(1, 0),
+			Price:     1111,
 		},
 		{
 			ClassId:   nfts[0].ClassId,
@@ -775,6 +776,7 @@ func TestQueryNftRanking(t *testing.T) {
 			Receiver:  nfts[0].Owner,
 			TxHash:    "A2",
 			Timestamp: time.Unix(2, 0),
+			Price:     1000,
 		},
 		{
 			ClassId:   nfts[1].ClassId,
@@ -782,6 +784,7 @@ func TestQueryNftRanking(t *testing.T) {
 			Action:    ACTION_MINT,
 			TxHash:    "B1",
 			Timestamp: time.Unix(3, 0),
+			Price:     2222,
 		},
 		{
 			ClassId:   nfts[1].ClassId,
@@ -791,6 +794,7 @@ func TestQueryNftRanking(t *testing.T) {
 			Receiver:  nfts[1].Owner,
 			TxHash:    "B2",
 			Timestamp: time.Unix(4, 0),
+			Price:     2000,
 		},
 		{
 			ClassId:   nfts[2].ClassId,
@@ -798,6 +802,7 @@ func TestQueryNftRanking(t *testing.T) {
 			Action:    ACTION_MINT,
 			TxHash:    "C1",
 			Timestamp: time.Unix(5, 0),
+			Price:     3333,
 		},
 		{
 			ClassId:   nfts[2].ClassId,
@@ -807,22 +812,14 @@ func TestQueryNftRanking(t *testing.T) {
 			Receiver:  nfts[2].Owner,
 			TxHash:    "C2",
 			Timestamp: time.Unix(6, 0),
+			Price:     2500,
 		},
-	}
-	txs := []string{
-		`{"txhash":"A1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"1111"}]}]}]}}}`,
-		`{"txhash":"A2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"1000"}]}]}]}}}`,
-		`{"txhash":"B1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2222"}]}]}]}}}`,
-		`{"txhash":"B2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2000"}]}]}]}}}`,
-		`{"txhash":"C1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"3333"}]}]}]}}}`,
-		`{"txhash":"C2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2500"}]}]}]}}}`,
 	}
 	err := InsertTestData(DBTestData{
 		Iscns:      iscns,
 		NftClasses: nftClasses,
 		Nfts:       nfts,
 		NftEvents:  nftEvents,
-		Txs:        txs,
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -98,14 +98,12 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 		SELECT DISTINCT ON (n.id)
 			n.nft_id,
 			c.id AS class_pid,
-			(txs.tx #>> '{"tx", "body", "messages", 0, "msgs", 0, "amount", 0, "amount"}')::bigint AS price
+			e.price AS price
 		FROM nft_class AS c
 		JOIN nft AS n
 			ON c.class_id = n.class_id
 		JOIN nft_event AS e
 			ON e.nft_id = n.nft_id
-		JOIN txs
-			ON e.tx_hash = txs.tx ->> 'txhash'
 		JOIN iscn AS i
 			ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN iscn_latest_version
