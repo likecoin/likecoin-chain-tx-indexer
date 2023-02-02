@@ -205,7 +205,7 @@ func TestQueryNftByOwner(t *testing.T) {
 		{
 			ClassId:   nfts[0].ClassId,
 			NftId:     nfts[0].NftId,
-			Action:    "/cosmos.nft.v1beta1.MsgSend",
+			Action:    ACTION_SEND,
 			Sender:    ADDR_01_LIKE,
 			Receiver:  nfts[0].Owner,
 			TxHash:    "AA",
@@ -490,7 +490,7 @@ func TestNftEvents(t *testing.T) {
 		{
 			"query by action type (0)",
 			QueryEventsRequest{
-				ActionType: []string{nftEvents[0].Action},
+				ActionType: []NftEventAction{nftEvents[0].Action},
 			},
 			1,
 			func(i int, events []NftEvent) {
@@ -503,7 +503,7 @@ func TestNftEvents(t *testing.T) {
 		{
 			"query by action type (1)",
 			QueryEventsRequest{
-				ActionType: []string{nftEvents[1].Action},
+				ActionType: []NftEventAction{nftEvents[1].Action},
 			},
 			2,
 			func(i int, events []NftEvent) {
@@ -518,7 +518,7 @@ func TestNftEvents(t *testing.T) {
 		{
 			"query by action type (0, 1)",
 			QueryEventsRequest{
-				ActionType: []string{nftEvents[0].Action, nftEvents[1].Action},
+				ActionType: []NftEventAction{nftEvents[0].Action, nftEvents[1].Action},
 			},
 			3,
 			nil,
@@ -763,14 +763,14 @@ func TestQueryNftRanking(t *testing.T) {
 		{
 			ClassId:   nfts[0].ClassId,
 			NftId:     nfts[0].NftId,
-			Action:    "mint_nft",
+			Action:    ACTION_MINT,
 			TxHash:    "A1",
 			Timestamp: time.Unix(1, 0),
 		},
 		{
 			ClassId:   nfts[0].ClassId,
 			NftId:     nfts[0].NftId,
-			Action:    "/cosmos.nft.v1beta1.MsgSend",
+			Action:    ACTION_SEND,
 			Sender:    ADDR_01_LIKE,
 			Receiver:  nfts[0].Owner,
 			TxHash:    "A2",
@@ -779,14 +779,14 @@ func TestQueryNftRanking(t *testing.T) {
 		{
 			ClassId:   nfts[1].ClassId,
 			NftId:     nfts[1].NftId,
-			Action:    "mint_nft",
+			Action:    ACTION_MINT,
 			TxHash:    "B1",
 			Timestamp: time.Unix(3, 0),
 		},
 		{
 			ClassId:   nfts[1].ClassId,
 			NftId:     nfts[1].NftId,
-			Action:    "/cosmos.nft.v1beta1.MsgSend",
+			Action:    ACTION_SEND,
 			Sender:    ADDR_01_LIKE,
 			Receiver:  nfts[1].Owner,
 			TxHash:    "B2",
@@ -795,14 +795,14 @@ func TestQueryNftRanking(t *testing.T) {
 		{
 			ClassId:   nfts[2].ClassId,
 			NftId:     nfts[2].NftId,
-			Action:    "mint_nft",
+			Action:    ACTION_MINT,
 			TxHash:    "C1",
 			Timestamp: time.Unix(5, 0),
 		},
 		{
 			ClassId:   nfts[2].ClassId,
 			NftId:     nfts[2].NftId,
-			Action:    "/cosmos.nft.v1beta1.MsgSend",
+			Action:    ACTION_SEND,
 			Sender:    ADDR_01_LIKE,
 			Receiver:  nfts[2].Owner,
 			TxHash:    "C2",

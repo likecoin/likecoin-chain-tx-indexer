@@ -12,8 +12,6 @@ import (
 
 func attachNftEvent(e *db.NftEvent, payload *Payload) {
 	events := payload.GetEvents()
-	// TODO: remove this as we don't want to rely on message.action
-	e.Action = utils.GetEventsValue(events, "message", "action")
 	e.Events = events
 	e.Timestamp = payload.Timestamp
 	e.TxHash = payload.TxHash
@@ -38,6 +36,7 @@ func createNftClass(payload *Payload, event *types.StringEvent) error {
 	e := db.NftEvent{
 		ClassId: c.Id,
 		Sender:  message.Creator,
+		Action:  db.ACTION_NEW_CLASS,
 	}
 	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)
@@ -56,6 +55,7 @@ func updateNftClass(payload *Payload, event *types.StringEvent) error {
 	e := db.NftEvent{
 		ClassId: c.Id,
 		Sender:  message.Creator,
+		Action:  db.ACTION_UPDATE_CLASS,
 	}
 	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)
@@ -95,6 +95,7 @@ func mintNft(payload *Payload, event *types.StringEvent) error {
 		ClassId: nft.ClassId,
 		NftId:   nft.NftId,
 		Sender:  nft.Owner,
+		Action:  db.ACTION_MINT,
 	}
 	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)
@@ -130,6 +131,7 @@ func extractNftEvent(event *types.StringEvent, classIdField, nftIdField, senderF
 
 func sendNft(payload *Payload, event *types.StringEvent) error {
 	e := extractNftEvent(event, "class_id", "id", "sender", "receiver")
+	e.Action = db.ACTION_SEND
 	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
 	payload.Batch.Batch.Queue(sql, e.Receiver, e.ClassId, e.NftId)
 
@@ -143,8 +145,8 @@ func sendNft(payload *Payload, event *types.StringEvent) error {
 	// We assume the first message is the authz message with token send
 	// TODO: also check if authz grantee is API address
 	events := payload.EventsList[0].Events
-	action := utils.GetEventsValue(events, "message", "action")
-	if action == "/cosmos.authz.v1beta1.MsgExec" {
+	msgAction := utils.GetEventsValue(events, "message", "action")
+	if msgAction == "/cosmos.authz.v1beta1.MsgExec" {
 		e.Price = extractPriceFromEvents(events)
 	}
 	attachNftEvent(&e, payload)

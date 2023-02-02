@@ -63,7 +63,7 @@ func TestCreateAndUpdateNft(t *testing.T) {
 	require.Equal(t, config, string(res.Classes[0].Config))
 
 	eventRes, err := GetNftEvents(Conn, QueryEventsRequest{
-		ActionType: []string{"new_class"},
+		ActionType: []NftEventAction{ACTION_NEW_CLASS},
 		ClassId:    classId,
 	}, pagination)
 	require.NoError(t, err)
@@ -111,7 +111,7 @@ func TestCreateAndUpdateNft(t *testing.T) {
 	require.Equal(t, config, string(res.Classes[0].Config))
 
 	eventRes, err = GetNftEvents(Conn, QueryEventsRequest{
-		ActionType: []string{"update_class"},
+		ActionType: []NftEventAction{ACTION_UPDATE_CLASS},
 		ClassId:    classId,
 	}, pagination)
 	require.NoError(t, err)
@@ -183,7 +183,7 @@ func TestSendNft(t *testing.T) {
 	}, PageRequest{Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, eventRes.Events, 1)
-	require.Equal(t, eventRes.Events[0].Action, "/cosmos.nft.v1beta1.MsgSend")
+	require.Equal(t, eventRes.Events[0].Action, ACTION_SEND)
 	require.Equal(t, eventRes.Events[0].NftId, nfts[0].NftId)
 	require.Equal(t, eventRes.Events[0].Sender, ADDR_01_LIKE)
 	require.Equal(t, eventRes.Events[0].Receiver, ADDR_02_LIKE)
@@ -249,7 +249,7 @@ func TestSendNftWithPrice(t *testing.T) {
 	require.Equal(t, ADDR_01_LIKE, eventRes.Events[0].Sender)
 	require.Equal(t, ADDR_02_LIKE, eventRes.Events[0].Receiver)
 	require.Equal(t, "AAAAAA", eventRes.Events[0].TxHash)
-	require.Equal(t, "/cosmos.nft.v1beta1.MsgSend", eventRes.Events[0].Action)
+	require.Equal(t, ACTION_SEND, eventRes.Events[0].Action)
 	require.Equal(t, uint64(100), eventRes.Events[0].Price)
 }
 
@@ -325,7 +325,7 @@ func TestMintNft(t *testing.T) {
 		QueryEventsRequest{
 			ClassId:    nftClasses[0].Id,
 			NftId:      nftId,
-			ActionType: []string{"mint_nft"},
+			ActionType: []NftEventAction{ACTION_MINT},
 		},
 		PageRequest{Limit: 1, Reverse: true},
 	)

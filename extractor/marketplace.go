@@ -108,9 +108,18 @@ func getPriceFromEvent(event *types.StringEvent) uint64 {
 	return price
 }
 
-func marketplaceDeal(payload *Payload, event *types.StringEvent) error {
+func buyNft(payload *Payload, event *types.StringEvent) error {
+	return marketplaceDeal(payload, event, db.ACTION_BUY)
+}
+
+func sellNft(payload *Payload, event *types.StringEvent) error {
+	return marketplaceDeal(payload, event, db.ACTION_SELL)
+}
+
+func marketplaceDeal(payload *Payload, event *types.StringEvent, actionType db.NftEventAction) error {
 	e := extractNftEvent(event, "class_id", "nft_id", "seller", "buyer")
 	e.Price = getPriceFromEvent(event)
+	e.Action = actionType
 	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
 	payload.Batch.Batch.Queue(sql, e.Receiver, e.ClassId, e.NftId)
 	attachNftEvent(&e, payload)
@@ -119,8 +128,8 @@ func marketplaceDeal(payload *Payload, event *types.StringEvent) error {
 }
 
 func init() {
-	eventExtractor.RegisterType("likechain.likenft.v1.EventBuyNFT", marketplaceDeal)
-	eventExtractor.RegisterType("likechain.likenft.v1.EventSellNFT", marketplaceDeal)
+	eventExtractor.RegisterType("likechain.likenft.v1.EventBuyNFT", buyNft)
+	eventExtractor.RegisterType("likechain.likenft.v1.EventSellNFT", sellNft)
 	eventExtractor.RegisterType("likechain.likenft.v1.EventCreateListing", createListing)
 	eventExtractor.RegisterType("likechain.likenft.v1.EventUpdateListing", updateListing)
 	eventExtractor.RegisterType("likechain.likenft.v1.EventDeleteListing", deleteListing)

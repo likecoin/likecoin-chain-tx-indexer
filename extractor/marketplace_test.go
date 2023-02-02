@@ -76,7 +76,7 @@ func TestBuyNftOwnership(t *testing.T) {
 	}, PageRequest{Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, eventRes.Events, 1)
-	require.Equal(t, eventRes.Events[0].Action, "buy_nft")
+	require.Equal(t, eventRes.Events[0].Action, ACTION_BUY)
 	require.Equal(t, eventRes.Events[0].NftId, nfts[0].NftId)
 	require.Equal(t, eventRes.Events[0].Sender, ADDR_01_LIKE)
 	require.Equal(t, eventRes.Events[0].Receiver, ADDR_02_LIKE)
@@ -148,7 +148,7 @@ func TestSellNftOwnership(t *testing.T) {
 	}, PageRequest{Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, eventRes.Events, 1)
-	require.Equal(t, eventRes.Events[0].Action, "sell_nft")
+	require.Equal(t, eventRes.Events[0].Action, ACTION_SELL)
 	require.Equal(t, eventRes.Events[0].NftId, nfts[0].NftId)
 	require.Equal(t, eventRes.Events[0].Sender, ADDR_01_LIKE)
 	require.Equal(t, eventRes.Events[0].Receiver, ADDR_02_LIKE)
@@ -340,7 +340,7 @@ func TestListing(t *testing.T) {
 		QueryEventsRequest{
 			ClassId:    nftClasses[0].Id,
 			NftId:      nfts[0].NftId,
-			ActionType: []string{"buy_nft"},
+			ActionType: []NftEventAction{ACTION_BUY},
 		},
 		PageRequest{Limit: 1, Reverse: true},
 	)
@@ -534,7 +534,7 @@ func TestOffer(t *testing.T) {
 		QueryEventsRequest{
 			ClassId:    nftClasses[0].Id,
 			NftId:      nfts[0].NftId,
-			ActionType: []string{"sell_nft"},
+			ActionType: []NftEventAction{ACTION_SELL},
 		},
 		PageRequest{Limit: 1, Reverse: true},
 	)
