@@ -12,7 +12,6 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
-// TODO: handle Authz by extracting corresponding message from MsgExec sub-messages
 func parseMessage(payload *Payload) (db.NftMarketplaceItem, error) {
 	var item struct {
 		ClassId    string    `json:"class_id"`

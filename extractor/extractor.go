@@ -9,7 +9,6 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
-// TODO: wrap eventExtractor.Extract for authz pre-processing
 var ExtractFunc db.Extractor
 
 // TODO: should we make extractor synchronous with poller instead of async?
