@@ -381,3 +381,15 @@ type QueryNftMarketplaceItemsResponse struct {
 	Items      []NftMarketplaceItemResponse `json:"items"`
 	Pagination PageResponse                 `json:"pagination"`
 }
+
+type QueryCollectorInCreatorsTopKRequest struct {
+	Collector       string   `form:"collector" binding:"required"`
+	IgnoreList      []string `form:"ignore_list"`
+	AllIscnVersions bool     `form:"all_iscn_versions"`
+	IncludeOwner    bool     `form:"include_owner,default=true"`
+	Top             uint     `form:"top,default=5"`
+}
+
+type QueryCollectorInCreatorsTopKResponse struct {
+	Creators []string `json:"creators"`
+}

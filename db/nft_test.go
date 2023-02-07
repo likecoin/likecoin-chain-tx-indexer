@@ -1,8 +1,12 @@
 package db_test
 
 import (
+	"fmt"
+	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
@@ -1172,6 +1176,84 @@ NEXT_TESTCASE:
 				}
 			}
 			t.Errorf("test case #%02d (%s): creator %s not found. results = %#v", i, testCase.name, owner, res.Creators)
+		}
+	}
+}
+
+func TestCollectorInCreatorsTopK(t *testing.T) {
+	r := rand.New(rand.NewSource(19823981948123019))
+	iscns := []IscnInsert{}
+	nftClasses := []NftClass{}
+	nfts := []Nft{}
+	for iscnOwnerIndex := 0; iscnOwnerIndex < 5; iscnOwnerIndex++ {
+		for iscnIndex := 0; iscnIndex < 5; iscnIndex++ {
+			iscnPrefix := fmt.Sprintf("iscn://testing/%02d-%02d", iscnOwnerIndex, iscnIndex)
+			iscns = append(iscns, IscnInsert{
+				Iscn:  iscnPrefix + "/1",
+				Owner: ADDRS_LIKE[iscnOwnerIndex],
+			})
+			for nftClassIndex := 0; nftClassIndex < 5; nftClassIndex++ {
+				classId := fmt.Sprintf("testing-nft-class-%s-%02d", iscnPrefix, nftClassIndex)
+				nftClasses = append(nftClasses, NftClass{
+					Id:     classId,
+					Parent: NftClassParent{IscnIdPrefix: iscnPrefix},
+				})
+				for nftIndex := 0; nftIndex < 10; nftIndex++ {
+					nfts = append(nfts, Nft{
+						ClassId: nftClasses[0].Id,
+						NftId:   fmt.Sprintf("%s-%02d", classId, nftIndex),
+						Owner:   ADDRS_LIKE[r.Intn(10)],
+					})
+				}
+			}
+		}
+	}
+	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
+	require.NoError(t, err)
+
+	p := PageRequest{
+		Limit:   100,
+		Reverse: true,
+	}
+
+	shouldInTopK := func(t *testing.T, res QueryCollectorResponse, collector string, k uint) {
+		collectorCount := 0
+		for _, collectorEntry := range res.Collectors {
+			if collectorEntry.Account == collector {
+				collectorCount = collectorEntry.Count
+				break
+			}
+		}
+		require.NotZero(t, collectorCount)
+
+		inFrontOfCollectorCount := uint(0)
+		for _, collectorEntry := range res.Collectors {
+			if collectorEntry.Count > collectorCount {
+				inFrontOfCollectorCount++
+			}
+		}
+		require.Less(t, inFrontOfCollectorCount, k)
+	}
+
+	for i := 0; i < 10; i++ {
+		for k := uint(1); k <= 10; k++ {
+			collector := ADDRS_LIKE[i]
+			res, err := GetCollectorInCreatorsTopK(Conn, QueryCollectorInCreatorsTopKRequest{
+				Collector:    collector,
+				IncludeOwner: true,
+				Top:          k,
+			})
+			require.NoError(t, err)
+
+			for _, creator := range res.Creators {
+				res, err := GetCollector(Conn, QueryCollectorRequest{
+					Creator:      creator,
+					IncludeOwner: true,
+				}, p)
+				require.NoError(t, err)
+				require.NotEmpty(t, res.Collectors)
+				shouldInTopK(t, res, collector, k)
+			}
 		}
 	}
 }
