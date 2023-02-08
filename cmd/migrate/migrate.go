@@ -18,5 +18,6 @@ func init() {
 		MigrationSetupIscnVersionTableCommand,
 		MigrationAddressPrefixCommand,
 		MigrationNftEventPriceCommand,
+		MigrationNftPriceCommand,
 	)
 }

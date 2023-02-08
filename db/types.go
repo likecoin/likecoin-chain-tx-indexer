@@ -73,17 +73,18 @@ func (q IscnQuery) Empty() bool {
 }
 
 type NftClass struct {
-	Id          string          `json:"id"`
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Symbol      string          `json:"symbol"`
-	URI         string          `json:"uri"`
-	URIHash     string          `json:"uri_hash"`
-	Config      json.RawMessage `json:"config"`
-	Metadata    json.RawMessage `json:"metadata"`
-	Parent      NftClassParent  `json:"parent"`
-	Price       int             `json:"price"`
-	CreatedAt   time.Time       `json:"created_at"`
+	Id             string          `json:"id"`
+	Name           string          `json:"name"`
+	Description    string          `json:"description"`
+	Symbol         string          `json:"symbol"`
+	URI            string          `json:"uri"`
+	URIHash        string          `json:"uri_hash"`
+	Config         json.RawMessage `json:"config"`
+	Metadata       json.RawMessage `json:"metadata"`
+	Parent         NftClassParent  `json:"parent"`
+	CreatedAt      time.Time       `json:"created_at"`
+	LatestPrice    uint64          `json:"latest_price,omitempty"`
+	PriceUpdatedAt *time.Time      `json:"price_updated_at,omitempty"`
 }
 
 type NftClassParent struct {
@@ -93,13 +94,15 @@ type NftClassParent struct {
 }
 
 type Nft struct {
-	NftId     string          `json:"nft_id"`
-	ClassId   string          `json:"class_id"`
-	Owner     string          `json:"owner"`
-	Uri       string          `json:"uri"`
-	UriHash   string          `json:"uri_hash"`
-	Metadata  json.RawMessage `json:"metadata"`
-	Timestamp time.Time       `json:"timestamp"`
+	NftId          string          `json:"nft_id"`
+	ClassId        string          `json:"class_id"`
+	Owner          string          `json:"owner"`
+	Uri            string          `json:"uri"`
+	UriHash        string          `json:"uri_hash"`
+	Metadata       json.RawMessage `json:"metadata"`
+	Timestamp      time.Time       `json:"timestamp"`
+	LatestPrice    uint64          `json:"latest_price,omitempty"`
+	PriceUpdatedAt *time.Time      `json:"price_updated_at,omitempty"`
 }
 
 type NftEventAction string

@@ -187,7 +187,22 @@ func InsertTestData(testData DBTestData) error {
 		b.InsertNftClass(c)
 	}
 	for _, n := range testData.Nfts {
-		b.InsertNft(n)
+		convertedOwner, err := utils.ConvertAddressPrefix(n.Owner, db.MainAddressPrefix)
+		if err == nil {
+			n.Owner = convertedOwner
+		}
+		sql := `
+		INSERT INTO nft (
+			nft_id, class_id, owner, uri, uri_hash,
+			metadata, latest_price, price_updated_at
+		)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7, $8)
+		ON CONFLICT DO NOTHING`
+		b.Batch.Queue(sql,
+			n.NftId, n.ClassId, n.Owner, n.Uri, n.UriHash,
+			n.Metadata, n.LatestPrice, time.Unix(0, 0).UTC(),
+		)
 	}
 	for _, e := range testData.NftEvents {
 		e.Timestamp = e.Timestamp.UTC()
