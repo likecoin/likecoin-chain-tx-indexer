@@ -1180,7 +1180,7 @@ NEXT_TESTCASE:
 	}
 }
 
-func TestCollectorInCreatorsTopK(t *testing.T) {
+func TestGetCollectorTopRankedCreators(t *testing.T) {
 	defer func() { _ = CleanupTestData(Conn) }()
 	r := rand.New(rand.NewSource(19823981948123019))
 	iscns := []IscnInsert{}
@@ -1239,7 +1239,7 @@ func TestCollectorInCreatorsTopK(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		for k := uint(1); k <= 10; k++ {
 			collector := ADDRS_LIKE[i]
-			res, err := GetCollectorInCreatorsTopK(Conn, QueryCollectorInCreatorsTopKRequest{
+			res, err := GetCollectorTopRankedCreators(Conn, QueryCollectorTopRankedCreatorsRequest{
 				Collector:    collector,
 				IncludeOwner: true,
 				Top:          k,

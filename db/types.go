@@ -382,7 +382,7 @@ type QueryNftMarketplaceItemsResponse struct {
 	Pagination PageResponse                 `json:"pagination"`
 }
 
-type QueryCollectorInCreatorsTopKRequest struct {
+type QueryCollectorTopRankedCreatorsRequest struct {
 	Collector       string   `form:"collector" binding:"required"`
 	IgnoreList      []string `form:"ignore_list"`
 	AllIscnVersions bool     `form:"all_iscn_versions"`
@@ -390,6 +390,6 @@ type QueryCollectorInCreatorsTopKRequest struct {
 	Top             uint     `form:"top,default=5"`
 }
 
-type QueryCollectorInCreatorsTopKResponse struct {
+type QueryCollectorTopRankedCreatorsResponse struct {
 	Creators []string `json:"creators"`
 }

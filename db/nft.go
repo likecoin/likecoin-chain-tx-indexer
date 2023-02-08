@@ -526,7 +526,7 @@ func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatR
 	return
 }
 
-func GetCollectorInCreatorsTopK(conn *pgxpool.Conn, q QueryCollectorInCreatorsTopKRequest) (res QueryCollectorInCreatorsTopKResponse, err error) {
+func GetCollectorTopRankedCreators(conn *pgxpool.Conn, q QueryCollectorTopRankedCreatorsRequest) (res QueryCollectorTopRankedCreatorsResponse, err error) {
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	sql := `
@@ -559,8 +559,8 @@ func GetCollectorInCreatorsTopK(conn *pgxpool.Conn, q QueryCollectorInCreatorsTo
 		collectorVariations, q.Top, ignoreListVariations, q.AllIscnVersions, q.IncludeOwner,
 	)
 	if err != nil {
-		logger.L.Errorw("failed to query collector top creators list", "error", err, "q", q)
-		err = fmt.Errorf("failed to query collector top creators list: %w", err)
+		logger.L.Errorw("failed to query collector top ranked creators list", "error", err, "q", q)
+		err = fmt.Errorf("failed to query collector top ranked creators list: %w", err)
 		return
 	}
 	defer rows.Close()
