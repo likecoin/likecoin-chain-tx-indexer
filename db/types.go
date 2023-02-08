@@ -320,14 +320,14 @@ type QueryCreatorResponse struct {
 
 type accountCollection struct {
 	Account     string       `json:"account"`
-	Count       int          `json:"count"`
+	TotalValue  uint64       `json:"total_value"`
 	Collections []collection `json:"collections"`
 }
 
 type collection struct {
 	IscnIdPrefix string `json:"iscn_id_prefix"`
 	ClassId      string `json:"class_id"`
-	Count        int    `json:"count"`
+	Value        int    `json:"value"`
 }
 
 type QueryUserStatRequest struct {

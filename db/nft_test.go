@@ -962,19 +962,22 @@ func TestCollectors(t *testing.T) {
 	}
 	nfts := []Nft{
 		{
-			ClassId: nftClasses[0].Id,
-			NftId:   "testing-nft-12093810",
-			Owner:   ADDR_02_LIKE,
+			ClassId:     nftClasses[0].Id,
+			NftId:       "testing-nft-12093810",
+			Owner:       ADDR_02_LIKE,
+			LatestPrice: 123,
 		},
 		{
-			ClassId: nftClasses[0].Id,
-			NftId:   "testing-nft-12093811",
-			Owner:   ADDR_03_LIKE,
+			ClassId:     nftClasses[0].Id,
+			NftId:       "testing-nft-12093811",
+			Owner:       ADDR_03_LIKE,
+			LatestPrice: 234,
 		},
 		{
-			ClassId: nftClasses[1].Id,
-			NftId:   "testing-nft-12093812",
-			Owner:   ADDR_03_LIKE,
+			ClassId:     nftClasses[1].Id,
+			NftId:       "testing-nft-12093812",
+			Owner:       ADDR_03_LIKE,
+			LatestPrice: 345,
 		},
 	}
 	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
@@ -983,35 +986,35 @@ func TestCollectors(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name   string
-		query  QueryCollectorRequest
-		owners []string
-		counts []int
+		name        string
+		query       QueryCollectorRequest
+		owners      []string
+		totalValues []uint64
 	}{
 		// HACK: default IncludeOwner is true when binding to form
 		{
-			name:   "empty query",
-			query:  QueryCollectorRequest{IncludeOwner: true},
-			owners: []string{nfts[1].Owner, nfts[0].Owner},
-			counts: []int{2, 1},
+			name:        "empty query",
+			query:       QueryCollectorRequest{IncludeOwner: true},
+			owners:      []string{nfts[1].Owner, nfts[0].Owner},
+			totalValues: []uint64{nfts[1].LatestPrice + nfts[2].LatestPrice, nfts[0].LatestPrice},
 		},
 		{
-			name:   "query with IncludeOwner = false",
-			query:  QueryCollectorRequest{IncludeOwner: false},
-			owners: []string{nfts[1].Owner},
-			counts: []int{2},
+			name:        "query with IncludeOwner = false",
+			query:       QueryCollectorRequest{IncludeOwner: false},
+			owners:      []string{nfts[1].Owner},
+			totalValues: []uint64{nfts[1].LatestPrice + nfts[2].LatestPrice},
 		},
 		{
-			name:   "query by creator, AllIscnVersions = false",
-			query:  QueryCollectorRequest{Creator: ADDR_01_COSMOS, IncludeOwner: true},
-			owners: []string{},
-			counts: []int{},
+			name:        "query by creator, AllIscnVersions = false",
+			query:       QueryCollectorRequest{Creator: ADDR_01_COSMOS, IncludeOwner: true},
+			owners:      []string{},
+			totalValues: []uint64{},
 		},
 		{
-			name:   "query by creator, AllIscnVersions = true",
-			query:  QueryCollectorRequest{Creator: ADDR_01_COSMOS, IncludeOwner: true, AllIscnVersions: true},
-			owners: []string{nfts[0].Owner, nfts[1].Owner},
-			counts: []int{1, 1},
+			name:        "query by creator, AllIscnVersions = true",
+			query:       QueryCollectorRequest{Creator: ADDR_01_COSMOS, IncludeOwner: true, AllIscnVersions: true},
+			owners:      []string{nfts[1].Owner, nfts[0].Owner},
+			totalValues: []uint64{nfts[1].LatestPrice, nfts[0].LatestPrice},
 		},
 		{
 			name: "query with ignore list",
@@ -1019,8 +1022,8 @@ func TestCollectors(t *testing.T) {
 				IgnoreList:   []string{ADDR_03_COSMOS},
 				IncludeOwner: true,
 			},
-			owners: []string{nfts[0].Owner},
-			counts: []int{1},
+			owners:      []string{nfts[0].Owner},
+			totalValues: []uint64{nfts[0].LatestPrice},
 		},
 	}
 
@@ -1039,9 +1042,9 @@ NEXT_TESTCASE:
 			continue NEXT_TESTCASE
 		}
 		if len(res.Collectors) > 1 {
-			prev := res.Collectors[0].Count
+			prev := res.Collectors[0].TotalValue
 			for _, collector := range res.Collectors {
-				if collector.Count > prev {
+				if collector.TotalValue > prev {
 					t.Errorf("test case #%02d (%s): expect Collectors in descending order, got results = %#v", i, testCase.name, res.Collectors)
 					continue NEXT_TESTCASE
 				}
@@ -1051,8 +1054,8 @@ NEXT_TESTCASE:
 		for j, owner := range testCase.owners {
 			for _, collector := range res.Collectors {
 				if collector.Account == owner {
-					if collector.Count != testCase.counts[j] {
-						t.Errorf("test case #%02d (%s), collector %s: expect count = %d, got %d. results = %#v", i, testCase.name, owner, testCase.counts[j], collector.Count, res.Collectors)
+					if collector.TotalValue != testCase.totalValues[j] {
+						t.Errorf("test case #%02d (%s), collector %s: expect total value = %d, got %d. results = %#v", i, testCase.name, owner, testCase.totalValues[j], collector.TotalValue, res.Collectors)
 						continue NEXT_TESTCASE
 					}
 					continue NEXT_OWNER
@@ -1085,19 +1088,22 @@ func TestCreators(t *testing.T) {
 	}
 	nfts := []Nft{
 		{
-			ClassId: nftClasses[0].Id,
-			NftId:   "testing-nft-12093810",
-			Owner:   ADDR_02_COSMOS,
+			ClassId:     nftClasses[0].Id,
+			NftId:       "testing-nft-12093810",
+			Owner:       ADDR_02_COSMOS,
+			LatestPrice: 123,
 		},
 		{
-			ClassId: nftClasses[0].Id,
-			NftId:   "testing-nft-12093811",
-			Owner:   ADDR_03_LIKE,
+			ClassId:     nftClasses[0].Id,
+			NftId:       "testing-nft-12093811",
+			Owner:       ADDR_03_LIKE,
+			LatestPrice: 234,
 		},
 		{
-			ClassId: nftClasses[1].Id,
-			NftId:   "testing-nft-12093812",
-			Owner:   ADDR_03_LIKE,
+			ClassId:     nftClasses[1].Id,
+			NftId:       "testing-nft-12093812",
+			Owner:       ADDR_03_LIKE,
+			LatestPrice: 345,
 		},
 	}
 	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
@@ -1106,35 +1112,35 @@ func TestCreators(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name   string
-		query  QueryCreatorRequest
-		owners []string
-		counts []int
+		name        string
+		query       QueryCreatorRequest
+		owners      []string
+		totalValues []uint64
 	}{
 		// HACK: default IncludeOwner is true when binding to form
 		{
-			name:   "query by collector (0), AllIscnVersions = false",
-			query:  QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: true},
-			owners: []string{iscns[1].Owner},
-			counts: []int{1},
+			name:        "query by collector (0), AllIscnVersions = false",
+			query:       QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: true},
+			owners:      []string{iscns[1].Owner},
+			totalValues: []uint64{nfts[0].LatestPrice},
 		},
 		{
-			name:   "query by collector (0), AllIscnVersions = false, IncludeOwner = false",
-			query:  QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: false},
-			owners: []string{},
-			counts: []int{},
+			name:        "query by collector (0), AllIscnVersions = false, IncludeOwner = false",
+			query:       QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: false},
+			owners:      []string{},
+			totalValues: []uint64{},
 		},
 		{
-			name:   "query by collector (1), AllIscnVersions = false",
-			query:  QueryCreatorRequest{Collector: nfts[1].Owner, IncludeOwner: true},
-			owners: []string{iscns[1].Owner, iscns[2].Owner},
-			counts: []int{1, 1},
+			name:        "query by collector (1), AllIscnVersions = false",
+			query:       QueryCreatorRequest{Collector: nfts[1].Owner, IncludeOwner: true},
+			owners:      []string{iscns[2].Owner, iscns[1].Owner},
+			totalValues: []uint64{nfts[2].LatestPrice, nfts[1].LatestPrice},
 		},
 		{
-			name:   "query by collector (1), AllIscnVersions = true",
-			query:  QueryCreatorRequest{Collector: nfts[1].Owner, IncludeOwner: true, AllIscnVersions: true},
-			owners: []string{iscns[0].Owner, iscns[1].Owner, iscns[2].Owner},
-			counts: []int{1, 1, 1},
+			name:        "query by collector (1), AllIscnVersions = true",
+			query:       QueryCreatorRequest{Collector: nfts[1].Owner, IncludeOwner: true, AllIscnVersions: true},
+			owners:      []string{iscns[2].Owner, iscns[1].Owner, iscns[0].Owner},
+			totalValues: []uint64{nfts[2].LatestPrice, nfts[1].LatestPrice, nfts[1].LatestPrice},
 		},
 	}
 
@@ -1153,9 +1159,9 @@ NEXT_TESTCASE:
 			continue NEXT_TESTCASE
 		}
 		if len(res.Creators) > 1 {
-			prev := res.Creators[0].Count
+			prev := res.Creators[0].TotalValue
 			for _, creators := range res.Creators {
-				if creators.Count > prev {
+				if creators.TotalValue > prev {
 					t.Errorf("test case #%02d (%s): expect Creators in descending order, got results = %#v", i, testCase.name, res.Creators)
 					continue NEXT_TESTCASE
 				}
@@ -1165,8 +1171,8 @@ NEXT_TESTCASE:
 		for j, owner := range testCase.owners {
 			for _, creator := range res.Creators {
 				if creator.Account == owner {
-					if creator.Count != testCase.counts[j] {
-						t.Errorf("test case #%02d (%s), creator %s: expect count = %d, got %d. results = %#v", i, testCase.name, owner, testCase.counts[j], creator.Count, res.Creators)
+					if creator.TotalValue != testCase.totalValues[j] {
+						t.Errorf("test case #%02d (%s), creator %s: expect total value = %d, got %d. results = %#v", i, testCase.name, owner, testCase.totalValues[j], creator.TotalValue, res.Creators)
 						continue NEXT_TESTCASE
 					}
 					continue NEXT_OWNER
@@ -1198,9 +1204,10 @@ func TestGetCollectorTopRankedCreators(t *testing.T) {
 				})
 				for nftIndex := 0; nftIndex < 10; nftIndex++ {
 					nfts = append(nfts, Nft{
-						ClassId: nftClasses[0].Id,
-						NftId:   fmt.Sprintf("%s-%02d", classId, nftIndex),
-						Owner:   ADDRS_LIKE[r.Intn(10)],
+						ClassId:     nftClasses[0].Id,
+						NftId:       fmt.Sprintf("%s-%02d", classId, nftIndex),
+						Owner:       ADDRS_LIKE[r.Intn(10)],
+						LatestPrice: uint64(r.Int31n(2) + 1),
 					})
 				}
 			}
@@ -1215,18 +1222,18 @@ func TestGetCollectorTopRankedCreators(t *testing.T) {
 	}
 
 	shouldBeRankK := func(t *testing.T, res QueryCollectorResponse, collector string, k uint) {
-		collectorCount := 0
+		collectorTotalValue := uint64(0)
 		for _, collectorEntry := range res.Collectors {
 			if collectorEntry.Account == collector {
-				collectorCount = collectorEntry.Count
+				collectorTotalValue = collectorEntry.TotalValue
 				break
 			}
 		}
-		require.NotZero(t, collectorCount)
+		require.NotZero(t, collectorTotalValue)
 
 		inFrontOfCollectorCount := uint(0)
 		for _, collectorEntry := range res.Collectors {
-			if collectorEntry.Count > collectorCount {
+			if collectorEntry.TotalValue > collectorTotalValue {
 				inFrontOfCollectorCount++
 			}
 		}
