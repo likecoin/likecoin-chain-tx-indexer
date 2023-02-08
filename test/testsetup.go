@@ -47,6 +47,8 @@ const (
 	ADDR_10_COSMOS = "cosmos1pgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhfuh3u"
 )
 
+var ADDRS_LIKE = []string{ADDR_01_LIKE, ADDR_02_LIKE, ADDR_03_LIKE, ADDR_04_LIKE, ADDR_05_LIKE, ADDR_06_LIKE, ADDR_07_LIKE, ADDR_08_LIKE, ADDR_09_LIKE, ADDR_10_LIKE}
+
 var Pool *pgxpool.Pool
 var Conn *pgxpool.Conn
 

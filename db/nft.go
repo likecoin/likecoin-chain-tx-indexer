@@ -525,3 +525,51 @@ func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatR
 
 	return
 }
+
+func GetCollectorTopRankedCreators(conn *pgxpool.Conn, q QueryCollectorTopRankedCreatorsRequest) (res QueryCollectorTopRankedCreatorsResponse, err error) {
+	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
+	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
+	sql := `
+	SELECT creator FROM (
+		SELECT
+			i.owner AS creator,
+			n.owner AS collector,
+			COUNT(DISTINCT n.id) AS total,
+			RANK() OVER (PARTITION BY i.owner ORDER BY COUNT(DISTINCT n.id) DESC) AS rank
+		FROM iscn as i
+		JOIN iscn_latest_version
+		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND ($4 = true OR i.version = iscn_latest_version.latest_version)
+		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN nft AS n ON c.class_id = n.class_id
+			AND ($3::text[] IS NULL OR cardinality($3::text[]) = 0 OR n.owner != ALL($3))
+		WHERE 
+			($5 = true OR n.owner != i.owner)
+		GROUP BY creator, collector
+	) AS r
+	WHERE
+		collector = ANY($1)
+		AND rank <= $2
+	;
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(ctx, sql,
+		collectorVariations, q.Top, ignoreListVariations, q.AllIscnVersions, q.IncludeOwner,
+	)
+	if err != nil {
+		logger.L.Errorw("failed to query collector top ranked creators list", "error", err, "q", q)
+		err = fmt.Errorf("failed to query collector top ranked creators list: %w", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var creator string
+		if err = rows.Scan(&creator); err != nil {
+			return
+		}
+		res.Creators = append(res.Creators, creator)
+	}
+	return
+}

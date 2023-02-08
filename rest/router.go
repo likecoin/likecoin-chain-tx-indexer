@@ -45,6 +45,7 @@ func GetRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
 		nft.GET("/creator", handleNftCreators)
 		nft.GET("/user-stat", handleNftUserStat)
 		nft.GET("/marketplace", handleNftMarketplaceItem)
+		nft.GET("/collector-top-ranked-creators", handleNftCollectorTopRankedCreatorsRequest)
 	}
 	analysis := router.Group(ANALYSIS_ENDPOINT)
 	{
