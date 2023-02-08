@@ -1246,9 +1246,10 @@ func TestGetCollectorTopRankedCreators(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			for _, creator := range res.Creators {
+			for _, creatorEntry := range res.Creators {
+				require.LessOrEqual(t, creatorEntry.Rank, k)
 				res, err := GetCollector(Conn, QueryCollectorRequest{
-					Creator:      creator,
+					Creator:      creatorEntry.Creator,
 					IncludeOwner: true,
 				}, p)
 				require.NoError(t, err)

@@ -390,6 +390,11 @@ type QueryCollectorTopRankedCreatorsRequest struct {
 	Top             uint     `form:"top,default=5"`
 }
 
+type CollectorTopRankedCreator struct {
+	Creator string `json:"creator"`
+	Rank    uint   `json:"rank"`
+}
+
 type QueryCollectorTopRankedCreatorsResponse struct {
-	Creators []string `json:"creators"`
+	Creators []CollectorTopRankedCreator `json:"creators"`
 }
