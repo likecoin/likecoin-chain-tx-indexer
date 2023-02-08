@@ -358,28 +358,28 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	sql := `
-	SELECT owner, sum(count) as total,
+	SELECT owner, SUM(value) AS total_value,
 		array_agg(json_build_object(
 			'iscn_id_prefix', iscn_id_prefix,
 			'class_id', class_id,
-			'count', count)),
+			'value', value)),
 		COUNT(*) OVER() AS row_count
 	FROM (
-		SELECT n.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
-		FROM iscn as i
+		SELECT n.owner, i.iscn_id_prefix, c.class_id, SUM(n.latest_price) AS value
+		FROM iscn AS i
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
 			AND ($5 = true OR i.version = iscn_latest_version.latest_version)
-		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
 		WHERE 
 			($6 = true OR n.owner != i.owner)
 			AND ($1::text[] IS NULL OR cardinality($1::text[]) = 0 OR i.owner = ANY($1))
 		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
-	) as r
+	) AS r
 	GROUP BY owner
-	ORDER BY total DESC, owner DESC
+	ORDER BY total_value DESC, owner DESC
 	OFFSET $2
 	LIMIT $3
 	`
@@ -409,28 +409,28 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	sql := `
-	SELECT owner, sum(count) as total,
+	SELECT owner, SUM(value) as total_value,
 		array_agg(json_build_object(
 			'iscn_id_prefix', iscn_id_prefix,
 			'class_id', class_id,
-			'count', count)),
+			'value', value)),
 		COUNT(*) OVER() AS row_count
 	FROM (
-		SELECT i.owner, i.iscn_id_prefix, c.class_id, COUNT(DISTINCT n.id) as count
-		FROM iscn as i
+		SELECT i.owner, i.iscn_id_prefix, c.class_id, SUM(n.latest_price) AS value
+		FROM iscn AS i
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
 			AND ($5 = true OR i.version = iscn_latest_version.latest_version)
-		JOIN nft_class as c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
 		WHERE 
 			($6 = true OR n.owner != i.owner)
 			AND ($1::text[] IS NULL OR cardinality($1::text[]) = 0 OR n.owner = ANY($1))
 		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
-	) as r
+	) AS r
 	GROUP BY owner
-	ORDER BY total DESC
+	ORDER BY total_value DESC
 	OFFSET $2
 	LIMIT $3
 	`
@@ -459,7 +459,7 @@ func parseAccountCollections(rows pgx.Rows) (accounts []accountCollection, rowCo
 	for rows.Next() {
 		var account accountCollection
 		var collections pgtype.JSONBArray
-		if err = rows.Scan(&account.Account, &account.Count, &collections, &rowCount); err != nil {
+		if err = rows.Scan(&account.Account, &account.TotalValue, &collections, &rowCount); err != nil {
 			return
 		}
 		if err = collections.AssignTo(&account.Collections); err != nil {
@@ -550,8 +550,8 @@ func GetCollectorTopRankedCreators(conn *pgxpool.Conn, q QueryCollectorTopRanked
 		SELECT
 			i.owner AS creator,
 			n.owner AS collector,
-			COUNT(DISTINCT n.id) AS total,
-			RANK() OVER (PARTITION BY i.owner ORDER BY COUNT(DISTINCT n.id) DESC) AS rank
+			SUM(n.latest_price) AS total_value,
+			RANK() OVER (PARTITION BY i.owner ORDER BY SUM(n.latest_price) DESC) AS rank
 		FROM iscn as i
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
