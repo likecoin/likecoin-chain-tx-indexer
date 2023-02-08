@@ -1217,7 +1217,7 @@ func TestGetCollectorTopRankedCreators(t *testing.T) {
 		Reverse: true,
 	}
 
-	shouldInTopK := func(t *testing.T, res QueryCollectorResponse, collector string, k uint) {
+	shouldBeRankK := func(t *testing.T, res QueryCollectorResponse, collector string, k uint) {
 		collectorCount := 0
 		for _, collectorEntry := range res.Collectors {
 			if collectorEntry.Account == collector {
@@ -1233,7 +1233,7 @@ func TestGetCollectorTopRankedCreators(t *testing.T) {
 				inFrontOfCollectorCount++
 			}
 		}
-		require.Less(t, inFrontOfCollectorCount, k)
+		require.Equal(t, k-1, inFrontOfCollectorCount)
 	}
 
 	for i := 0; i < 10; i++ {
@@ -1254,7 +1254,7 @@ func TestGetCollectorTopRankedCreators(t *testing.T) {
 				}, p)
 				require.NoError(t, err)
 				require.NotEmpty(t, res.Collectors)
-				shouldInTopK(t, res, collector, k)
+				shouldBeRankK(t, res, collector, creatorEntry.Rank)
 			}
 		}
 	}
