@@ -15,9 +15,9 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	iscnOwnerVariations := utils.ConvertAddressPrefixes(q.IscnOwner, AddressPrefixes)
 	sql := fmt.Sprintf(`
 	SELECT DISTINCT ON (c.id)
-		c.id, c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
-		c.config, c.metadata, c.price,
-		c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at,
+		c.id, c.class_id, c.name, c.description, c.symbol,
+		c.uri, c.uri_hash, c.config, c.metadata, c.latest_price,
+		c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at, c.price_updated_at,
 	(
 		SELECT array_agg(row_to_json((n.*)))
 		FROM nft as n
@@ -56,10 +56,10 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 		var c NftClassResponse
 		var nfts pgtype.JSONBArray
 		if err = rows.Scan(
-			&res.Pagination.NextKey,
-			&c.Id, &c.Name, &c.Description, &c.Symbol, &c.URI, &c.URIHash,
-			&c.Config, &c.Metadata, &c.Price,
-			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account, &c.CreatedAt, &nfts,
+			&res.Pagination.NextKey, &c.Id, &c.Name, &c.Description, &c.Symbol,
+			&c.URI, &c.URIHash, &c.Config, &c.Metadata, &c.LatestPrice,
+			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account, &c.CreatedAt, &c.PriceUpdatedAt,
+			&nfts,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft class", "error", err)
 			return QueryClassResponse{}, fmt.Errorf("query nft class data failed: %w", err)
@@ -89,9 +89,9 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 	}
 	sql := fmt.Sprintf(`
 	SELECT
-		c.class_id, c.name, c.description, c.symbol, c.uri, c.uri_hash,
-		c.config, c.metadata, c.price,
-		c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at,
+		c.class_id, c.name, c.description, c.symbol, c.uri,
+		c.uri_hash, c.config, c.metadata, c.latest_price, c.parent_type,
+		c.parent_iscn_id_prefix, c.parent_account, c.created_at, c.price_updated_at,
 		COUNT(DISTINCT t.nft_id) AS sold_count,
 		SUM(t.price) AS total_sold_value
 	FROM (
@@ -159,10 +159,10 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 	for rows.Next() {
 		var c NftClassRankingResponse
 		if err = rows.Scan(
-			&c.Id, &c.Name, &c.Description, &c.Symbol, &c.URI, &c.URIHash,
-			&c.Config, &c.Metadata, &c.Price,
-			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account,
-			&c.CreatedAt, &c.SoldCount, &c.TotalSoldValue,
+			&c.Id, &c.Name, &c.Description, &c.Symbol, &c.URI,
+			&c.URIHash, &c.Config, &c.Metadata, &c.LatestPrice, &c.Parent.Type,
+			&c.Parent.IscnIdPrefix, &c.Parent.Account, &c.CreatedAt, &c.PriceUpdatedAt,
+			&c.SoldCount, &c.TotalSoldValue,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft class", "error", err)
 			return QueryRankingResponse{}, fmt.Errorf("query nft class data failed: %w", err)
@@ -180,7 +180,8 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 		n.id, n.nft_id, n.class_id, n.owner, n.uri,
 		n.uri_hash, n.metadata, e.timestamp, c.name, c.description,
 		c.symbol, c.uri, c.uri_hash, c.config, c.metadata,
-		c.price, c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at
+		c.latest_price, c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at,
+		c.price_updated_at
 	FROM nft as n
 	JOIN nft_class as c
 	ON n.class_id = c.class_id
@@ -214,7 +215,8 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 			&res.Pagination.NextKey, &n.NftId, &n.ClassId, &n.Owner, &n.Uri,
 			&n.UriHash, &n.Metadata, &n.Timestamp, &c.Name, &c.Description,
 			&c.Symbol, &c.URI, &c.URIHash, &c.Config, &c.Metadata,
-			&c.Price, &n.ClassParent.Type, &n.ClassParent.IscnIdPrefix, &n.ClassParent.Account, &c.CreatedAt,
+			&c.LatestPrice, &n.ClassParent.Type, &n.ClassParent.IscnIdPrefix, &n.ClassParent.Account, &c.CreatedAt,
+			&c.PriceUpdatedAt,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft", "error", err, "q", q)
 			return QueryNftResponse{}, fmt.Errorf("query nft failed: %w", err)

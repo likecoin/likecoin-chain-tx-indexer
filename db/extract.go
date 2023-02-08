@@ -180,18 +180,19 @@ func (batch *Batch) UpdateMetaHeight(key string, height int64) {
 
 func (batch *Batch) InsertNftClass(c NftClass) {
 	sql := `
-	INSERT INTO nft_class
-	(class_id, parent_type, parent_iscn_id_prefix, parent_account,
-	name, symbol, description, uri, uri_hash,
-	metadata, config, price, created_at)
+	INSERT INTO nft_class (
+		class_id, parent_type, parent_iscn_id_prefix, parent_account, name,
+		symbol, description, uri, uri_hash, metadata,
+		config, created_at
+	)
 	VALUES
-	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	ON CONFLICT DO NOTHING
 	`
 	batch.Batch.Queue(sql,
-		c.Id, c.Parent.Type, c.Parent.IscnIdPrefix, c.Parent.Account,
-		c.Name, c.Symbol, c.Description, c.URI, c.URIHash,
-		c.Metadata, c.Config, c.Price, c.CreatedAt,
+		c.Id, c.Parent.Type, c.Parent.IscnIdPrefix, c.Parent.Account, c.Name,
+		c.Symbol, c.Description, c.URI, c.URIHash, c.Metadata,
+		c.Config, c.CreatedAt,
 	)
 	_ = pubsub.Publish("NewNFTClass", c)
 }
@@ -245,6 +246,26 @@ func (batch *Batch) InsertNftEvent(e NftEvent) {
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	ON CONFLICT DO NOTHING`
 	batch.Batch.Queue(sql, e.Action, e.ClassId, e.NftId, e.Sender, e.Receiver, utils.GetEventStrings(e.Events), e.TxHash, e.Timestamp, e.Price)
+
+	if e.Price > 0 {
+		nftSql := `
+			UPDATE nft
+			SET latest_price = $1,
+				price_updated_at = $2
+			WHERE
+				class_id = $3
+				AND nft_id = $4
+		`
+		batch.Batch.Queue(nftSql, e.Price, e.Timestamp, e.ClassId, e.NftId)
+		nftClassSql := `
+			UPDATE nft_class
+			SET latest_price = $1,
+				price_updated_at = $2
+			WHERE
+				class_id = $3
+		`
+		batch.Batch.Queue(nftClassSql, e.Price, e.Timestamp, e.ClassId)
+	}
 	_ = pubsub.Publish("NewNFTEvent", e)
 }
 

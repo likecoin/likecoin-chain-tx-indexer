@@ -22,7 +22,7 @@ func MigrateNftEventPrice(conn *pgxpool.Conn, batchSize uint64) error {
 		logger.L.Errorw("Error when querying max ID", "error", err)
 		return err
 	}
-	for batchHeadId < maxId {
+	for batchHeadId <= maxId {
 		_, err = conn.Exec(context.Background(), `
 			UPDATE nft_event AS e
 			SET price = (

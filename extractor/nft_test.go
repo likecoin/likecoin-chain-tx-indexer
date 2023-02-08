@@ -1,6 +1,7 @@
 package extractor_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -251,6 +252,14 @@ func TestSendNftWithPrice(t *testing.T) {
 	require.Equal(t, "AAAAAA", eventRes.Events[0].TxHash)
 	require.Equal(t, ACTION_SEND, eventRes.Events[0].Action)
 	require.Equal(t, uint64(100), eventRes.Events[0].Price)
+
+	row := Conn.QueryRow(context.Background(), `SELECT latest_price, price_updated_at FROM nft WHERE class_id = $1 AND nft_id = $2`, nftClasses[0].Id, nfts[0].NftId)
+	var price uint64
+	var priceUpdatedAt time.Time
+	err = row.Scan(&price, &priceUpdatedAt)
+	require.NoError(t, err)
+	require.Equal(t, uint64(100), price)
+	require.Equal(t, timestamp.UTC(), priceUpdatedAt.UTC())
 }
 
 func TestMintNft(t *testing.T) {
