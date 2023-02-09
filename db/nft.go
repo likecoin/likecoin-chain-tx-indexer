@@ -530,7 +530,7 @@ func GetCollectorTopRankedCreators(conn *pgxpool.Conn, q QueryCollectorTopRanked
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	sql := `
-	SELECT creator FROM (
+	SELECT creator, rank FROM (
 		SELECT
 			i.owner AS creator,
 			n.owner AS collector,
@@ -550,6 +550,7 @@ func GetCollectorTopRankedCreators(conn *pgxpool.Conn, q QueryCollectorTopRanked
 	WHERE
 		collector = ANY($1)
 		AND rank <= $2
+	ORDER BY rank
 	;
 	`
 	ctx, cancel := GetTimeoutContext()
@@ -565,8 +566,8 @@ func GetCollectorTopRankedCreators(conn *pgxpool.Conn, q QueryCollectorTopRanked
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var creator string
-		if err = rows.Scan(&creator); err != nil {
+		var creator CollectorTopRankedCreator
+		if err = rows.Scan(&creator.Creator, &creator.Rank); err != nil {
 			return
 		}
 		res.Creators = append(res.Creators, creator)
