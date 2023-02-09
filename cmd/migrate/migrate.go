@@ -19,5 +19,6 @@ func init() {
 		MigrationAddressPrefixCommand,
 		MigrationNftEventPriceCommand,
 		MigrationNftPriceCommand,
+		MigrationNftEventMemoCommand,
 	)
 }

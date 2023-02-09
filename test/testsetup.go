@@ -206,6 +206,25 @@ func InsertTestData(testData DBTestData) error {
 	}
 	for _, e := range testData.NftEvents {
 		e.Timestamp = e.Timestamp.UTC()
+		for _, tx := range testData.Txs {
+			var txStruct struct {
+				TxHash string `json:"txhash"`
+				Tx     struct {
+					Body struct {
+						Memo string `json:"memo"`
+					} `json:"body"`
+				} `json:"tx"`
+			}
+			err := json.Unmarshal([]byte(tx), &txStruct)
+			if err != nil {
+				logger.L.Debugw("cannot unmarshal tx", "tx", tx, "err", err)
+				continue
+			}
+			if txStruct.TxHash == e.TxHash {
+				e.Memo = txStruct.Tx.Body.Memo
+				break
+			}
+		}
 		b.InsertNftEvent(e)
 	}
 	for _, item := range testData.NftMarketplaceItems {
