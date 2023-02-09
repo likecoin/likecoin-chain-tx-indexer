@@ -326,14 +326,18 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	for rows.Next() {
 		var e NftEvent
 		var eventRaw []string
+		var price *uint64
 		if err = rows.Scan(
 			&res.Pagination.NextKey,
 			&e.Action, &e.ClassId, &e.NftId, &e.Sender,
 			&e.Receiver, &e.Timestamp, &e.TxHash, &eventRaw, &e.Memo,
-			&e.Price,
+			&price,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft events", "error", err, "q", q)
 			return QueryEventsResponse{}, fmt.Errorf("query nft events data failed: %w", err)
+		}
+		if price != nil {
+			e.Price = *price
 		}
 		if q.Verbose {
 			e.Events, err = utils.ParseEvents(eventRaw)
