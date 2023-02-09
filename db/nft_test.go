@@ -1178,7 +1178,7 @@ NEXT_TESTCASE:
 }
 
 func TestGetCollectorTopRankedCreators(t *testing.T) {
-	defer func() { _ = CleanupTestData(Conn) }()
+	defer CleanupTestData(Conn)
 	r := rand.New(rand.NewSource(19823981948123019))
 	iscns := []IscnInsert{}
 	nftClasses := []NftClass{}
