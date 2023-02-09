@@ -358,14 +358,15 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	sql := `
-	SELECT owner, SUM(value) AS total_value,
+	SELECT owner, SUM(value) AS total_value, SUM(count) AS total_count,
 		array_agg(json_build_object(
 			'iscn_id_prefix', iscn_id_prefix,
 			'class_id', class_id,
-			'value', value)),
+			'value', value,
+			'count', count)),
 		COUNT(*) OVER() AS row_count
 	FROM (
-		SELECT n.owner, i.iscn_id_prefix, c.class_id, SUM(n.latest_price) AS value
+		SELECT n.owner, i.iscn_id_prefix, c.class_id, SUM(n.latest_price) AS value, COUNT(DISTINCT n.id) as count
 		FROM iscn AS i
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
@@ -409,14 +410,15 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	sql := `
-	SELECT owner, SUM(value) as total_value,
+	SELECT owner, SUM(value) as total_value, SUM(count) AS total_count,
 		array_agg(json_build_object(
 			'iscn_id_prefix', iscn_id_prefix,
 			'class_id', class_id,
-			'value', value)),
+			'value', value,
+			'count', count)),
 		COUNT(*) OVER() AS row_count
 	FROM (
-		SELECT i.owner, i.iscn_id_prefix, c.class_id, SUM(n.latest_price) AS value
+		SELECT i.owner, i.iscn_id_prefix, c.class_id, SUM(n.latest_price) AS value, COUNT(DISTINCT n.id) as count
 		FROM iscn AS i
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
@@ -459,7 +461,7 @@ func parseAccountCollections(rows pgx.Rows) (accounts []accountCollection, rowCo
 	for rows.Next() {
 		var account accountCollection
 		var collections pgtype.JSONBArray
-		if err = rows.Scan(&account.Account, &account.TotalValue, &collections, &rowCount); err != nil {
+		if err = rows.Scan(&account.Account, &account.TotalValue, &account.Count, &collections, &rowCount); err != nil {
 			return
 		}
 		if err = collections.AssignTo(&account.Collections); err != nil {
