@@ -530,6 +530,27 @@ func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatR
 		return
 	}
 
+	sql = `
+	SELECT SUM(e.price)
+	FROM iscn AS i
+	JOIN iscn_latest_version
+	ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+		AND ($2 = true OR i.version = iscn_latest_version.latest_version)
+	JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+	JOIN nft AS n ON c.class_id = n.class_id
+	JOIN nft_event AS e ON e.nft_id = n.nft_id
+	WHERE i.owner = $1
+		AND e.price IS NOT NULL
+	`
+
+	row = conn.QueryRow(ctx, sql, q.User, q.AllIscnVersions)
+
+	err = row.Scan(&res.TotalSales)
+	if err != nil {
+		err = fmt.Errorf("scan total sales error: %w", err)
+		return
+	}
+
 	return
 }
 
