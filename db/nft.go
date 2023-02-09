@@ -271,41 +271,34 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	receiverVariations := utils.ConvertAddressPrefixes(q.Receiver, AddressPrefixes)
 	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
 	sql := fmt.Sprintf(`
-	SELECT DISTINCT ON (e.id)
-		e.id,
-		action,
-		e.class_id,
-		e.nft_id,
-		e.sender,
-		e.receiver,
-		e.timestamp,
-		e.tx_hash,
-		e.events,
-		t.tx -> 'tx' -> 'body' ->> 'memo' AS memo,
-		e.price
-	FROM nft_event as e
-	JOIN nft_class as c
-	ON e.class_id = c.class_id
-	JOIN txs AS t
-	ON e.tx_hash = t.tx ->> 'txhash'::text
-	JOIN iscn AS i
-	ON i.iscn_id_prefix = c.parent_iscn_id_prefix
-	JOIN iscn_latest_version
-	ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-		AND i.version = iscn_latest_version.latest_version
-	WHERE ($4 = '' OR e.class_id = $4)
-		AND ($12::text[] IS NULL OR cardinality($12::text[]) = 0 OR i.owner = ANY($12))
-		AND (nft_id = '' OR $5 = '' OR nft_id = $5)
-		AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
-		AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.sender = ANY($10))
-		AND ($11::text[] IS NULL OR cardinality($11::text[]) = 0 OR e.receiver = ANY($11))
-		AND ($1 = 0 OR e.id > $1)
-		AND ($2 = 0 OR e.id < $2)
-		AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR e.action = ANY($7))
-		AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR e.sender != ALL($8))
-		AND ($9::text[] IS NULL OR cardinality($9::text[]) = 0 OR e.receiver != ALL($9))
-	ORDER BY e.id %s
-	LIMIT $3
+	SELECT e.*, txs.tx -> 'tx' -> 'body' ->> 'memo' AS memo
+	FROM (
+		SELECT DISTINCT ON (e.id)
+			e.id, e.action, e.class_id, e.nft_id, e.sender,
+			e.receiver, e.timestamp, e.tx_hash, e.events, e.price
+		FROM nft_event as e
+		JOIN nft_class as c
+		ON e.class_id = c.class_id
+		JOIN iscn AS i
+		ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN iscn_latest_version
+		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND i.version = iscn_latest_version.latest_version
+		WHERE ($4 = '' OR e.class_id = $4)
+			AND ($12::text[] IS NULL OR cardinality($12::text[]) = 0 OR i.owner = ANY($12))
+			AND (nft_id = '' OR $5 = '' OR nft_id = $5)
+			AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
+			AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.sender = ANY($10))
+			AND ($11::text[] IS NULL OR cardinality($11::text[]) = 0 OR e.receiver = ANY($11))
+			AND ($1 = 0 OR e.id > $1)
+			AND ($2 = 0 OR e.id < $2)
+			AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR e.action = ANY($7))
+			AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR e.sender != ALL($8))
+			AND ($9::text[] IS NULL OR cardinality($9::text[]) = 0 OR e.receiver != ALL($9))
+		ORDER BY e.id %s
+		LIMIT $3
+	) AS e
+	JOIN txs ON e.tx_hash = txs.tx ->> 'txhash'::text
 	`, p.Order())
 
 	ctx, cancel := GetTimeoutContext()
@@ -330,10 +323,9 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 		var eventRaw []string
 		var price *uint64
 		if err = rows.Scan(
-			&res.Pagination.NextKey,
-			&e.Action, &e.ClassId, &e.NftId, &e.Sender,
-			&e.Receiver, &e.Timestamp, &e.TxHash, &eventRaw, &e.Memo,
-			&price,
+			&res.Pagination.NextKey, &e.Action, &e.ClassId, &e.NftId, &e.Sender,
+			&e.Receiver, &e.Timestamp, &e.TxHash, &eventRaw, &price,
+			&e.Memo,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft events", "error", err, "q", q)
 			return QueryEventsResponse{}, fmt.Errorf("query nft events data failed: %w", err)
