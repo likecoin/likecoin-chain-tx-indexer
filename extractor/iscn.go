@@ -99,6 +99,5 @@ func GetIscnVersion(iscn string) int {
 
 func init() {
 	eventExtractor.RegisterTypeKey("iscn_record", "ipld", insertIscn)
-	eventExtractor.RegisterTypeKey("iscn_record", "ipld", insertIscn)
 	eventExtractor.RegisterTypeKey("iscn_record", "owner", transferIscn)
 }
