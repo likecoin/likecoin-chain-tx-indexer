@@ -551,6 +551,32 @@ func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatR
 		return
 	}
 
+	sql = `
+	SELECT COALESCE(SUM(CAST(r.msg -> 'amount' -> 0 ->> 'amount' AS BIGINT)), 0)
+	FROM (
+		SELECT jsonb_array_elements(t.tx -> 'tx' -> 'body' -> 'messages') AS msg
+		FROM iscn AS i
+		JOIN iscn_latest_version
+		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND ($2 = true OR i.version = iscn_latest_version.latest_version)
+		JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN nft AS n ON c.class_id = n.class_id
+		JOIN nft_event AS e ON e.nft_id = n.nft_id
+		JOIN txs AS t ON e.tx_hash = t.tx ->> 'txhash'
+		WHERE i.owner = $1
+			AND e.price IS NOT NULL
+	) AS r
+	WHERE r.msg ->> 'to_address' = $1
+		AND r.msg ->> '@type' = '/cosmos.bank.v1beta1.MsgSend'
+	`
+	row = conn.QueryRow(ctx, sql, q.User, q.AllIscnVersions)
+
+	err = row.Scan(&res.TotalRevenue)
+	if err != nil {
+		err = fmt.Errorf("scan total sales error: %w", err)
+		return
+	}
+
 	return
 }
 

@@ -343,6 +343,7 @@ type QueryUserStatResponse struct {
 	CreatedCount     int              `json:"created_count"`
 	CollectorCount   int              `json:"collector_count"`
 	TotalSales       uint64           `json:"total_sales"`
+	TotalRevenue     uint64           `json:"total_revenue"`
 }
 
 type CollectedClass struct {
