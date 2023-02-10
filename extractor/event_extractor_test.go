@@ -104,3 +104,26 @@ func TestExtractAuthz(t *testing.T) {
 	require.Equal(t, iscnIdA1, res.Records[0].Data.Id)
 	require.Equal(t, iscnIdB1, res.Records[1].Data.Id)
 }
+
+func TestEventContextFromAuthzClone(t *testing.T) {
+	originalCtx := EventContext{
+		Batch:     nil,
+		Timestamp: time.Unix(123456789, 0),
+		Messages:  []json.RawMessage{json.RawMessage(`{"msgs":[]}`)},
+		EventsList: EventsList{
+			struct {
+				Events types.StringEvents `json:"events"`
+			}{
+				Events: nil,
+			},
+		},
+		TxHash: "txhash",
+		Memo:   "memo",
+	}
+	clonedCtx, err := EventContextFromAuthz(originalCtx, 0)
+	require.NoError(t, err)
+	require.Equal(t, originalCtx.Timestamp, clonedCtx.Timestamp)
+	require.Equal(t, originalCtx.TxHash, clonedCtx.TxHash)
+	require.Equal(t, originalCtx.Memo, clonedCtx.Memo)
+	require.Equal(t, &originalCtx, clonedCtx.AuthzParent)
+}
