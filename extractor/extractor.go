@@ -9,27 +9,9 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
-var handlers = map[string]db.EventHandler{
-	"create_iscn_record":                           insertIscn,
-	"/likechain.iscn.MsgCreateIscnRecord":          insertIscn,
-	"update_iscn_record":                           insertIscn,
-	"/likechain.iscn.MsgUpdateIscnRecord":          insertIscn,
-	"msg_change_iscn_record_ownership":             transferIscn,
-	"/likechain.iscn.MsgChangeIscnRecordOwnership": transferIscn,
-	"new_class":                   createNftClass,
-	"update_class":                updateNftClass,
-	"mint_nft":                    mintNft,
-	"/cosmos.nft.v1beta1.MsgSend": sendNft,
-	"buy_nft":                     buyNft,
-	"sell_nft":                    sellNft,
-	"create_listing":              createListing,
-	"update_listing":              updateListing,
-	"delete_listing":              deleteListing,
-	"create_offer":                createOffer,
-	"update_offer":                updateOffer,
-	"delete_offer":                deleteOffer,
-}
+var ExtractFunc db.Extractor
 
+// TODO: should we make extractor synchronous with poller instead of async?
 func Run(pool *pgxpool.Pool) chan<- int64 {
 	trigger := make(chan int64, 100)
 	go func() {
@@ -50,7 +32,7 @@ func Run(pool *pgxpool.Pool) chan<- int64 {
 					continue
 				}
 			}
-			finished, err = db.Extract(conn, handlers)
+			finished, err = db.Extract(conn, ExtractFunc)
 			if err != nil {
 				logger.L.Errorw("Extract error", "error", err)
 				time.Sleep(5 * time.Second)
@@ -63,4 +45,8 @@ func Run(pool *pgxpool.Pool) chan<- int64 {
 		}
 	}()
 	return trigger
+}
+
+func init() {
+	ExtractFunc = eventExtractor.Extract
 }

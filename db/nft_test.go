@@ -14,6 +14,7 @@ import (
 )
 
 func TestQueryNftClass(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	prefixB := "iscn://testing/bbbbbb"
 	iscns := []IscnInsert{
@@ -74,7 +75,6 @@ func TestQueryNftClass(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name     string
@@ -177,6 +177,7 @@ NEXT_TESTCASE:
 }
 
 func TestQueryNftByOwner(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/aaaaaa/1",
@@ -204,7 +205,7 @@ func TestQueryNftByOwner(t *testing.T) {
 		{
 			ClassId:   nfts[0].ClassId,
 			NftId:     nfts[0].NftId,
-			Action:    "/cosmos.nft.v1beta1.MsgSend",
+			Action:    ACTION_SEND,
 			Sender:    ADDR_01_LIKE,
 			Receiver:  nfts[0].Owner,
 			TxHash:    "AA",
@@ -220,7 +221,6 @@ func TestQueryNftByOwner(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		owner string
@@ -276,6 +276,7 @@ NEXT_TESTCASE:
 }
 
 func TestOwnerByClassId(t *testing.T) {
+	defer CleanupTestData(Conn)
 	nfts := []Nft{
 		{
 			NftId:   "testing-nft-1123123098",
@@ -312,7 +313,6 @@ func TestOwnerByClassId(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		classId string
@@ -369,6 +369,7 @@ NEXT_TESTCASE:
 }
 
 func TestNftEvents(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/aaaaaa/1",
@@ -434,7 +435,6 @@ func TestNftEvents(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name    string
@@ -490,7 +490,7 @@ func TestNftEvents(t *testing.T) {
 		{
 			"query by action type (0)",
 			QueryEventsRequest{
-				ActionType: []string{nftEvents[0].Action},
+				ActionType: []NftEventAction{nftEvents[0].Action},
 			},
 			1,
 			func(i int, events []NftEvent) {
@@ -503,7 +503,7 @@ func TestNftEvents(t *testing.T) {
 		{
 			"query by action type (1)",
 			QueryEventsRequest{
-				ActionType: []string{nftEvents[1].Action},
+				ActionType: []NftEventAction{nftEvents[1].Action},
 			},
 			2,
 			func(i int, events []NftEvent) {
@@ -518,7 +518,7 @@ func TestNftEvents(t *testing.T) {
 		{
 			"query by action type (0, 1)",
 			QueryEventsRequest{
-				ActionType: []string{nftEvents[0].Action, nftEvents[1].Action},
+				ActionType: []NftEventAction{nftEvents[0].Action, nftEvents[1].Action},
 			},
 			3,
 			nil,
@@ -697,6 +697,7 @@ func TestNftEvents(t *testing.T) {
 }
 
 func TestQueryNftRanking(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	prefixB := "iscn://testing/bbbbbb"
 	iscns := []IscnInsert{
@@ -762,71 +763,67 @@ func TestQueryNftRanking(t *testing.T) {
 		{
 			ClassId:   nfts[0].ClassId,
 			NftId:     nfts[0].NftId,
-			Action:    "mint_nft",
+			Action:    ACTION_MINT,
 			TxHash:    "A1",
 			Timestamp: time.Unix(1, 0),
+			Price:     1111,
 		},
 		{
 			ClassId:   nfts[0].ClassId,
 			NftId:     nfts[0].NftId,
-			Action:    "/cosmos.nft.v1beta1.MsgSend",
+			Action:    ACTION_SEND,
 			Sender:    ADDR_01_LIKE,
 			Receiver:  nfts[0].Owner,
 			TxHash:    "A2",
 			Timestamp: time.Unix(2, 0),
+			Price:     1000,
 		},
 		{
 			ClassId:   nfts[1].ClassId,
 			NftId:     nfts[1].NftId,
-			Action:    "mint_nft",
+			Action:    ACTION_MINT,
 			TxHash:    "B1",
 			Timestamp: time.Unix(3, 0),
+			Price:     2222,
 		},
 		{
 			ClassId:   nfts[1].ClassId,
 			NftId:     nfts[1].NftId,
-			Action:    "/cosmos.nft.v1beta1.MsgSend",
+			Action:    ACTION_SEND,
 			Sender:    ADDR_01_LIKE,
 			Receiver:  nfts[1].Owner,
 			TxHash:    "B2",
 			Timestamp: time.Unix(4, 0),
+			Price:     2000,
 		},
 		{
 			ClassId:   nfts[2].ClassId,
 			NftId:     nfts[2].NftId,
-			Action:    "mint_nft",
+			Action:    ACTION_MINT,
 			TxHash:    "C1",
 			Timestamp: time.Unix(5, 0),
+			Price:     3333,
 		},
 		{
 			ClassId:   nfts[2].ClassId,
 			NftId:     nfts[2].NftId,
-			Action:    "/cosmos.nft.v1beta1.MsgSend",
+			Action:    ACTION_SEND,
 			Sender:    ADDR_01_LIKE,
 			Receiver:  nfts[2].Owner,
 			TxHash:    "C2",
 			Timestamp: time.Unix(6, 0),
+			Price:     2500,
 		},
-	}
-	txs := []string{
-		`{"txhash":"A1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"1111"}]}]}]}}}`,
-		`{"txhash":"A2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"1000"}]}]}]}}}`,
-		`{"txhash":"B1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2222"}]}]}]}}}`,
-		`{"txhash":"B2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2000"}]}]}]}}}`,
-		`{"txhash":"C1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"3333"}]}]}]}}}`,
-		`{"txhash":"C2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2500"}]}]}]}}}`,
 	}
 	err := InsertTestData(DBTestData{
 		Iscns:      iscns,
 		NftClasses: nftClasses,
 		Nfts:       nfts,
 		NftEvents:  nftEvents,
-		Txs:        txs,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name            string
@@ -944,6 +941,7 @@ func TestQueryNftRanking(t *testing.T) {
 	}
 }
 func TestCollectors(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/aaaaaa/1",
@@ -983,7 +981,6 @@ func TestCollectors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name   string
@@ -1067,6 +1064,7 @@ NEXT_TESTCASE:
 }
 
 func TestCreators(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/aaaaaa/1",
@@ -1106,7 +1104,6 @@ func TestCreators(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name   string
@@ -1181,7 +1178,7 @@ NEXT_TESTCASE:
 }
 
 func TestGetCollectorTopRankedCreators(t *testing.T) {
-	defer func() { _ = CleanupTestData(Conn) }()
+	defer CleanupTestData(Conn)
 	r := rand.New(rand.NewSource(19823981948123019))
 	iscns := []IscnInsert{}
 	nftClasses := []NftClass{}

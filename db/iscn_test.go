@@ -11,6 +11,7 @@ import (
 )
 
 func TestIscnCombineQuery(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscn := IscnInsert{
 		Iscn:  "iscn://testing/abcdef/1",
 		Owner: ADDR_01_LIKE,
@@ -31,7 +32,6 @@ func TestIscnCombineQuery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	tables := []struct {
 		name string
@@ -149,6 +149,7 @@ func TestIscnCombineQuery(t *testing.T) {
 }
 
 func TestIscnQueryLatestVersion(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/abcdef/1",
@@ -163,7 +164,6 @@ func TestIscnQueryLatestVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	p := PageRequest{
 		Limit: 100,
@@ -280,6 +280,7 @@ func TestIscnQueryLatestVersion(t *testing.T) {
 }
 
 func TestIscnList(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []IscnInsert{
 		{Iscn: "iscn://testing/aaaaaa/1"},
 		{Iscn: "iscn://testing/aaaaaa/2"},
@@ -296,7 +297,6 @@ func TestIscnList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	p := PageRequest{
 		Limit: 5,
@@ -329,6 +329,7 @@ func TestIscnList(t *testing.T) {
 }
 
 func TestIscnPagination(t *testing.T) {
+	defer CleanupTestData(Conn)
 	iscns := []IscnInsert{
 		{Iscn: "iscn://testing/aaaaaa/1", Timestamp: time.Unix(0, 0)},
 		{Iscn: "iscn://testing/bbbbbb/1", Timestamp: time.Unix(1, 0)},
@@ -345,7 +346,6 @@ func TestIscnPagination(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	p := PageRequest{Limit: 1}
 	res, err := QueryIscnList(Conn, p, true)

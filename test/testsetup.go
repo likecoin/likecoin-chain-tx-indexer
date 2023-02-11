@@ -84,14 +84,17 @@ func SetupDbAndRunTest(m *testing.M, preRun func(pool *pgxpool.Pool)) {
 		if err != nil {
 			logger.L.Panic(err)
 		}
+		defer func() {
+			err := cleanupTestDatabase(Conn)
+			if err != nil {
+				logger.L.Panic(err)
+			}
+		}()
+		defer CleanupTestData(Conn)
 		if preRun != nil {
 			preRun(Pool)
 		}
 		code := m.Run()
-		err = cleanupTestDatabase(Conn)
-		if err != nil {
-			logger.L.Panic(err)
-		}
 		return code
 	}()
 	os.Exit(code)
@@ -144,8 +147,11 @@ func cleanupTestDatabase(conn *pgxpool.Conn) error {
 	return RunEmbededSQLFile(conn, "test_cleanup_table.sql")
 }
 
-func CleanupTestData(conn *pgxpool.Conn) error {
-	return RunEmbededSQLFile(conn, "test_cleanup_data.sql")
+func CleanupTestData(conn *pgxpool.Conn) {
+	err := RunEmbededSQLFile(conn, "test_cleanup_data.sql")
+	if err != nil {
+		logger.L.Panicw("failed to cleanup test data", "err", err)
+	}
 }
 
 type DBTestData struct {

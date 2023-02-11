@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
 type Stakeholder struct {
@@ -103,8 +102,19 @@ type Nft struct {
 	Timestamp time.Time       `json:"timestamp"`
 }
 
+type NftEventAction string
+
+const (
+	ACTION_SEND         NftEventAction = "/cosmos.nft.v1beta1.MsgSend"
+	ACTION_MINT         NftEventAction = "mint_nft"
+	ACTION_NEW_CLASS    NftEventAction = "new_class"
+	ACTION_UPDATE_CLASS NftEventAction = "update_class"
+	ACTION_BUY          NftEventAction = "buy_nft"
+	ACTION_SELL         NftEventAction = "sell_nft"
+)
+
 type NftEvent struct {
-	Action    string             `json:"action"`
+	Action    NftEventAction     `json:"action"`
 	ClassId   string             `json:"class_id"`
 	NftId     string             `json:"nft_id"`
 	Sender    string             `json:"sender"`
@@ -113,13 +123,7 @@ type NftEvent struct {
 	TxHash    string             `json:"tx_hash"`
 	Timestamp time.Time          `json:"timestamp"`
 	Memo      string             `json:"memo"`
-}
-
-func (n *NftEvent) Attach(payload EventPayload) {
-	n.Action = utils.GetEventsValue(payload.Events, "message", "action")
-	n.Events = payload.Events
-	n.Timestamp = payload.Timestamp
-	n.TxHash = payload.TxHash
+	Price     uint64             `json:"price,omitempty"`
 }
 
 type NftMarketplaceItem struct {
@@ -243,16 +247,16 @@ type OwnerResponse struct {
 }
 
 type QueryEventsRequest struct {
-	ClassId        string   `form:"class_id"`
-	NftId          string   `form:"nft_id"`
-	IscnIdPrefix   string   `form:"iscn_id_prefix"`
-	Sender         string   `form:"sender"`
-	Receiver       string   `form:"receiver"`
-	Creator        string   `form:"creator"`
-	Verbose        bool     `form:"verbose"`
-	ActionType     []string `form:"action_type"`
-	IgnoreFromList []string `form:"ignore_from_list"`
-	IgnoreToList   []string `form:"ignore_to_list"`
+	ClassId        string           `form:"class_id"`
+	NftId          string           `form:"nft_id"`
+	IscnIdPrefix   string           `form:"iscn_id_prefix"`
+	Sender         string           `form:"sender"`
+	Receiver       string           `form:"receiver"`
+	Creator        string           `form:"creator"`
+	Verbose        bool             `form:"verbose"`
+	ActionType     []NftEventAction `form:"action_type"`
+	IgnoreFromList []string         `form:"ignore_from_list"`
+	IgnoreToList   []string         `form:"ignore_to_list"`
 }
 
 type QueryEventsResponse struct {

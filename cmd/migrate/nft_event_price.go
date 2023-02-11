@@ -8,9 +8,9 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
-var MigrationSetupIscnVersionTableCommand = &cobra.Command{
-	Use:   "setup-iscn-version-table",
-	Short: "Setup ISCN version table by scanning iscn table",
+var MigrationNftEventPriceCommand = &cobra.Command{
+	Use:   "nft-event-price",
+	Short: "Setup price column in nft_event table",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		batchSize, err := cmd.Flags().GetUint64(CmdBatchSize)
 		if err != nil {
@@ -25,14 +25,14 @@ var MigrationSetupIscnVersionTableCommand = &cobra.Command{
 			logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
 		}
 		defer conn.Release()
-		return parallel.MigrateSetupIscnVersionTable(conn, batchSize)
+		return parallel.MigrateNftEventPrice(conn, batchSize)
 	},
 }
 
 func init() {
-	MigrationSetupIscnVersionTableCommand.PersistentFlags().Uint64(
+	MigrationNftEventPriceCommand.PersistentFlags().Uint64(
 		CmdBatchSize,
 		1000,
-		"batch size when scanning iscn table for setting up iscn version table",
+		"number of ids in nft_event table to scan each time",
 	)
 }

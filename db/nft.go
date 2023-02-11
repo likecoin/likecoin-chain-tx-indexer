@@ -98,14 +98,12 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 		SELECT DISTINCT ON (n.id)
 			n.nft_id,
 			c.id AS class_pid,
-			(txs.tx #>> '{"tx", "body", "messages", 0, "msgs", 0, "amount", 0, "amount"}')::bigint AS price
+			e.price AS price
 		FROM nft_class AS c
 		JOIN nft AS n
 			ON c.class_id = n.class_id
 		JOIN nft_event AS e
 			ON e.nft_id = n.nft_id
-		JOIN txs
-			ON e.tx_hash = txs.tx ->> 'txhash'
 		JOIN iscn AS i
 			ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN iscn_latest_version
@@ -271,7 +269,18 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	receiverVariations := utils.ConvertAddressPrefixes(q.Receiver, AddressPrefixes)
 	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
 	sql := fmt.Sprintf(`
-	SELECT DISTINCT ON (e.id) e.id, action, e.class_id, e.nft_id, e.sender, e.receiver, e.timestamp, e.tx_hash, e.events, t.tx -> 'tx' -> 'body' ->> 'memo' AS memo
+	SELECT DISTINCT ON (e.id)
+		e.id,
+		action,
+		e.class_id,
+		e.nft_id,
+		e.sender,
+		e.receiver,
+		e.timestamp,
+		e.tx_hash,
+		e.events,
+		t.tx -> 'tx' -> 'body' ->> 'memo' AS memo,
+		e.price
 	FROM nft_event as e
 	JOIN nft_class as c
 	ON e.class_id = c.class_id
@@ -317,13 +326,18 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	for rows.Next() {
 		var e NftEvent
 		var eventRaw []string
+		var price *uint64
 		if err = rows.Scan(
 			&res.Pagination.NextKey,
 			&e.Action, &e.ClassId, &e.NftId, &e.Sender,
 			&e.Receiver, &e.Timestamp, &e.TxHash, &eventRaw, &e.Memo,
+			&price,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft events", "error", err, "q", q)
 			return QueryEventsResponse{}, fmt.Errorf("query nft events data failed: %w", err)
+		}
+		if price != nil {
+			e.Price = *price
 		}
 		if q.Verbose {
 			e.Events, err = utils.ParseEvents(eventRaw)

@@ -6,11 +6,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
-// TODO: handle Authz by extracting corresponding message from MsgExec sub-messages
-func parseMessage(payload db.EventPayload) (db.NftMarketplaceItem, error) {
+func parseMessage(payload *Payload) (db.NftMarketplaceItem, error) {
 	var item struct {
 		ClassId    string    `json:"class_id"`
 		NftId      string    `json:"nft_id"`
@@ -18,7 +20,7 @@ func parseMessage(payload db.EventPayload) (db.NftMarketplaceItem, error) {
 		Price      string    `json:"price"`
 		Expiration time.Time `json:"expiration"`
 	}
-	err := json.Unmarshal(payload.Message, &item)
+	err := json.Unmarshal(payload.GetMessage(), &item)
 	if err != nil {
 		return db.NftMarketplaceItem{}, fmt.Errorf("failed to unmarshal marketplace related message: %w", err)
 	}
@@ -38,7 +40,7 @@ func parseMessage(payload db.EventPayload) (db.NftMarketplaceItem, error) {
 	}, nil
 }
 
-func createListing(payload db.EventPayload) error {
+func createListing(payload *Payload, event *types.StringEvent) error {
 	item, err := parseMessage(payload)
 	if err != nil {
 		return err
@@ -48,71 +50,89 @@ func createListing(payload db.EventPayload) error {
 	return nil
 }
 
-func deleteListing(payload db.EventPayload) error {
-	item, err := parseMessage(payload)
-	if err != nil {
-		return err
-	}
-	item.Type = "listing"
-	payload.Batch.DeleteNFTMarketplaceItem(item)
-	return nil
-}
-
-func updateListing(payload db.EventPayload) error {
-	err := deleteListing(payload)
-	if err != nil {
-		return err
-	}
-	return createListing(payload)
-}
-func createOffer(payload db.EventPayload) error {
-	item, err := parseMessage(payload)
-	if err != nil {
-		return err
-	}
-	item.Type = "offer"
-	payload.Batch.InsertNFTMarketplaceItem(item)
-	return nil
-}
-
-func deleteOffer(payload db.EventPayload) error {
-	item, err := parseMessage(payload)
-	if err != nil {
-		return err
-	}
-	item.Type = "offer"
-	payload.Batch.DeleteNFTMarketplaceItem(item)
-	return nil
-}
-
-func updateOffer(payload db.EventPayload) error {
-	err := deleteOffer(payload)
-	if err != nil {
-		return err
-	}
-	return createOffer(payload)
-}
-
-func buyNft(payload db.EventPayload) error {
-	e := extractNftEvent(payload.Events, "likechain.likenft.v1.EventBuyNFT", "class_id", "nft_id", "seller", "buyer")
-	payload.Batch.DeleteNFTMarketplaceItem(db.NftMarketplaceItem{
+func deleteListing(payload *Payload, event *types.StringEvent) error {
+	item := db.NftMarketplaceItem{
 		Type:    "listing",
-		ClassId: e.ClassId,
-		NftId:   e.NftId,
-		Creator: e.Sender,
-	})
-	changeNftOwnerFromEvent(payload, e)
+		ClassId: utils.GetEventValue(event, "class_id"),
+		NftId:   utils.GetEventValue(event, "nft_id"),
+		Creator: utils.GetEventValue(event, "seller"),
+	}
+	payload.Batch.DeleteNFTMarketplaceItem(item)
 	return nil
 }
 
-func sellNft(payload db.EventPayload) error {
-	e := extractNftEvent(payload.Events, "likechain.likenft.v1.EventSellNFT", "class_id", "nft_id", "seller", "buyer")
-	payload.Batch.DeleteNFTMarketplaceItem(db.NftMarketplaceItem{
-		Type:    "offer",
-		ClassId: e.ClassId,
-		NftId:   e.NftId,
-		Creator: e.Receiver,
-	})
-	changeNftOwnerFromEvent(payload, e)
+func updateListing(payload *Payload, event *types.StringEvent) error {
+	err := deleteListing(payload, event)
+	if err != nil {
+		return err
+	}
+	return createListing(payload, event)
+}
+func createOffer(payload *Payload, event *types.StringEvent) error {
+	item, err := parseMessage(payload)
+	if err != nil {
+		return err
+	}
+	item.Type = "offer"
+	payload.Batch.InsertNFTMarketplaceItem(item)
 	return nil
+}
+
+func deleteOffer(payload *Payload, event *types.StringEvent) error {
+	item := db.NftMarketplaceItem{
+		Type:    "offer",
+		ClassId: utils.GetEventValue(event, "class_id"),
+		NftId:   utils.GetEventValue(event, "nft_id"),
+		Creator: utils.GetEventValue(event, "buyer"),
+	}
+	payload.Batch.DeleteNFTMarketplaceItem(item)
+	return nil
+}
+
+func updateOffer(payload *Payload, event *types.StringEvent) error {
+	err := deleteOffer(payload, event)
+	if err != nil {
+		return err
+	}
+	return createOffer(payload, event)
+}
+
+func getPriceFromEvent(event *types.StringEvent) uint64 {
+	priceStr := utils.GetEventValue(event, "price")
+	price, err := strconv.ParseUint(priceStr, 10, 64)
+	if err != nil {
+		// TODO: should we return error?
+		return 0
+	}
+	return price
+}
+
+func buyNft(payload *Payload, event *types.StringEvent) error {
+	return marketplaceDeal(payload, event, db.ACTION_BUY)
+}
+
+func sellNft(payload *Payload, event *types.StringEvent) error {
+	return marketplaceDeal(payload, event, db.ACTION_SELL)
+}
+
+func marketplaceDeal(payload *Payload, event *types.StringEvent, actionType db.NftEventAction) error {
+	e := extractNftEvent(event, "class_id", "nft_id", "seller", "buyer")
+	e.Price = getPriceFromEvent(event)
+	e.Action = actionType
+	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
+	payload.Batch.Batch.Queue(sql, e.Receiver, e.ClassId, e.NftId)
+	attachNftEvent(&e, payload)
+	payload.Batch.InsertNftEvent(e)
+	return nil
+}
+
+func init() {
+	eventExtractor.RegisterType("likechain.likenft.v1.EventBuyNFT", buyNft)
+	eventExtractor.RegisterType("likechain.likenft.v1.EventSellNFT", sellNft)
+	eventExtractor.RegisterType("likechain.likenft.v1.EventCreateListing", createListing)
+	eventExtractor.RegisterType("likechain.likenft.v1.EventUpdateListing", updateListing)
+	eventExtractor.RegisterType("likechain.likenft.v1.EventDeleteListing", deleteListing)
+	eventExtractor.RegisterType("likechain.likenft.v1.EventCreateOffer", createOffer)
+	eventExtractor.RegisterType("likechain.likenft.v1.EventUpdateOffer", updateOffer)
+	eventExtractor.RegisterType("likechain.likenft.v1.EventDeleteOffer", deleteOffer)
 }

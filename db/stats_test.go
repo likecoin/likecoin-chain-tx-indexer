@@ -8,6 +8,7 @@ import (
 )
 
 func TestNftCount(t *testing.T) {
+	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
 	prefixB := "iscn://testing/bbbbbb"
 	iscns := []IscnInsert{
@@ -74,7 +75,6 @@ func TestNftCount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name  string
@@ -113,17 +113,18 @@ func TestNftCount(t *testing.T) {
 }
 
 func TestNftTradeStats(t *testing.T) {
+	defer CleanupTestData(Conn)
 	nftEvents := []NftEvent{
 		{
 			ClassId: "likenft1class1",
 			NftId:   "testing-nft-1209301",
-			Action:  "mint_nft",
+			Action:  ACTION_MINT,
 			TxHash:  "A1",
 		},
 		{
 			ClassId:  "likenft1class1",
 			NftId:    "testing-nft-1209301",
-			Action:   "/cosmos.nft.v1beta1.MsgSend",
+			Action:   ACTION_SEND,
 			Sender:   ADDR_01_LIKE,
 			Receiver: ADDR_02_COSMOS,
 			TxHash:   "A2",
@@ -131,13 +132,13 @@ func TestNftTradeStats(t *testing.T) {
 		{
 			ClassId: "likenft1class2",
 			NftId:   "testing-nft-1209302",
-			Action:  "mint_nft",
+			Action:  ACTION_MINT,
 			TxHash:  "B1",
 		},
 		{
 			ClassId:  "likenft1class2",
 			NftId:    "testing-nft-1209302",
-			Action:   "/cosmos.nft.v1beta1.MsgSend",
+			Action:   ACTION_SEND,
 			Sender:   ADDR_01_LIKE,
 			Receiver: ADDR_03_LIKE,
 			TxHash:   "B2",
@@ -145,13 +146,13 @@ func TestNftTradeStats(t *testing.T) {
 		{
 			ClassId: "likenft1class3",
 			NftId:   "testing-nft-1209303",
-			Action:  "mint_nft",
+			Action:  ACTION_MINT,
 			TxHash:  "C1",
 		},
 		{
 			ClassId:  "likenft1class3",
 			NftId:    "testing-nft-1209303",
-			Action:   "/cosmos.nft.v1beta1.MsgSend",
+			Action:   ACTION_SEND,
 			Sender:   ADDR_01_LIKE,
 			Receiver: ADDR_04_LIKE,
 			TxHash:   "C2",
@@ -169,7 +170,6 @@ func TestNftTradeStats(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	query := QueryNftTradeStatsRequest{
 		ApiAddresses: []string{ADDR_01_LIKE},
@@ -187,57 +187,58 @@ func TestNftTradeStats(t *testing.T) {
 }
 
 func TestNftCreatorCount(t *testing.T) {
+	defer CleanupTestData(Conn)
 	nftEvents := []NftEvent{
 		{
 			ClassId: "likenft1class1",
-			Action:  "new_class",
+			Action:  ACTION_NEW_CLASS,
 			Sender:  ADDR_01_LIKE,
 		},
 		{
 			ClassId: "likenft1class1",
 			NftId:   "testing-nft-1209301",
-			Action:  "mint_nft",
+			Action:  ACTION_MINT,
 			Sender:  ADDR_02_LIKE,
 		},
 		{
 			ClassId:  "likenft1class1",
 			NftId:    "testing-nft-1209301",
-			Action:   "/cosmos.nft.v1beta1.MsgSend",
+			Action:   ACTION_SEND,
 			Sender:   ADDR_03_LIKE,
 			Receiver: ADDR_04_LIKE,
 		},
 		{
 			ClassId: "likenft1class2",
-			Action:  "new_class",
+			Action:  ACTION_NEW_CLASS,
 			Sender:  ADDR_01_LIKE,
 		},
 		{
 			ClassId: "likenft1class2",
 			NftId:   "testing-nft-1209302",
-			Action:  "mint_nft",
+			Action:  ACTION_MINT,
 			Sender:  ADDR_05_LIKE,
 		},
 		{
 			ClassId:  "likenft1class2",
 			NftId:    "testing-nft-1209302",
-			Action:   "/cosmos.nft.v1beta1.MsgSend",
+			Action:   ACTION_SEND,
 			Sender:   ADDR_06_LIKE,
 			Receiver: ADDR_07_LIKE,
 		},
 		{
 			ClassId: "likenft1class3",
-			Action:  "new_class",
+			Action:  ACTION_NEW_CLASS,
 			Sender:  ADDR_02_LIKE,
 		},
 		{
 			ClassId: "likenft1class3",
 			NftId:   "testing-nft-1209303",
-			Action:  "mint_nft",
+			Action:  ACTION_MINT,
 			Sender:  ADDR_05_LIKE,
 		},
 		{
 			ClassId: "likenft1class4",
-			Action:  "new_class",
+			Action:  ACTION_NEW_CLASS,
 			Sender:  ADDR_03_LIKE,
 		},
 	}
@@ -245,7 +246,6 @@ func TestNftCreatorCount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	res, err := GetNftCreatorCount(Conn)
 	if err != nil {
@@ -257,6 +257,7 @@ func TestNftCreatorCount(t *testing.T) {
 }
 
 func TestNftOwnerCount(t *testing.T) {
+	defer CleanupTestData(Conn)
 	nfts := []Nft{
 		{
 			NftId: "testing-nft-1123123098",
@@ -287,7 +288,6 @@ func TestNftOwnerCount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	res, err := GetNftOwnerCount(Conn)
 	if err != nil {
@@ -299,6 +299,7 @@ func TestNftOwnerCount(t *testing.T) {
 }
 
 func TestNftOwnerList(t *testing.T) {
+	defer CleanupTestData(Conn)
 	nfts := []Nft{
 		{
 			NftId: "testing-nft-1123123098",
@@ -329,7 +330,6 @@ func TestNftOwnerList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = CleanupTestData(Conn) }()
 
 	testCases := []struct {
 		name       string
