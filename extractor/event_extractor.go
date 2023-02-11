@@ -81,12 +81,8 @@ func extractAuthzMessages(msg json.RawMessage) ([]json.RawMessage, error) {
 }
 
 func EventContextFromAuthz(ctx db.EventContext, msgIndex int) (db.EventContext, error) {
-	authzCtx := db.EventContext{
-		Batch:       ctx.Batch,
-		Timestamp:   ctx.Timestamp,
-		TxHash:      ctx.TxHash,
-		AuthzParent: &ctx,
-	}
+	authzCtx := ctx
+	authzCtx.AuthzParent = &ctx
 	var err error
 	authzCtx.Messages, err = extractAuthzMessages(ctx.Messages[msgIndex])
 	if err != nil {

@@ -27,6 +27,7 @@ type EventContext struct {
 	EventsList EventsList
 	Timestamp  time.Time
 	TxHash     string
+	Memo       string
 
 	// If the event is from authz, we process it by making a psuedo EventContext
 	// for each authz message, and then set this field to the original EventContext
@@ -59,7 +60,7 @@ func Extract(conn *pgxpool.Conn, extractor Extractor) (finished bool, err error)
 	defer cancel()
 
 	sql := `
-	SELECT tx #> '{"tx", "body", "messages"}' AS messages, tx -> 'logs' AS logs, tx -> 'timestamp', tx -> 'txhash'
+	SELECT tx #> '{"tx", "body", "messages"}' AS messages, tx -> 'logs' AS logs, tx -> 'timestamp', tx -> 'txhash', tx -> 'tx' -> 'body' -> 'memo'
 	FROM txs
 	WHERE height > $1
 		AND height <= $2
@@ -80,7 +81,8 @@ func Extract(conn *pgxpool.Conn, extractor Extractor) (finished bool, err error)
 		var eventData pgtype.JSONB
 		var timestamp time.Time
 		var txHash string
-		err := rows.Scan(&messageData, &eventData, &timestamp, &txHash)
+		var memo string
+		err := rows.Scan(&messageData, &eventData, &timestamp, &txHash, &memo)
 		if err != nil {
 			return false, fmt.Errorf("failed to scan tx row on tx %s: %w", txHash, err)
 		}
@@ -102,6 +104,7 @@ func Extract(conn *pgxpool.Conn, extractor Extractor) (finished bool, err error)
 			EventsList: eventsList,
 			Timestamp:  timestamp,
 			TxHash:     strings.Trim(txHash, "\""),
+			Memo:       memo,
 		}
 		err = extractor(ctx)
 		if err != nil {
@@ -241,11 +244,16 @@ func (batch *Batch) InsertNftEvent(e NftEvent) {
 		e.Receiver = convertedReceiver
 	}
 	sql := `
-	INSERT INTO nft_event
-	(action, class_id, nft_id, sender, receiver, events, tx_hash, timestamp, price)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	INSERT INTO nft_event (
+		action, class_id, nft_id, sender, receiver,
+		events, tx_hash, timestamp, price, memo
+	)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	ON CONFLICT DO NOTHING`
-	batch.Batch.Queue(sql, e.Action, e.ClassId, e.NftId, e.Sender, e.Receiver, utils.GetEventStrings(e.Events), e.TxHash, e.Timestamp, e.Price)
+	batch.Batch.Queue(sql,
+		e.Action, e.ClassId, e.NftId, e.Sender, e.Receiver,
+		utils.GetEventStrings(e.Events), e.TxHash, e.Timestamp, e.Price, e.Memo,
+	)
 
 	if e.Price > 0 {
 		nftSql := `
