@@ -531,7 +531,7 @@ func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatR
 	}
 
 	sql = `
-	SELECT SUM(e.price)
+	SELECT COALESCE(SUM(e.price), 0)
 	FROM iscn AS i
 	JOIN iscn_latest_version
 	ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
