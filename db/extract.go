@@ -104,7 +104,7 @@ func Extract(conn *pgxpool.Conn, extractor Extractor) (finished bool, err error)
 			EventsList: eventsList,
 			Timestamp:  timestamp,
 			TxHash:     strings.Trim(txHash, "\""),
-			Memo:       memo,
+			Memo:       strings.Trim(memo, "\""),
 		}
 		err = extractor(ctx)
 		if err != nil {
