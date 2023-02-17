@@ -267,9 +267,9 @@ func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, err
 func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (QueryEventsResponse, error) {
 	ignoreFromListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreFromList, AddressPrefixes)
 	ignoreToListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreToList, AddressPrefixes)
-	senderVariations := utils.ConvertAddressPrefixes(q.Sender, AddressPrefixes)
-	receiverVariations := utils.ConvertAddressPrefixes(q.Receiver, AddressPrefixes)
-	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
+	senderVariations := utils.ConvertAddressArrayPrefixes(q.Sender, AddressPrefixes)
+	receiverVariations := utils.ConvertAddressArrayPrefixes(q.Receiver, AddressPrefixes)
+	creatorVariations := utils.ConvertAddressArrayPrefixes(q.Creator, AddressPrefixes)
 	sql := fmt.Sprintf(`
 		SELECT DISTINCT ON (e.id)
 			e.id, e.action, e.class_id, e.nft_id, e.sender,
