@@ -669,6 +669,18 @@ func TestNftEvents(t *testing.T) {
 				}
 			},
 		},
+		{
+			"query by multiple senders (0, 1)", QueryEventsRequest{Sender: []string{ADDR_01_LIKE, ADDR_02_COSMOS}}, 2, nil,
+		},
+		{
+			"query by multiple receivers (0, 1)", QueryEventsRequest{Receiver: []string{ADDR_02_COSMOS, ADDR_03_LIKE}}, 2, nil,
+		},
+		{
+			"query by multiple creators (0, 1)", QueryEventsRequest{Creator: []string{iscns[0].Owner, iscns[1].Owner}}, 2, nil,
+		},
+		{
+			"query by multiple creators (1, 2)", QueryEventsRequest{Creator: []string{iscns[1].Owner, iscns[2].Owner}}, 3, nil,
+		},
 		{"query by old creator", QueryEventsRequest{Creator: []string{ADDR_01_LIKE}}, 0, nil},
 		{"query by non existing iscn ID prefix", QueryEventsRequest{IscnIdPrefix: "iscn://testing/notexist"}, 0, nil},
 		{"query by non existing class ID", QueryEventsRequest{ClassId: "likenft1notexist"}, 0, nil},
