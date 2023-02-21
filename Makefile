@@ -1,18 +1,20 @@
 #!/usr/bin/make -f
 
+COMMIT := $(shell git rev-parse HEAD)
+
 build:
 	go build -o indexer main.go
 
 build-image:
-	docker build -t likechain/tx-indexer .
+	docker build --build-arg INDEXER_COMMIT_HASH=$(COMMIT) -t likechain/tx-indexer .
 
 build-and-push:
-	docker buildx build -t likechain/tx-indexer:latest --platform linux/amd64 .
+	docker buildx --build-arg INDEXER_COMMIT_HASH=$(COMMIT) build -t likechain/tx-indexer:latest --platform linux/amd64 .
 	docker tag likechain/tx-indexer:latest us.gcr.io/likecoin-foundation/likechain-tx-indexer:latest
 	docker -- push us.gcr.io/likecoin-foundation/likechain-tx-indexer:latest
 
 build-and-push-develop:
-	docker buildx build -t likechain/tx-indexer:latest --platform linux/amd64 .
+	docker buildx --build-arg INDEXER_COMMIT_HASH=$(COMMIT) build -t likechain/tx-indexer:latest --platform linux/amd64 .
 	docker tag likechain/tx-indexer:latest us.gcr.io/likecoin-develop/likechain-tx-indexer:latest
 	docker -- push us.gcr.io/likecoin-develop/likechain-tx-indexer:latest
 

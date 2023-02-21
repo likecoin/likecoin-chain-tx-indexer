@@ -15,6 +15,7 @@ const ISCN_ENDPOINT = "/iscn/records"
 const LATEST_HEIGHT_ENDPOINT = "/indexer/height/latest"
 const NFT_ENDPOINT = "/likechain/likenft/v1"
 const ANALYSIS_ENDPOINT = "/statistics/nft"
+const INFO_ENDPOINT = "/indexer/info"
 
 func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string, defaultApiAddresses []string) {
 	lcdURL, err := url.Parse(lcdEndpoint)
@@ -59,6 +60,7 @@ func GetRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
 	router.GET("/txs", handleAminoTxsSearch)
 	router.GET(STARGATE_ENDPOINT, handleStargateTxsSearch)
 	router.GET(LATEST_HEIGHT_ENDPOINT, handleLatestHeight)
+	router.GET(INFO_ENDPOINT, handleInfo)
 	return router
 }
 
