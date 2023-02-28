@@ -670,6 +670,15 @@ func TestNftEvents(t *testing.T) {
 			},
 		},
 		{
+			"query by involver (1)", QueryEventsRequest{Involver: []string{ADDR_01_LIKE}}, 2, nil,
+		},
+		{
+			"query by involver (2)", QueryEventsRequest{Involver: []string{ADDR_02_LIKE}}, 2, nil,
+		},
+		{
+			"query by involver (3)", QueryEventsRequest{Involver: []string{ADDR_03_LIKE}}, 2, nil,
+		},
+		{
 			"query by multiple senders (0, 1)", QueryEventsRequest{Sender: []string{ADDR_01_LIKE, ADDR_02_COSMOS}}, 2, nil,
 		},
 		{
