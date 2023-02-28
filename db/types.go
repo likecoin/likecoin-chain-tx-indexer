@@ -256,6 +256,7 @@ type QueryEventsRequest struct {
 	Sender         []string         `form:"sender"`
 	Receiver       []string         `form:"receiver"`
 	Creator        []string         `form:"creator"`
+	Involver       []string         `form:"involver"`
 	Verbose        bool             `form:"verbose"`
 	ActionType     []NftEventAction `form:"action_type"`
 	IgnoreFromList []string         `form:"ignore_from_list"`

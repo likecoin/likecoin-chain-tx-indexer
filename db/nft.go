@@ -270,6 +270,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	senderVariations := utils.ConvertAddressArrayPrefixes(q.Sender, AddressPrefixes)
 	receiverVariations := utils.ConvertAddressArrayPrefixes(q.Receiver, AddressPrefixes)
 	creatorVariations := utils.ConvertAddressArrayPrefixes(q.Creator, AddressPrefixes)
+	involverVariations := utils.ConvertAddressArrayPrefixes(q.Involver, AddressPrefixes)
 	sql := fmt.Sprintf(`
 		SELECT DISTINCT ON (e.id)
 			e.id, e.action, e.class_id, e.nft_id, e.sender,
@@ -289,6 +290,11 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 			AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
 			AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.sender = ANY($10))
 			AND ($11::text[] IS NULL OR cardinality($11::text[]) = 0 OR e.receiver = ANY($11))
+			AND ($13::text[] IS NULL OR cardinality($13::text[]) = 0
+				OR e.sender = ANY($13)
+				OR e.receiver = ANY($13)
+				OR i.owner = ANY($13)
+			)
 			AND ($1 = 0 OR e.id > $1)
 			AND ($2 = 0 OR e.id < $2)
 			AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR e.action = ANY($7))
@@ -305,7 +311,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 		ctx, sql,
 		p.After(), p.Before(), p.Limit, q.ClassId, q.NftId,
 		q.IscnIdPrefix, q.ActionType, ignoreFromListVariations, ignoreToListVariations, senderVariations,
-		receiverVariations, creatorVariations,
+		receiverVariations, creatorVariations, involverVariations,
 	)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft events", "error", err)
