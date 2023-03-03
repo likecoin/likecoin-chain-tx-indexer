@@ -349,13 +349,21 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
+func getSourceTable(priceBy string) string {
+	switch priceBy {
+	case "class":
+		return "c"
+	case "nft":
+	default:
+		return "n"
+	}
+	return "n"
+}
+
 func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (res QueryCollectorResponse, err error) {
 	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
-	priceSourceTable := "n"
-	if q.SumByNftClassPrice {
-		priceSourceTable = "c"
-	}
+	priceSourceTable := getSourceTable(q.PriceBy)
 	sql := fmt.Sprintf(`
 	SELECT owner, SUM(value) AS total_value, SUM(count) AS total_count,
 		array_agg(json_build_object(
@@ -408,10 +416,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res QueryCreatorResponse, err error) {
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
-	priceSourceTable := "n"
-	if q.SumByNftClassPrice {
-		priceSourceTable = "c"
-	}
+	priceSourceTable := getSourceTable(q.PriceBy)
 	sql := fmt.Sprintf(`
 	SELECT owner, SUM(value) as total_value, SUM(count) AS total_count,
 		array_agg(json_build_object(

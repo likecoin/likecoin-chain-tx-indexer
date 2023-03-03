@@ -1048,7 +1048,7 @@ func TestCollectors(t *testing.T) {
 		},
 		{
 			name:        "query with SumByNftClassPrice = true",
-			query:       QueryCollectorRequest{IncludeOwner: true, SumByNftClassPrice: true},
+			query:       QueryCollectorRequest{IncludeOwner: true, PriceBy: "class"},
 			owners:      []string{nfts[1].Owner, nfts[0].Owner},
 			totalValues: []uint64{nftClasses[0].LatestPrice + nftClasses[1].LatestPrice, nftClasses[0].LatestPrice},
 		},
@@ -1171,7 +1171,7 @@ func TestCreators(t *testing.T) {
 		},
 		{
 			name:        "query by collector (0), AllIscnVersions = false, SumByNftClassPrice = true",
-			query:       QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: true, SumByNftClassPrice: true},
+			query:       QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: true, PriceBy: "class"},
 			owners:      []string{iscns[1].Owner},
 			totalValues: []uint64{nftClasses[0].LatestPrice},
 		},
