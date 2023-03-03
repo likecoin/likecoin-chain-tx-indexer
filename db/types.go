@@ -296,10 +296,11 @@ type NftClassRankingResponse struct {
 }
 
 type QueryCollectorRequest struct {
-	Creator         string   `form:"creator"`
-	IgnoreList      []string `form:"ignore_list"`
-	AllIscnVersions bool     `form:"all_iscn_versions"`
-	IncludeOwner    bool     `form:"include_owner,default=true"`
+	Creator            string   `form:"creator"`
+	IgnoreList         []string `form:"ignore_list"`
+	AllIscnVersions    bool     `form:"all_iscn_versions"`
+	IncludeOwner       bool     `form:"include_owner,default=true"`
+	SumByNftClassPrice bool     `form:"sum_by_nft_class_price"`
 }
 
 type QueryCollectorResponse struct {
@@ -308,10 +309,11 @@ type QueryCollectorResponse struct {
 }
 
 type QueryCreatorRequest struct {
-	Collector       string   `form:"collector"`
-	IgnoreList      []string `form:"ignore_list"`
-	AllIscnVersions bool     `form:"all_iscn_versions"`
-	IncludeOwner    bool     `form:"include_owner,default=true"`
+	Collector          string   `form:"collector"`
+	IgnoreList         []string `form:"ignore_list"`
+	AllIscnVersions    bool     `form:"all_iscn_versions"`
+	IncludeOwner       bool     `form:"include_owner,default=true"`
+	SumByNftClassPrice bool     `form:"sum_by_nft_class_price"`
 }
 
 type QueryCreatorResponse struct {

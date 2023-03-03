@@ -352,7 +352,11 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (res QueryCollectorResponse, err error) {
 	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
-	sql := `
+	priceSourceTable := "n"
+	if q.SumByNftClassPrice {
+		priceSourceTable = "c"
+	}
+	sql := fmt.Sprintf(`
 	SELECT owner, SUM(value) AS total_value, SUM(count) AS total_count,
 		array_agg(json_build_object(
 			'iscn_id_prefix', iscn_id_prefix,
@@ -361,7 +365,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 			'count', count)),
 		COUNT(*) OVER() AS row_count
 	FROM (
-		SELECT n.owner, i.iscn_id_prefix, c.class_id, SUM(n.latest_price) AS value, COUNT(DISTINCT n.id) as count
+		SELECT n.owner, i.iscn_id_prefix, c.class_id, SUM(%s.latest_price) AS value, COUNT(DISTINCT n.id) as count
 		FROM iscn AS i
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
@@ -378,7 +382,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 	ORDER BY total_value DESC, owner DESC
 	OFFSET $2
 	LIMIT $3
-	`
+	`, priceSourceTable)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
@@ -404,7 +408,11 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res QueryCreatorResponse, err error) {
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
-	sql := `
+	priceSourceTable := "n"
+	if q.SumByNftClassPrice {
+		priceSourceTable = "c"
+	}
+	sql := fmt.Sprintf(`
 	SELECT owner, SUM(value) as total_value, SUM(count) AS total_count,
 		array_agg(json_build_object(
 			'iscn_id_prefix', iscn_id_prefix,
@@ -413,7 +421,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 			'count', count)),
 		COUNT(*) OVER() AS row_count
 	FROM (
-		SELECT i.owner, i.iscn_id_prefix, c.class_id, SUM(n.latest_price) AS value, COUNT(DISTINCT n.id) as count
+		SELECT i.owner, i.iscn_id_prefix, c.class_id, SUM(%s.latest_price) AS value, COUNT(DISTINCT n.id) as count
 		FROM iscn AS i
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
@@ -430,7 +438,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 	ORDER BY total_value DESC
 	OFFSET $2
 	LIMIT $3
-	`
+	`, priceSourceTable)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
