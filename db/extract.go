@@ -186,16 +186,16 @@ func (batch *Batch) InsertNftClass(c NftClass) {
 	INSERT INTO nft_class (
 		class_id, parent_type, parent_iscn_id_prefix, parent_account, name,
 		symbol, description, uri, uri_hash, metadata,
-		config, created_at
+		config, created_at, latest_price, price_updated_at
 	)
 	VALUES
-	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 	ON CONFLICT DO NOTHING
 	`
 	batch.Batch.Queue(sql,
 		c.Id, c.Parent.Type, c.Parent.IscnIdPrefix, c.Parent.Account, c.Name,
 		c.Symbol, c.Description, c.URI, c.URIHash, c.Metadata,
-		c.Config, c.CreatedAt,
+		c.Config, c.CreatedAt, c.LatestPrice, c.PriceUpdatedAt,
 	)
 	_ = pubsub.Publish("NewNFTClass", c)
 }
