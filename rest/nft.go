@@ -141,6 +141,10 @@ func handleNftCollectors(c *gin.Context) {
 		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
 		return
 	}
+	if form.PriceBy != "nft" && form.PriceBy != "class" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "price_by should either be nft or class"})
+		return
+	}
 	p, err := getPagination(c)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err})
@@ -162,6 +166,10 @@ func handleNftCreators(c *gin.Context) {
 	var form db.QueryCreatorRequest
 	if err := c.ShouldBindQuery(&form); err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
+		return
+	}
+	if form.PriceBy != "nft" && form.PriceBy != "class" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "price_by should either be nft or class"})
 		return
 	}
 	p, err := getPagination(c)
