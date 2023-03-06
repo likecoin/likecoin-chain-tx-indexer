@@ -978,8 +978,8 @@ func TestCollectors(t *testing.T) {
 		},
 	}
 	nftClasses := []NftClass{
-		{Id: "likenft1aaaaaa", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/aaaaaa"}},
-		{Id: "likenft1bbbbbb", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/bbbbbb"}},
+		{Id: "likenft1aaaaaa", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/aaaaaa"}, LatestPrice: 456},
+		{Id: "likenft1bbbbbb", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/bbbbbb"}, LatestPrice: 567},
 	}
 	nfts := []Nft{
 		{
@@ -1046,6 +1046,12 @@ func TestCollectors(t *testing.T) {
 			owners:      []string{nfts[0].Owner},
 			totalValues: []uint64{nfts[0].LatestPrice},
 		},
+		{
+			name:        "query with SumByNftClassPrice = true",
+			query:       QueryCollectorRequest{IncludeOwner: true, PriceBy: "class"},
+			owners:      []string{nfts[1].Owner, nfts[0].Owner},
+			totalValues: []uint64{nftClasses[0].LatestPrice + nftClasses[1].LatestPrice, nftClasses[0].LatestPrice},
+		},
 	}
 
 	p := PageRequest{
@@ -1104,8 +1110,8 @@ func TestCreators(t *testing.T) {
 		},
 	}
 	nftClasses := []NftClass{
-		{Id: "likenft1aaaaaa", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/aaaaaa"}},
-		{Id: "likenft1bbbbbb", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/bbbbbb"}},
+		{Id: "likenft1aaaaaa", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/aaaaaa"}, LatestPrice: 456},
+		{Id: "likenft1bbbbbb", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/bbbbbb"}, LatestPrice: 567},
 	}
 	nfts := []Nft{
 		{
@@ -1162,6 +1168,12 @@ func TestCreators(t *testing.T) {
 			query:       QueryCreatorRequest{Collector: nfts[1].Owner, IncludeOwner: true, AllIscnVersions: true},
 			owners:      []string{iscns[2].Owner, iscns[1].Owner, iscns[0].Owner},
 			totalValues: []uint64{nfts[2].LatestPrice, nfts[1].LatestPrice, nfts[1].LatestPrice},
+		},
+		{
+			name:        "query by collector (0), AllIscnVersions = false, SumByNftClassPrice = true",
+			query:       QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: true, PriceBy: "class"},
+			owners:      []string{iscns[1].Owner},
+			totalValues: []uint64{nftClasses[0].LatestPrice},
 		},
 	}
 

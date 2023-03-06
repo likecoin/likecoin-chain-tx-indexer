@@ -300,6 +300,7 @@ type QueryCollectorRequest struct {
 	IgnoreList      []string `form:"ignore_list"`
 	AllIscnVersions bool     `form:"all_iscn_versions"`
 	IncludeOwner    bool     `form:"include_owner,default=true"`
+	PriceBy         string   `form:"price_by,default=nft"`
 }
 
 type QueryCollectorResponse struct {
@@ -312,6 +313,7 @@ type QueryCreatorRequest struct {
 	IgnoreList      []string `form:"ignore_list"`
 	AllIscnVersions bool     `form:"all_iscn_versions"`
 	IncludeOwner    bool     `form:"include_owner,default=true"`
+	PriceBy         string   `form:"price_by,default=nft"`
 }
 
 type QueryCreatorResponse struct {
