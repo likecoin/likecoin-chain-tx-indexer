@@ -138,6 +138,14 @@ type NftMarketplaceItem struct {
 	Expiration time.Time `json:"expiration,omitempty"`
 }
 
+type NftRoyalty struct {
+	ClassId     string    `json:"class_id"`
+	NftId       string    `json:"nft_id"`
+	TxHash      string    `json:"tx_hash"`
+	Stakeholder string    `json:"stakeholder"`
+	Royalty     uint64    `json:"royalty"`
+}
+
 type LegacyPageRequest struct {
 	Key     uint64 `form:"key"`
 	Limit   int    `form:"limit,default=100" binding:"gte=1,lte=100"`

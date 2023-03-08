@@ -130,6 +130,28 @@ func extractNftEvent(event *types.StringEvent, classIdField, nftIdField, senderF
 	return e
 }
 
+func extractNftRoyalties(payload *Payload, event *types.StringEvent) []db.NftRoyalty {
+	classId := utils.GetEventValue(event, "class_id")
+	nftId := utils.GetEventValue(event, "id")
+	txHash := payload.TxHash
+	var royalties []db.NftRoyalty
+	for _, r := range payload.EventsList {
+		msgAction := utils.GetEventsValue(r.Events, "message", "action")
+		if msgAction == "/cosmos.bank.v1beta1.MsgSend" {
+			stakeholder := utils.GetEventsValue(r.Events, "coin_received", "receiver")
+			royalty := extractPriceFromEvents(r.Events)
+			royalties = append(royalties, db.NftRoyalty{
+				ClassId:     classId,
+				NftId:       nftId,
+				TxHash:      txHash,
+				Stakeholder: stakeholder,
+				Royalty:     royalty,
+			})
+		}
+	}
+	return royalties
+}
+
 func sendNft(payload *Payload, event *types.StringEvent) error {
 	e := extractNftEvent(event, "class_id", "id", "sender", "receiver")
 	e.Action = db.ACTION_SEND
@@ -149,6 +171,10 @@ func sendNft(payload *Payload, event *types.StringEvent) error {
 	msgAction := utils.GetEventsValue(events, "message", "action")
 	if msgAction == "/cosmos.authz.v1beta1.MsgExec" {
 		e.Price = extractPriceFromEvents(events)
+		royalties := extractNftRoyalties(payload, event)
+		for _, r := range royalties {
+			payload.Batch.InsertNftRoyalty(r)
+		}
 	}
 	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)

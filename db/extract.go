@@ -289,6 +289,16 @@ func (batch *Batch) InsertNFTMarketplaceItem(item NftMarketplaceItem) {
 	_ = pubsub.Publish("NewNFTMarketplaceItem", item)
 }
 
+func (batch *Batch) InsertNftRoyalty(royalty NftRoyalty) error {
+	sql := `
+	INSERT INTO nft_royalty (class_id, nft_id, tx_hash, stakeholder_address, royalty)
+	VALUES ($1, $2, $3, $4, $5)
+	`
+	batch.Batch.Queue(sql, royalty.ClassId, royalty.NftId, royalty.TxHash, royalty.Stakeholder, royalty.Royalty)
+	_ = pubsub.Publish("NewNFTRoyalty", royalty)
+	return nil
+}
+
 func (batch *Batch) DeleteNFTMarketplaceItem(item NftMarketplaceItem) {
 	sql := `
 	DELETE FROM nft_marketplace
