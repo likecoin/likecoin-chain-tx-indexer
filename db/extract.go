@@ -225,12 +225,16 @@ func (batch *Batch) InsertNft(n Nft) {
 		n.Owner = convertedOwner
 	}
 	sql := `
-	INSERT INTO nft
-	(nft_id, class_id, owner, uri, uri_hash, metadata)
+	INSERT INTO nft (
+		nft_id, class_id, owner, uri, uri_hash,
+		metadata, latest_price, price_updated_at
+	)
 	VALUES
-	($1, $2, $3, $4, $5, $6)
+	($1, $2, $3, $4, $5, $6, $7, $8)
 	ON CONFLICT DO NOTHING`
-	batch.Batch.Queue(sql, n.NftId, n.ClassId, n.Owner, n.Uri, n.UriHash, n.Metadata)
+	batch.Batch.Queue(sql,
+		n.NftId, n.ClassId, n.Owner, n.Uri, n.UriHash,
+		n.Metadata, n.LatestPrice, n.Timestamp)
 	_ = pubsub.Publish("NewNFT", n)
 }
 
