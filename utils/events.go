@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
 func GetEventStrings(events types.StringEvents) []string {
@@ -65,4 +66,43 @@ func GetEventsValue(events types.StringEvents, t string, key string) string {
 		}
 	}
 	return ""
+}
+
+func ParseCoinFromEventString(coinStr string) (uint64, error) {
+	coin, err := types.ParseCoinNormalized(coinStr)
+	if err != nil {
+		return 0, err
+	}
+	return coin.Amount.Uint64(), nil
+}
+
+func GetRoyaltyMap(events types.StringEvents) map[string]uint64 {
+	royaltyMap := make(map[string]uint64)
+	for _, event := range events {
+		if event.Type == "coin_received" {
+			stakeholder := ""
+			amount := uint64(0)
+			for _, attr := range event.Attributes {
+				if attr.Key == "receiver" {
+					stakeholder = attr.Value
+				}
+				if attr.Key == "amount" {
+					amountStr := attr.Value
+					coin, err := types.ParseCoinNormalized(amountStr)
+					if err != nil {
+						logger.L.Warnw("Failed to parse royalty from event", "royalty_str", amountStr, "error", err)
+						stakeholder = ""
+						continue
+					}
+					amount = coin.Amount.Uint64()
+				}
+				if stakeholder != "" && amount != 0 {
+					royaltyMap[stakeholder] = amount
+					stakeholder = ""
+					amount = 0
+				}
+			}
+		}
+	}
+	return royaltyMap
 }

@@ -18,6 +18,12 @@ func attachNftEvent(e *db.NftEvent, payload *Payload) {
 	e.Memo = payload.Memo
 }
 
+func attachNftRoyalty(r *db.NftRoyalty, payload *Payload, event *types.StringEvent, nftIdField string) {
+	r.ClassId = utils.GetEventValue(event, "class_id")
+	r.NftId = utils.GetEventValue(event, nftIdField)
+	r.TxHash = payload.TxHash
+}
+
 type nftClassMessage struct {
 	Input   db.NftClass `json:"input"`
 	Creator string      `json:"creator"`
@@ -131,22 +137,17 @@ func extractNftEvent(event *types.StringEvent, classIdField, nftIdField, senderF
 }
 
 func extractNftRoyalties(payload *Payload, event *types.StringEvent) []db.NftRoyalty {
-	classId := utils.GetEventValue(event, "class_id")
-	nftId := utils.GetEventValue(event, "id")
-	txHash := payload.TxHash
 	var royalties []db.NftRoyalty
-	for _, r := range payload.EventsList {
-		msgAction := utils.GetEventsValue(r.Events, "message", "action")
-		if msgAction == "/cosmos.bank.v1beta1.MsgSend" {
-			stakeholder := utils.GetEventsValue(r.Events, "coin_received", "receiver")
-			royalty := extractPriceFromEvents(r.Events)
-			royalties = append(royalties, db.NftRoyalty{
-				ClassId:     classId,
-				NftId:       nftId,
-				TxHash:      txHash,
-				Stakeholder: stakeholder,
-				Royalty:     royalty,
-			})
+	for _, msgEvents := range payload.EventsList {
+		msgAction := utils.GetEventsValue(msgEvents.Events, "message", "action")
+		if msgAction == "/cosmos.bank.v1beta1.MsgSend" || msgAction == "buy_nft" {
+			royaltyMap := utils.GetRoyaltyMap(msgEvents.Events)
+			for stakeholder, amount := range royaltyMap {
+				royalties = append(royalties, db.NftRoyalty{
+					Stakeholder: stakeholder,
+					Royalty:     amount,
+				})
+			}
 		}
 	}
 	return royalties
@@ -167,12 +168,13 @@ func sendNft(payload *Payload, event *types.StringEvent) error {
 
 	// We assume the first message is the authz message with token send
 	// TODO: also check if authz grantee is API address
-	events := payload.EventsList[0].Events
-	msgAction := utils.GetEventsValue(events, "message", "action")
-	if msgAction == "/cosmos.authz.v1beta1.MsgExec" {
-		e.Price = extractPriceFromEvents(events)
+	firstMsgEvents := payload.EventsList[0].Events
+	firstMsgAction := utils.GetEventsValue(firstMsgEvents, "message", "action")
+	if firstMsgAction == "/cosmos.authz.v1beta1.MsgExec" {
+		e.Price = extractPriceFromEvents(firstMsgEvents)
 		royalties := extractNftRoyalties(payload, event)
 		for _, r := range royalties {
+			attachNftRoyalty(&r, payload, event, "id")
 			payload.Batch.InsertNftRoyalty(r)
 		}
 	}
