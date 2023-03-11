@@ -139,11 +139,11 @@ type NftMarketplaceItem struct {
 }
 
 type NftRoyalty struct {
-	ClassId     string    `json:"class_id"`
-	NftId       string    `json:"nft_id"`
-	TxHash      string    `json:"tx_hash"`
-	Stakeholder string    `json:"stakeholder"`
-	Royalty     uint64    `json:"royalty"`
+	ClassId     string `json:"class_id"`
+	NftId       string `json:"nft_id"`
+	TxHash      string `json:"tx_hash"`
+	Stakeholder string `json:"stakeholder"`
+	Royalty     uint64 `json:"royalty"`
 }
 
 type LegacyPageRequest struct {
@@ -275,6 +275,33 @@ type QueryEventsRequest struct {
 type QueryEventsResponse struct {
 	Pagination PageResponse `json:"pagination"`
 	Events     []NftEvent   `json:"events"`
+}
+
+type QueryRoyaltiesRequest struct {
+	ClassId     string   `form:"class_id"`
+	NftId       string   `form:"nft_id"`
+	Owner       string   `form:"owner"`
+	Stakeholder string   `form:"stakeholder"`
+	After       int64    `form:"after"`
+	Before      int64    `form:"before"`
+	Actions     []string `form:"actions"`
+	OrderBy     string   `form:"order_by"`
+}
+
+type NftRoyaltyResponse struct {
+	ClassId     string    `json:"class_id"`
+	NftId       string    `json:"nft_id"`
+	TxHash      string    `json:"tx_hash"`
+	Timestamp   time.Time `json:"timestamp"`
+	Owner       string    `json:"owner"`
+	Price       uint64    `json:"price"`
+	Stakeholder string    `json:"stakeholder"`
+	Royalty     uint64    `json:"royalty"`
+}
+
+type QueryRoyaltiesResponse struct {
+	Royalties  []NftRoyaltyResponse `json:"royalties"`
+	Pagination PageResponse         `json:"pagination"`
 }
 
 type QueryRankingRequest struct {

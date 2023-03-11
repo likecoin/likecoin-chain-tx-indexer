@@ -349,6 +349,83 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
+func GetNftRoyalties(conn *pgxpool.Conn, q QueryRoyaltiesRequest, p PageRequest) (QueryRoyaltiesResponse, error) {
+	ownerVariations := utils.ConvertAddressPrefixes(q.Owner, AddressPrefixes)
+	stakeholderVariations := utils.ConvertAddressPrefixes(q.Stakeholder, AddressPrefixes)
+	orderBy := "r.id"
+	switch q.OrderBy {
+	case "price":
+		orderBy = "e.price"
+	case "royalty":
+		orderBy = "r.royalty"
+	case "default":
+	default:
+		orderBy = "r.id"
+	}
+	actions := []string{}
+	for _, action := range q.Actions {
+		switch action {
+		case "collect":
+			actions = append(actions, "/cosmos.nft.v1beta1.MsgSend")
+		case "buy":
+			actions = append(actions, "buy_nft")
+		case "sell":
+			actions = append(actions, "sell_nft")
+		}
+	}
+
+	sql := fmt.Sprintf(`
+		SELECT e.class_id, e.nft_id, e.tx_hash, e.timestamp, e.receiver, 
+			r.stakeholder_address, e.price, r.royalty 
+		FROM nft_event AS e
+		JOIN nft_royalty AS r
+			ON e.class_id = r.class_id 
+			AND e.nft_id = r.nft_id
+			AND e.tx_hash = r.tx_hash
+		WHERE ($2 = 0 OR r.id > $2)
+			AND ($3 = 0 OR r.id < $3)
+			AND ($4 = '' OR e.class_id = $4)
+			AND ($5 = '' OR e.nft_id = $5)
+			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR e.receiver = ANY($6))
+			AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR r.stakeholder_address = ANY($7))
+			AND ($8 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($8)))
+			AND ($9 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($9)))
+			AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.action = ANY($10))
+		ORDER BY %[1]s %[2]s
+		LIMIT $1
+	`, orderBy, p.Order())
+
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(
+		ctx, sql,
+		p.Limit, p.After(), p.Before(), q.ClassId, q.NftId,
+		ownerVariations, stakeholderVariations, q.After, q.Before, actions,
+	)
+	if err != nil {
+		logger.L.Errorw("Failed to query nft royalties", "error", err)
+		return QueryRoyaltiesResponse{}, fmt.Errorf("query nft royalties error: %w", err)
+	}
+
+	res := QueryRoyaltiesResponse{
+		Royalties: make([]NftRoyaltyResponse, 0),
+	}
+	for rows.Next() {
+		var r NftRoyaltyResponse
+		if err = rows.Scan(
+			&r.ClassId, &r.NftId, &r.TxHash, &r.Timestamp, &r.Owner,
+			&r.Stakeholder, &r.Price, &r.Royalty,
+		); err != nil {
+			logger.L.Errorw("failed to scan nft royalties", "error", err, "q", q)
+			return QueryRoyaltiesResponse{}, fmt.Errorf("query nft royalties data failed: %w", err)
+		}
+		res.Royalties = append(res.Royalties, r)
+	}
+	res.Pagination.Count = len(res.Royalties)
+	return res, nil
+}
+
 func getTotalValueSourceField(priceBy string) string {
 	switch priceBy {
 	case "class":
