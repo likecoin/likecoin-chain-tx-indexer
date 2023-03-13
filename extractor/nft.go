@@ -140,7 +140,7 @@ func extractNftRoyalties(payload *Payload, event *types.StringEvent) []db.NftRoy
 	var royalties []db.NftRoyalty
 	for _, msgEvents := range payload.EventsList {
 		msgAction := utils.GetEventsValue(msgEvents.Events, "message", "action")
-		if msgAction == "/cosmos.bank.v1beta1.MsgSend" || msgAction == "buy_nft" {
+		if msgAction == "/cosmos.bank.v1beta1.MsgSend" || msgAction == string(db.ACTION_BUY) || msgAction == string(db.ACTION_SELL) {
 			royaltyMap := utils.GetRoyaltyMap(msgEvents.Events)
 			for stakeholder, amount := range royaltyMap {
 				royalties = append(royalties, db.NftRoyalty{

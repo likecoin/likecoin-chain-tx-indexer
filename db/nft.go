@@ -366,11 +366,11 @@ func GetNftRoyalties(conn *pgxpool.Conn, q QueryRoyaltiesRequest, p PageRequest)
 	for _, action := range q.Actions {
 		switch action {
 		case "collect":
-			actions = append(actions, "/cosmos.nft.v1beta1.MsgSend")
+			actions = append(actions, string(ACTION_SEND))
 		case "buy":
-			actions = append(actions, "buy_nft")
+			actions = append(actions, string(ACTION_BUY))
 		case "sell":
-			actions = append(actions, "sell_nft")
+			actions = append(actions, string(ACTION_SELL))
 		}
 	}
 
