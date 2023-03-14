@@ -362,17 +362,6 @@ func GetNftRoyalties(conn *pgxpool.Conn, q QueryRoyaltiesRequest, p PageRequest)
 	default:
 		orderBy = "r.id"
 	}
-	actions := []string{}
-	for _, action := range q.Actions {
-		switch action {
-		case "collect":
-			actions = append(actions, string(ACTION_SEND))
-		case "buy":
-			actions = append(actions, string(ACTION_BUY))
-		case "sell":
-			actions = append(actions, string(ACTION_SELL))
-		}
-	}
 
 	sql := fmt.Sprintf(`
 		SELECT e.class_id, e.nft_id, e.tx_hash, e.timestamp, e.receiver, 
@@ -401,7 +390,7 @@ func GetNftRoyalties(conn *pgxpool.Conn, q QueryRoyaltiesRequest, p PageRequest)
 	rows, err := conn.Query(
 		ctx, sql,
 		p.Limit, p.After(), p.Before(), q.ClassId, q.NftId,
-		ownerVariations, stakeholderVariations, q.After, q.Before, actions,
+		ownerVariations, stakeholderVariations, q.After, q.Before, q.ActionType,
 	)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft royalties", "error", err)

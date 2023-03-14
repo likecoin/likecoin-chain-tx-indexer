@@ -255,8 +255,9 @@ func TestSendNftWithPrice(t *testing.T) {
 	require.Equal(t, uint64(price), eventRes.Events[0].Price)
 
 	royaltyRes, err := GetNftRoyalties(Conn, QueryRoyaltiesRequest{
-		ClassId: nftClasses[0].Id,
-		OrderBy: "royalty",
+		ClassId:    nftClasses[0].Id,
+		OrderBy:    "royalty",
+		ActionType: []NftEventAction{ACTION_SEND},
 	}, PageRequest{Limit: 10, Reverse: true})
 	require.NoError(t, err)
 	require.Len(t, royaltyRes.Royalties, 2)

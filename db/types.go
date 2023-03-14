@@ -278,14 +278,14 @@ type QueryEventsResponse struct {
 }
 
 type QueryRoyaltiesRequest struct {
-	ClassId     string   `form:"class_id"`
-	NftId       string   `form:"nft_id"`
-	Owner       string   `form:"owner"`
-	Stakeholder string   `form:"stakeholder"`
-	After       int64    `form:"after"`
-	Before      int64    `form:"before"`
-	Actions     []string `form:"actions"`
-	OrderBy     string   `form:"order_by"`
+	ClassId     string           `form:"class_id"`
+	NftId       string           `form:"nft_id"`
+	Owner       string           `form:"owner"`
+	Stakeholder string           `form:"stakeholder"`
+	After       int64            `form:"after"`
+	Before      int64            `form:"before"`
+	ActionType  []NftEventAction `form:"action_type"`
+	OrderBy     string           `form:"order_by"`
 }
 
 type NftRoyaltyResponse struct {

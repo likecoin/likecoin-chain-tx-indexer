@@ -339,9 +339,10 @@ func TestListing(t *testing.T) {
 
 	royalties, err := GetNftRoyalties(Conn,
 		QueryRoyaltiesRequest{
-			ClassId: nftClasses[0].Id,
-			NftId:   nfts[0].NftId,
-			OrderBy: "royalty",
+			ClassId:    nftClasses[0].Id,
+			NftId:      nfts[0].NftId,
+			OrderBy:    "royalty",
+			ActionType: []NftEventAction{ACTION_BUY},
 		}, PageRequest{Limit: 10},
 	)
 	require.NoError(t, err)
@@ -546,9 +547,10 @@ func TestOffer(t *testing.T) {
 
 	royalties, err := GetNftRoyalties(Conn,
 		QueryRoyaltiesRequest{
-			ClassId: nftClasses[0].Id,
-			NftId:   nfts[0].NftId,
-			OrderBy: "royalty",
+			ClassId:    nftClasses[0].Id,
+			NftId:      nfts[0].NftId,
+			OrderBy:    "royalty",
+			ActionType: []NftEventAction{ACTION_SELL},
 		}, PageRequest{Limit: 10},
 	)
 	require.NoError(t, err)
