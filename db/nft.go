@@ -677,6 +677,20 @@ func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatR
 		return
 	}
 
+	sql = `
+	SELECT COALESCE(SUM(r.royalty), 0)
+	FROM nft_royalty AS r
+	WHERE r.stakeholder_address = $1
+	`
+
+	row = conn.QueryRow(ctx, sql, q.User)
+
+	err = row.Scan(&res.TotalRoyalties)
+	if err != nil {
+		err = fmt.Errorf("scan total royalty error: %w", err)
+		return
+	}
+
 	return
 }
 
