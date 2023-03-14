@@ -20,5 +20,6 @@ func init() {
 		MigrationNftEventPriceCommand,
 		MigrationNftPriceCommand,
 		MigrationNftEventMemoCommand,
+		MigrationNftRoyaltyCommand,
 	)
 }
