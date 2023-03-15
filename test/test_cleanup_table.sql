@@ -7,3 +7,4 @@ DROP TABLE nft_event;
 DROP TABLE nft;
 DROP TABLE nft_class;
 DROP TABLE nft_marketplace;
+DROP TABLE nft_royalty;
