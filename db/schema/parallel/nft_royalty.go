@@ -78,6 +78,9 @@ func MigrateNftRoyalty(conn *pgxpool.Conn, batchSize uint64) error {
 				}
 			}
 			count := len(royalties)
+			if count == 0 {
+				continue
+			}
 			for i := 0; i < count; i++ {
 				royalty := royalties[i]
 				_, err = dbTx.Exec(context.Background(), `
