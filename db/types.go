@@ -200,11 +200,11 @@ type iscnResponseData struct {
 }
 
 type QueryClassRequest struct {
-	IscnIdPrefix    string `form:"iscn_id_prefix"`
-	Account         string `form:"account"`
-	IscnOwner       string `form:"iscn_owner"`
-	Expand          bool   `form:"expand"`
-	AllIscnVersions bool   `form:"all_iscn_versions"`
+	IscnIdPrefix    string   `form:"iscn_id_prefix"`
+	Account         string   `form:"account"`
+	IscnOwner       []string `form:"iscn_owner"`
+	Expand          bool     `form:"expand"`
+	AllIscnVersions bool     `form:"all_iscn_versions"`
 }
 
 type QueryClassResponse struct {
@@ -214,8 +214,9 @@ type QueryClassResponse struct {
 
 type NftClassResponse struct {
 	NftClass
-	Count int   `json:"count,omitempty"`
-	Nfts  []Nft `json:"nfts,omitempty"`
+	Owner string `json:"owner"`
+	Count int    `json:"count,omitempty"`
+	Nfts  []Nft  `json:"nfts,omitempty"`
 }
 
 type QueryNftRequest struct {

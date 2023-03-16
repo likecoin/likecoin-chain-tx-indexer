@@ -12,12 +12,12 @@ import (
 
 func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryClassResponse, error) {
 	accountVariations := utils.ConvertAddressPrefixes(q.Account, AddressPrefixes)
-	iscnOwnerVariations := utils.ConvertAddressPrefixes(q.IscnOwner, AddressPrefixes)
+	iscnOwnerVariations := utils.ConvertAddressArrayPrefixes(q.IscnOwner, AddressPrefixes)
 	sql := fmt.Sprintf(`
 	SELECT DISTINCT ON (c.id)
 		c.id, c.class_id, c.name, c.description, c.symbol,
 		c.uri, c.uri_hash, c.config, c.metadata, c.latest_price,
-		c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at, c.price_updated_at,
+		c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at, c.price_updated_at, i.owner,
 	(
 		SELECT array_agg(row_to_json((n.*)))
 		FROM nft as n
@@ -59,7 +59,7 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 			&res.Pagination.NextKey, &c.Id, &c.Name, &c.Description, &c.Symbol,
 			&c.URI, &c.URIHash, &c.Config, &c.Metadata, &c.LatestPrice,
 			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account, &c.CreatedAt, &c.PriceUpdatedAt,
-			&nfts,
+			&c.Owner, &nfts,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft class", "error", err)
 			return QueryClassResponse{}, fmt.Errorf("query nft class data failed: %w", err)
