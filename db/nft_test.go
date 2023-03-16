@@ -106,27 +106,27 @@ func TestQueryNftClass(t *testing.T) {
 		{
 			"query by iscn owner 1 (LIKE prefix), AllIscnVersions = true",
 			QueryClassRequest{
-				IscnOwner:       ADDR_01_LIKE,
+				IscnOwner:       []string{ADDR_01_LIKE},
 				AllIscnVersions: true,
 			}, 2, []string{nftClasses[0].Id, nftClasses[1].Id},
 		},
 		{
 			"query by iscn owner 1 (LIKE prefix), AllIscnVersions = false",
 			QueryClassRequest{
-				IscnOwner:       ADDR_01_LIKE,
+				IscnOwner:       []string{ADDR_01_LIKE},
 				AllIscnVersions: false,
 			}, 0, nil,
 		},
 		{
 			"query by iscn owner 2 (LIKE prefix), AllIscnVersions = true",
 			QueryClassRequest{
-				IscnOwner:       ADDR_02_LIKE,
+				IscnOwner:       []string{ADDR_02_LIKE},
 				AllIscnVersions: true,
 			}, 2, []string{nftClasses[0].Id, nftClasses[1].Id},
 		},
 		{
 			"query by iscn owner 3 (LIKE prefix), AllIscnVersions = false",
-			QueryClassRequest{IscnOwner: ADDR_03_LIKE}, 1,
+			QueryClassRequest{IscnOwner: []string{ADDR_03_LIKE}}, 1,
 			[]string{nftClasses[2].Id},
 		},
 		{
@@ -135,7 +135,7 @@ func TestQueryNftClass(t *testing.T) {
 		},
 		{
 			"query by non existing iscn owner",
-			QueryClassRequest{IscnOwner: "nosuchowner"}, 0, nil,
+			QueryClassRequest{IscnOwner: []string{"nosuchowner"}}, 0, nil,
 		},
 	}
 

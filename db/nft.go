@@ -12,7 +12,7 @@ import (
 
 func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryClassResponse, error) {
 	accountVariations := utils.ConvertAddressPrefixes(q.Account, AddressPrefixes)
-	iscnOwnerVariations := utils.ConvertAddressPrefixes(q.IscnOwner, AddressPrefixes)
+	iscnOwnerVariations := utils.ConvertAddressArrayPrefixes(q.IscnOwner, AddressPrefixes)
 	sql := fmt.Sprintf(`
 	SELECT DISTINCT ON (c.id)
 		c.id, c.class_id, c.name, c.description, c.symbol,

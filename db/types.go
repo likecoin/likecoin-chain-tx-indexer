@@ -200,11 +200,11 @@ type iscnResponseData struct {
 }
 
 type QueryClassRequest struct {
-	IscnIdPrefix    string `form:"iscn_id_prefix"`
-	Account         string `form:"account"`
-	IscnOwner       string `form:"iscn_owner"`
-	Expand          bool   `form:"expand"`
-	AllIscnVersions bool   `form:"all_iscn_versions"`
+	IscnIdPrefix    string   `form:"iscn_id_prefix"`
+	Account         string   `form:"account"`
+	IscnOwner       []string `form:"iscn_owner"`
+	Expand          bool     `form:"expand"`
+	AllIscnVersions bool     `form:"all_iscn_versions"`
 }
 
 type QueryClassResponse struct {
