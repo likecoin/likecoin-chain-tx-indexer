@@ -214,8 +214,9 @@ type QueryClassResponse struct {
 
 type NftClassResponse struct {
 	NftClass
-	Count int   `json:"count,omitempty"`
-	Nfts  []Nft `json:"nfts,omitempty"`
+	Owner string `json:"owner"`
+	Count int    `json:"count,omitempty"`
+	Nfts  []Nft  `json:"nfts,omitempty"`
 }
 
 type QueryNftRequest struct {
