@@ -137,6 +137,12 @@ func TestQueryNftClass(t *testing.T) {
 			"query by non existing iscn owner",
 			QueryClassRequest{IscnOwner: []string{"nosuchowner"}}, 0, nil,
 		},
+		{
+			"query by multiple iscn owners",
+			QueryClassRequest{
+				IscnOwner: []string{ADDR_02_LIKE, ADDR_03_LIKE},
+			}, 3, []string{nftClasses[0].Id, nftClasses[1].Id, nftClasses[2].Id},
+		},
 	}
 
 	p := PageRequest{
