@@ -360,10 +360,22 @@ func getSourceTable(priceBy string) string {
 	return "n"
 }
 
+func convertOrderBy(orderBy string) string {
+	switch orderBy {
+	case "count":
+		return "total_count"
+	case "price":
+	default:
+		return "total_value"
+	}
+	return "total_value"
+}
+
 func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (res QueryCollectorResponse, err error) {
 	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	priceSourceTable := getSourceTable(q.PriceBy)
+	orderBy := convertOrderBy(q.OrderBy)
 	sql := fmt.Sprintf(`
 	SELECT owner, SUM(value) AS total_value, SUM(count) AS total_count,
 		array_agg(json_build_object(
@@ -373,7 +385,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 			'count', count)),
 		COUNT(*) OVER() AS row_count
 	FROM (
-		SELECT n.owner, i.iscn_id_prefix, c.class_id, SUM(%s.latest_price) AS value, COUNT(DISTINCT n.id) as count
+		SELECT n.owner, i.iscn_id_prefix, c.class_id, SUM(%[1]s.latest_price) AS value, COUNT(DISTINCT n.id) as count
 		FROM iscn AS i
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
@@ -387,10 +399,10 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
 	) AS r
 	GROUP BY owner
-	ORDER BY total_value DESC, owner DESC
+	ORDER BY %[2]s DESC, owner DESC
 	OFFSET $2
 	LIMIT $3
-	`, priceSourceTable)
+	`, priceSourceTable, orderBy)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
@@ -417,6 +429,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
 	priceSourceTable := getSourceTable(q.PriceBy)
+	orderBy := convertOrderBy(q.OrderBy)
 	sql := fmt.Sprintf(`
 	SELECT owner, SUM(value) as total_value, SUM(count) AS total_count,
 		array_agg(json_build_object(
@@ -426,7 +439,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 			'count', count)),
 		COUNT(*) OVER() AS row_count
 	FROM (
-		SELECT i.owner, i.iscn_id_prefix, c.class_id, SUM(%s.latest_price) AS value, COUNT(DISTINCT n.id) as count
+		SELECT i.owner, i.iscn_id_prefix, c.class_id, SUM(%[1]s.latest_price) AS value, COUNT(DISTINCT n.id) as count
 		FROM iscn AS i
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
@@ -440,10 +453,10 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
 	) AS r
 	GROUP BY owner
-	ORDER BY total_value DESC
+	ORDER BY %[2]s DESC
 	OFFSET $2
 	LIMIT $3
-	`, priceSourceTable)
+	`, priceSourceTable, orderBy)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 

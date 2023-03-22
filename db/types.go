@@ -302,6 +302,7 @@ type QueryCollectorRequest struct {
 	AllIscnVersions bool     `form:"all_iscn_versions"`
 	IncludeOwner    bool     `form:"include_owner,default=true"`
 	PriceBy         string   `form:"price_by,default=nft"`
+	OrderBy         string   `form:"order_by,default=price"`
 }
 
 type QueryCollectorResponse struct {
@@ -315,6 +316,7 @@ type QueryCreatorRequest struct {
 	AllIscnVersions bool     `form:"all_iscn_versions"`
 	IncludeOwner    bool     `form:"include_owner,default=true"`
 	PriceBy         string   `form:"price_by,default=nft"`
+	OrderBy         string   `form:"order_by,default=price"`
 }
 
 type QueryCreatorResponse struct {
