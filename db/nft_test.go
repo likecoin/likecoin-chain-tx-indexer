@@ -969,48 +969,78 @@ func TestQueryNftRanking(t *testing.T) {
 }
 func TestCollectors(t *testing.T) {
 	defer CleanupTestData(Conn)
+	creators := []string{ADDR_01_LIKE, ADDR_02_LIKE, ADDR_03_LIKE, ADDR_04_LIKE}
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/aaaaaa/1",
-			Owner: ADDR_01_LIKE,
+			Owner: creators[0],
 		},
 		{
 			Iscn:  "iscn://testing/aaaaaa/2",
-			Owner: ADDR_02_LIKE,
+			Owner: creators[1],
 		},
 		{
 			Iscn:  "iscn://testing/bbbbbb/1",
-			Owner: ADDR_04_LIKE,
+			Owner: creators[2],
+		},
+		{
+			Iscn:  "iscn://testing/cccccc/1",
+			Owner: creators[3],
 		},
 	}
 	nftClasses := []NftClass{
-		{Id: "likenft1aaaaaa", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/aaaaaa"}, LatestPrice: 456},
-		{Id: "likenft1bbbbbb", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/bbbbbb"}, LatestPrice: 567},
+		{Id: "likenft1aaaaaa", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/aaaaaa"}, LatestPrice: 100},
+		{Id: "likenft1bbbbbb", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/bbbbbb"}, LatestPrice: 1000},
+		{Id: "likenft1cccccc", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/cccccc"}, LatestPrice: 10000},
 	}
+	collectors := []string{ADDR_02_LIKE, ADDR_03_LIKE, ADDR_05_LIKE}
 	nfts := []Nft{
 		{
 			ClassId:     nftClasses[0].Id,
 			NftId:       "testing-nft-12093810",
-			Owner:       ADDR_02_LIKE,
-			LatestPrice: 123,
+			Owner:       collectors[0],
+			LatestPrice: 100,
 		},
 		{
 			ClassId:     nftClasses[0].Id,
 			NftId:       "testing-nft-12093811",
-			Owner:       ADDR_03_LIKE,
-			LatestPrice: 234,
+			Owner:       collectors[1],
+			LatestPrice: 10,
 		},
 		{
 			ClassId:     nftClasses[1].Id,
 			NftId:       "testing-nft-12093812",
-			Owner:       ADDR_03_LIKE,
-			LatestPrice: 345,
+			Owner:       collectors[1],
+			LatestPrice: 20,
+		},
+		{
+			ClassId:     nftClasses[0].Id,
+			NftId:       "testing-nft-12093813",
+			Owner:       collectors[2],
+			LatestPrice: 1,
+		},
+		{
+			ClassId:     nftClasses[1].Id,
+			NftId:       "testing-nft-12093814",
+			Owner:       collectors[2],
+			LatestPrice: 2,
+		},
+		{
+			ClassId:     nftClasses[2].Id,
+			NftId:       "testing-nft-12093815",
+			Owner:       collectors[2],
+			LatestPrice: 3,
 		},
 	}
 	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// end state:
+	// collectors[0]: 1 NFT, NFT price = 100, class price = 100, from himself
+	// collectors[1]: 2 NFTs, NFT price = 30, class price = 1100, 1 from himself, 1 from other
+	// collectors[2]: 3 NFTs, NFT price = 6, class price = 11100, all from others
 
 	testCases := []struct {
 		name        string
@@ -1020,43 +1050,61 @@ func TestCollectors(t *testing.T) {
 	}{
 		// HACK: default IncludeOwner is true when binding to form
 		{
-			name:        "empty query",
-			query:       QueryCollectorRequest{IncludeOwner: true},
-			owners:      []string{nfts[1].Owner, nfts[0].Owner},
-			totalValues: []uint64{nfts[1].LatestPrice + nfts[2].LatestPrice, nfts[0].LatestPrice},
+			name:   "empty query",
+			query:  QueryCollectorRequest{IncludeOwner: true},
+			owners: []string{collectors[0], collectors[1], collectors[2]},
+			totalValues: []uint64{
+				nfts[0].LatestPrice,
+				nfts[1].LatestPrice + nfts[2].LatestPrice,
+				nfts[3].LatestPrice + nfts[4].LatestPrice + nfts[5].LatestPrice,
+			},
 		},
 		{
 			name:        "query with IncludeOwner = false",
 			query:       QueryCollectorRequest{IncludeOwner: false},
-			owners:      []string{nfts[1].Owner},
-			totalValues: []uint64{nfts[1].LatestPrice + nfts[2].LatestPrice},
+			owners:      []string{collectors[1], collectors[2]},
+			totalValues: []uint64{nfts[1].LatestPrice, nfts[3].LatestPrice + nfts[4].LatestPrice + nfts[5].LatestPrice},
 		},
 		{
 			name:        "query by creator, AllIscnVersions = false",
-			query:       QueryCollectorRequest{Creator: ADDR_01_COSMOS, IncludeOwner: true},
+			query:       QueryCollectorRequest{Creator: creators[0], IncludeOwner: true},
 			owners:      []string{},
 			totalValues: []uint64{},
 		},
 		{
 			name:        "query by creator, AllIscnVersions = true",
-			query:       QueryCollectorRequest{Creator: ADDR_01_COSMOS, IncludeOwner: true, AllIscnVersions: true},
-			owners:      []string{nfts[1].Owner, nfts[0].Owner},
-			totalValues: []uint64{nfts[1].LatestPrice, nfts[0].LatestPrice},
+			query:       QueryCollectorRequest{Creator: creators[0], IncludeOwner: true, AllIscnVersions: true},
+			owners:      []string{collectors[0], collectors[1], collectors[2]},
+			totalValues: []uint64{nfts[0].LatestPrice, nfts[1].LatestPrice, nfts[3].LatestPrice},
 		},
 		{
 			name: "query with ignore list",
 			query: QueryCollectorRequest{
-				IgnoreList:   []string{ADDR_03_COSMOS},
+				IgnoreList:   []string{collectors[1], collectors[2]},
 				IncludeOwner: true,
 			},
-			owners:      []string{nfts[0].Owner},
+			owners:      []string{collectors[0]},
 			totalValues: []uint64{nfts[0].LatestPrice},
 		},
 		{
-			name:        "query with PriceBy = class",
-			query:       QueryCollectorRequest{IncludeOwner: true, PriceBy: "class"},
-			owners:      []string{nfts[1].Owner, nfts[0].Owner},
-			totalValues: []uint64{nftClasses[0].LatestPrice + nftClasses[1].LatestPrice, nftClasses[0].LatestPrice},
+			name:   "query with PriceBy = class",
+			query:  QueryCollectorRequest{IncludeOwner: true, PriceBy: "class"},
+			owners: []string{collectors[2], collectors[1], collectors[0]},
+			totalValues: []uint64{
+				nftClasses[0].LatestPrice + nftClasses[1].LatestPrice + nftClasses[2].LatestPrice,
+				nftClasses[0].LatestPrice + nftClasses[1].LatestPrice,
+				nftClasses[0].LatestPrice,
+			},
+		},
+		{
+			name:   "query with OrderBy = count",
+			query:  QueryCollectorRequest{IncludeOwner: true, OrderBy: "count"},
+			owners: []string{collectors[2], collectors[1], collectors[0]},
+			totalValues: []uint64{
+				nfts[3].LatestPrice + nfts[4].LatestPrice + nfts[5].LatestPrice,
+				nfts[1].LatestPrice + nfts[2].LatestPrice,
+				nfts[0].LatestPrice,
+			},
 		},
 	}
 
@@ -1075,9 +1123,11 @@ NEXT_TESTCASE:
 			continue NEXT_TESTCASE
 		}
 		if len(res.Collectors) > 1 {
-			prev := res.Collectors[0].TotalValue
-			for _, collector := range res.Collectors {
-				if collector.TotalValue > prev {
+			for j := 1; j < len(res.Collectors); j++ {
+				prev := res.Collectors[j-1]
+				curr := res.Collectors[j]
+				if (testCase.query.OrderBy == "count" && curr.Count > prev.Count) ||
+					(testCase.query.OrderBy != "count" && curr.TotalValue > prev.TotalValue) {
 					t.Errorf("test case #%02d (%s): expect Collectors in descending order, got results = %#v", i, testCase.name, res.Collectors)
 					continue NEXT_TESTCASE
 				}
@@ -1101,48 +1151,79 @@ NEXT_TESTCASE:
 
 func TestCreators(t *testing.T) {
 	defer CleanupTestData(Conn)
+	creators := []string{ADDR_01_LIKE, ADDR_02_LIKE, ADDR_03_LIKE, ADDR_04_LIKE}
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/aaaaaa/1",
-			Owner: ADDR_01_LIKE,
+			Owner: creators[0],
 		},
 		{
 			Iscn:  "iscn://testing/aaaaaa/2",
-			Owner: ADDR_02_LIKE,
+			Owner: creators[1],
 		},
 		{
 			Iscn:  "iscn://testing/bbbbbb/1",
-			Owner: ADDR_04_LIKE,
+			Owner: creators[2],
+		},
+		{
+			Iscn:  "iscn://testing/cccccc/1",
+			Owner: creators[3],
 		},
 	}
 	nftClasses := []NftClass{
-		{Id: "likenft1aaaaaa", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/aaaaaa"}, LatestPrice: 456},
-		{Id: "likenft1bbbbbb", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/bbbbbb"}, LatestPrice: 567},
+		{Id: "likenft1aaaaaa", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/aaaaaa"}, LatestPrice: 100},
+		{Id: "likenft1bbbbbb", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/bbbbbb"}, LatestPrice: 1000},
+		{Id: "likenft1cccccc", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/cccccc"}, LatestPrice: 10000},
 	}
+	collectors := []string{ADDR_02_LIKE, ADDR_03_LIKE, ADDR_05_LIKE}
 	nfts := []Nft{
 		{
 			ClassId:     nftClasses[0].Id,
 			NftId:       "testing-nft-12093810",
-			Owner:       ADDR_02_COSMOS,
-			LatestPrice: 123,
+			Owner:       collectors[0],
+			LatestPrice: 100,
 		},
 		{
 			ClassId:     nftClasses[0].Id,
 			NftId:       "testing-nft-12093811",
-			Owner:       ADDR_03_LIKE,
-			LatestPrice: 234,
+			Owner:       collectors[1],
+			LatestPrice: 10,
 		},
 		{
 			ClassId:     nftClasses[1].Id,
 			NftId:       "testing-nft-12093812",
-			Owner:       ADDR_03_LIKE,
-			LatestPrice: 345,
+			Owner:       collectors[1],
+			LatestPrice: 20,
+		},
+		{
+			ClassId:     nftClasses[0].Id,
+			NftId:       "testing-nft-12093813",
+			Owner:       collectors[2],
+			LatestPrice: 1,
+		},
+		{
+			ClassId:     nftClasses[1].Id,
+			NftId:       "testing-nft-12093814",
+			Owner:       collectors[2],
+			LatestPrice: 2,
+		},
+		{
+			ClassId:     nftClasses[2].Id,
+			NftId:       "testing-nft-12093815",
+			Owner:       collectors[2],
+			LatestPrice: 3,
 		},
 	}
 	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// end state:
+	// creators[0]: transfer ISCN ownership to collectors[1]
+	// creators[1]: 3 NFTs sold, NFT price = 111, class price = 300
+	// creators[2]: 2 NFTs sold, NFT price = 22, class price = 2000
+	// creators[3]: 1 NFT sold, NFT price = 3, class price = 10000
 
 	testCases := []struct {
 		name        string
@@ -1152,34 +1233,58 @@ func TestCreators(t *testing.T) {
 	}{
 		// HACK: default IncludeOwner is true when binding to form
 		{
+			name:   "empty query",
+			query:  QueryCreatorRequest{IncludeOwner: true},
+			owners: []string{creators[1], creators[2], creators[3]},
+			totalValues: []uint64{
+				nfts[0].LatestPrice + nfts[1].LatestPrice + nfts[3].LatestPrice,
+				nfts[2].LatestPrice + nfts[4].LatestPrice,
+				nfts[5].LatestPrice,
+			},
+		},
+		{
 			name:        "query by collector (0), AllIscnVersions = false",
-			query:       QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: true},
-			owners:      []string{iscns[1].Owner},
+			query:       QueryCreatorRequest{Collector: collectors[0], IncludeOwner: true},
+			owners:      []string{creators[1]},
 			totalValues: []uint64{nfts[0].LatestPrice},
 		},
 		{
 			name:        "query by collector (0), AllIscnVersions = false, IncludeOwner = false",
-			query:       QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: false},
+			query:       QueryCreatorRequest{Collector: collectors[0], IncludeOwner: false},
 			owners:      []string{},
 			totalValues: []uint64{},
 		},
 		{
 			name:        "query by collector (1), AllIscnVersions = false",
-			query:       QueryCreatorRequest{Collector: nfts[1].Owner, IncludeOwner: true},
-			owners:      []string{iscns[2].Owner, iscns[1].Owner},
+			query:       QueryCreatorRequest{Collector: collectors[1], IncludeOwner: true},
+			owners:      []string{creators[2], creators[1]},
 			totalValues: []uint64{nfts[2].LatestPrice, nfts[1].LatestPrice},
 		},
 		{
 			name:        "query by collector (1), AllIscnVersions = true",
-			query:       QueryCreatorRequest{Collector: nfts[1].Owner, IncludeOwner: true, AllIscnVersions: true},
-			owners:      []string{iscns[2].Owner, iscns[1].Owner, iscns[0].Owner},
+			query:       QueryCreatorRequest{Collector: collectors[1], IncludeOwner: true, AllIscnVersions: true},
+			owners:      []string{creators[2], creators[1], creators[0]},
 			totalValues: []uint64{nfts[2].LatestPrice, nfts[1].LatestPrice, nfts[1].LatestPrice},
 		},
 		{
-			name:        "query by collector (0), AllIscnVersions = false, PriceBy = class",
-			query:       QueryCreatorRequest{Collector: nfts[0].Owner, IncludeOwner: true, PriceBy: "class"},
-			owners:      []string{iscns[1].Owner},
-			totalValues: []uint64{nftClasses[0].LatestPrice},
+			name:   "AllIscnVersions = false, PriceBy = class",
+			query:  QueryCreatorRequest{IncludeOwner: true, PriceBy: "class"},
+			owners: []string{creators[3], creators[2], creators[1]},
+			totalValues: []uint64{
+				nftClasses[2].LatestPrice,
+				nftClasses[1].LatestPrice * 2,
+				nftClasses[0].LatestPrice * 3,
+			},
+		},
+		{
+			name:   "AllIscnVersions = false, OrderBy = count",
+			query:  QueryCreatorRequest{IncludeOwner: true, OrderBy: "count"},
+			owners: []string{creators[1], creators[2], creators[3]},
+			totalValues: []uint64{
+				nfts[0].LatestPrice + nfts[1].LatestPrice + nfts[3].LatestPrice,
+				nfts[2].LatestPrice + nfts[4].LatestPrice,
+				nfts[5].LatestPrice,
+			},
 		},
 	}
 
@@ -1198,9 +1303,11 @@ NEXT_TESTCASE:
 			continue NEXT_TESTCASE
 		}
 		if len(res.Creators) > 1 {
-			prev := res.Creators[0].TotalValue
-			for _, creators := range res.Creators {
-				if creators.TotalValue > prev {
+			for j := 1; j < len(res.Creators); j++ {
+				prev := res.Creators[j-1]
+				curr := res.Creators[j]
+				if (testCase.query.OrderBy == "count" && curr.Count > prev.Count) ||
+					(testCase.query.OrderBy != "count" && curr.TotalValue > prev.TotalValue) {
 					t.Errorf("test case #%02d (%s): expect Creators in descending order, got results = %#v", i, testCase.name, res.Creators)
 					continue NEXT_TESTCASE
 				}
