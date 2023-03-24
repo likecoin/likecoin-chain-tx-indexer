@@ -1032,7 +1032,58 @@ func TestCollectors(t *testing.T) {
 			LatestPrice: 3,
 		},
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
+	nftEvents := []NftEvent{
+		{
+			ClassId:  nfts[0].ClassId,
+			NftId:    nfts[0].NftId,
+			Receiver: nfts[0].Owner,
+			Price:    nfts[0].LatestPrice,
+		},
+		{
+			ClassId:  nfts[1].ClassId,
+			NftId:    nfts[1].NftId,
+			Receiver: nfts[1].Owner,
+			Price:    nfts[1].LatestPrice,
+		},
+		{
+			ClassId:  nfts[2].ClassId,
+			NftId:    nfts[2].NftId,
+			Receiver: nfts[2].Owner,
+			Price:    nfts[2].LatestPrice,
+		},
+		{
+			ClassId:  nfts[3].ClassId,
+			NftId:    nfts[3].NftId,
+			Receiver: nfts[3].Owner,
+			Price:    nfts[3].LatestPrice,
+		},
+		{
+			ClassId:  nfts[4].ClassId,
+			NftId:    nfts[4].NftId,
+			Receiver: nfts[4].Owner,
+			Price:    nfts[4].LatestPrice,
+		},
+		{
+			ClassId:  nfts[5].ClassId,
+			NftId:    nfts[5].NftId,
+			Receiver: nfts[5].Owner,
+			Price:    nfts[5].LatestPrice,
+		},
+		// force update nft_class.latest_price
+		{
+			ClassId: nftClasses[0].Id,
+			Price:   nftClasses[0].LatestPrice,
+		},
+		{
+			ClassId: nftClasses[1].Id,
+			Price:   nftClasses[1].LatestPrice,
+		},
+		{
+			ClassId: nftClasses[2].Id,
+			Price:   nftClasses[2].LatestPrice,
+		},
+	}
+	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts, NftEvents: nftEvents})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1214,7 +1265,58 @@ func TestCreators(t *testing.T) {
 			LatestPrice: 3,
 		},
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
+	nftEvents := []NftEvent{
+		{
+			ClassId:  nfts[0].ClassId,
+			NftId:    nfts[0].NftId,
+			Receiver: nfts[0].Owner,
+			Price:    nfts[0].LatestPrice,
+		},
+		{
+			ClassId:  nfts[1].ClassId,
+			NftId:    nfts[1].NftId,
+			Receiver: nfts[1].Owner,
+			Price:    nfts[1].LatestPrice,
+		},
+		{
+			ClassId:  nfts[2].ClassId,
+			NftId:    nfts[2].NftId,
+			Receiver: nfts[2].Owner,
+			Price:    nfts[2].LatestPrice,
+		},
+		{
+			ClassId:  nfts[3].ClassId,
+			NftId:    nfts[3].NftId,
+			Receiver: nfts[3].Owner,
+			Price:    nfts[3].LatestPrice,
+		},
+		{
+			ClassId:  nfts[4].ClassId,
+			NftId:    nfts[4].NftId,
+			Receiver: nfts[4].Owner,
+			Price:    nfts[4].LatestPrice,
+		},
+		{
+			ClassId:  nfts[5].ClassId,
+			NftId:    nfts[5].NftId,
+			Receiver: nfts[5].Owner,
+			Price:    nfts[5].LatestPrice,
+		},
+		// force update nft_class.latest_price
+		{
+			ClassId: nftClasses[0].Id,
+			Price:   nftClasses[0].LatestPrice,
+		},
+		{
+			ClassId: nftClasses[1].Id,
+			Price:   nftClasses[1].LatestPrice,
+		},
+		{
+			ClassId: nftClasses[2].Id,
+			Price:   nftClasses[2].LatestPrice,
+		},
+	}
+	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts, NftEvents: nftEvents})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1335,6 +1437,7 @@ func TestGetCollectorTopRankedCreators(t *testing.T) {
 	iscns := []IscnInsert{}
 	nftClasses := []NftClass{}
 	nfts := []Nft{}
+	nftEvents := []NftEvent{}
 	for iscnOwnerIndex := 0; iscnOwnerIndex < 5; iscnOwnerIndex++ {
 		for iscnIndex := 0; iscnIndex < 5; iscnIndex++ {
 			iscnPrefix := fmt.Sprintf("iscn://testing/%02d-%02d", iscnOwnerIndex, iscnIndex)
@@ -1349,17 +1452,26 @@ func TestGetCollectorTopRankedCreators(t *testing.T) {
 					Parent: NftClassParent{IscnIdPrefix: iscnPrefix},
 				})
 				for nftIndex := 0; nftIndex < 10; nftIndex++ {
+					nftId := fmt.Sprintf("%s-%02d", classId, nftIndex)
+					owner := ADDRS_LIKE[r.Intn(10)]
+					price := uint64(r.Int31n(2) + 1)
 					nfts = append(nfts, Nft{
-						ClassId:     nftClasses[0].Id,
-						NftId:       fmt.Sprintf("%s-%02d", classId, nftIndex),
-						Owner:       ADDRS_LIKE[r.Intn(10)],
-						LatestPrice: uint64(r.Int31n(2) + 1),
+						ClassId:     classId,
+						NftId:       nftId,
+						Owner:       owner,
+						LatestPrice: price,
+					})
+					nftEvents = append(nftEvents, NftEvent{
+						ClassId:  classId,
+						NftId:    nftId,
+						Receiver: owner,
+						Price:    price,
 					})
 				}
 			}
 		}
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
+	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts, NftEvents: nftEvents})
 	require.NoError(t, err)
 
 	p := PageRequest{
