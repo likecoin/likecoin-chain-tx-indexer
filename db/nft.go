@@ -349,7 +349,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func getSourceTable(priceBy string) string {
+func getTotalValueSourceField(priceBy string) string {
 	switch priceBy {
 	case "class":
 		return "c.latest_price"
@@ -374,7 +374,7 @@ func convertOrderBy(orderBy string) string {
 func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (res QueryCollectorResponse, err error) {
 	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
-	priceSourceTable := getSourceTable(q.PriceBy)
+	totalValueSourceField := getTotalValueSourceField(q.PriceBy)
 	orderBy := convertOrderBy(q.OrderBy)
 	sql := fmt.Sprintf(`
 	SELECT owner, SUM(value) AS total_value, SUM(count) AS total_count,
@@ -406,7 +406,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 	ORDER BY %[2]s DESC, owner DESC
 	OFFSET $2
 	LIMIT $3
-	`, priceSourceTable, orderBy)
+	`, totalValueSourceField, orderBy)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
@@ -432,7 +432,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res QueryCreatorResponse, err error) {
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
-	priceSourceTable := getSourceTable(q.PriceBy)
+	totalValueSourceField := getTotalValueSourceField(q.PriceBy)
 	orderBy := convertOrderBy(q.OrderBy)
 	sql := fmt.Sprintf(`
 	SELECT owner, SUM(value) as total_value, SUM(count) AS total_count,
@@ -464,7 +464,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 	ORDER BY %[2]s DESC
 	OFFSET $2
 	LIMIT $3
-	`, priceSourceTable, orderBy)
+	`, totalValueSourceField, orderBy)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
