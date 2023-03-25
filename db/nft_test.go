@@ -1017,19 +1017,19 @@ func TestCollectors(t *testing.T) {
 			ClassId:     nftClasses[0].Id,
 			NftId:       "testing-nft-12093813",
 			Owner:       collectors[2],
-			LatestPrice: 1,
+			LatestPrice: nftClasses[0].LatestPrice,
 		},
 		{
 			ClassId:     nftClasses[1].Id,
 			NftId:       "testing-nft-12093814",
 			Owner:       collectors[2],
-			LatestPrice: 2,
+			LatestPrice: nftClasses[1].LatestPrice,
 		},
 		{
 			ClassId:     nftClasses[2].Id,
 			NftId:       "testing-nft-12093815",
 			Owner:       collectors[2],
-			LatestPrice: 3,
+			LatestPrice: nftClasses[2].LatestPrice,
 		},
 	}
 	nftEvents := []NftEvent{
@@ -1069,19 +1069,6 @@ func TestCollectors(t *testing.T) {
 			Receiver: nfts[5].Owner,
 			Price:    nfts[5].LatestPrice,
 		},
-		// force update nft_class.latest_price
-		{
-			ClassId: nftClasses[0].Id,
-			Price:   nftClasses[0].LatestPrice,
-		},
-		{
-			ClassId: nftClasses[1].Id,
-			Price:   nftClasses[1].LatestPrice,
-		},
-		{
-			ClassId: nftClasses[2].Id,
-			Price:   nftClasses[2].LatestPrice,
-		},
 	}
 	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts, NftEvents: nftEvents})
 	if err != nil {
@@ -1091,7 +1078,7 @@ func TestCollectors(t *testing.T) {
 	// end state:
 	// collectors[0]: 1 NFT, NFT price = 100, class price = 100, from himself
 	// collectors[1]: 2 NFTs, NFT price = 30, class price = 1100, 1 from himself, 1 from other
-	// collectors[2]: 3 NFTs, NFT price = 6, class price = 11100, all from others
+	// collectors[2]: 3 NFTs, NFT price = 11100, class price = 11100, all from others
 
 	testCases := []struct {
 		name        string
@@ -1103,11 +1090,11 @@ func TestCollectors(t *testing.T) {
 		{
 			name:   "empty query",
 			query:  QueryCollectorRequest{IncludeOwner: true},
-			owners: []string{collectors[0], collectors[1], collectors[2]},
+			owners: []string{collectors[2], collectors[0], collectors[1]},
 			totalValues: []uint64{
+				nfts[3].LatestPrice + nfts[4].LatestPrice + nfts[5].LatestPrice,
 				nfts[0].LatestPrice,
 				nfts[1].LatestPrice + nfts[2].LatestPrice,
-				nfts[3].LatestPrice + nfts[4].LatestPrice + nfts[5].LatestPrice,
 			},
 		},
 		{
@@ -1125,8 +1112,8 @@ func TestCollectors(t *testing.T) {
 		{
 			name:        "query by creator, AllIscnVersions = true",
 			query:       QueryCollectorRequest{Creator: creators[0], IncludeOwner: true, AllIscnVersions: true},
-			owners:      []string{collectors[0], collectors[1], collectors[2]},
-			totalValues: []uint64{nfts[0].LatestPrice, nfts[1].LatestPrice, nfts[3].LatestPrice},
+			owners:      []string{collectors[0], collectors[2], collectors[1]},
+			totalValues: []uint64{nfts[0].LatestPrice, nfts[3].LatestPrice, nfts[1].LatestPrice},
 		},
 		{
 			name: "query with ignore list",
@@ -1140,11 +1127,11 @@ func TestCollectors(t *testing.T) {
 		{
 			name:   "query with PriceBy = class",
 			query:  QueryCollectorRequest{IncludeOwner: true, PriceBy: "class"},
-			owners: []string{collectors[2], collectors[1], collectors[0]},
+			owners: []string{collectors[2], collectors[0], collectors[1]},
 			totalValues: []uint64{
 				nftClasses[0].LatestPrice + nftClasses[1].LatestPrice + nftClasses[2].LatestPrice,
-				nftClasses[0].LatestPrice + nftClasses[1].LatestPrice,
 				nftClasses[0].LatestPrice,
+				nftClasses[0].LatestPrice + nftClasses[1].LatestPrice,
 			},
 		},
 		{
@@ -1250,19 +1237,19 @@ func TestCreators(t *testing.T) {
 			ClassId:     nftClasses[0].Id,
 			NftId:       "testing-nft-12093813",
 			Owner:       collectors[2],
-			LatestPrice: 1,
+			LatestPrice: nftClasses[0].LatestPrice,
 		},
 		{
 			ClassId:     nftClasses[1].Id,
 			NftId:       "testing-nft-12093814",
 			Owner:       collectors[2],
-			LatestPrice: 2,
+			LatestPrice: nftClasses[1].LatestPrice,
 		},
 		{
 			ClassId:     nftClasses[2].Id,
 			NftId:       "testing-nft-12093815",
 			Owner:       collectors[2],
-			LatestPrice: 3,
+			LatestPrice: nftClasses[2].LatestPrice,
 		},
 	}
 	nftEvents := []NftEvent{
@@ -1302,19 +1289,6 @@ func TestCreators(t *testing.T) {
 			Receiver: nfts[5].Owner,
 			Price:    nfts[5].LatestPrice,
 		},
-		// force update nft_class.latest_price
-		{
-			ClassId: nftClasses[0].Id,
-			Price:   nftClasses[0].LatestPrice,
-		},
-		{
-			ClassId: nftClasses[1].Id,
-			Price:   nftClasses[1].LatestPrice,
-		},
-		{
-			ClassId: nftClasses[2].Id,
-			Price:   nftClasses[2].LatestPrice,
-		},
 	}
 	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts, NftEvents: nftEvents})
 	if err != nil {
@@ -1323,9 +1297,9 @@ func TestCreators(t *testing.T) {
 
 	// end state:
 	// creators[0]: transfer ISCN ownership to collectors[1]
-	// creators[1]: 3 NFTs sold, NFT price = 111, class price = 300
-	// creators[2]: 2 NFTs sold, NFT price = 22, class price = 2000
-	// creators[3]: 1 NFT sold, NFT price = 3, class price = 10000
+	// creators[1]: 3 NFTs sold, NFT price = 210, class price = 300
+	// creators[2]: 2 NFTs sold, NFT price = 1020, class price = 2000
+	// creators[3]: 1 NFT sold, NFT price = 10000, class price = 10000
 
 	testCases := []struct {
 		name        string
@@ -1337,11 +1311,11 @@ func TestCreators(t *testing.T) {
 		{
 			name:   "empty query",
 			query:  QueryCreatorRequest{IncludeOwner: true},
-			owners: []string{creators[1], creators[2], creators[3]},
+			owners: []string{creators[3], creators[2], creators[1]},
 			totalValues: []uint64{
-				nfts[0].LatestPrice + nfts[1].LatestPrice + nfts[3].LatestPrice,
-				nfts[2].LatestPrice + nfts[4].LatestPrice,
 				nfts[5].LatestPrice,
+				nfts[2].LatestPrice + nfts[4].LatestPrice,
+				nfts[0].LatestPrice + nfts[1].LatestPrice + nfts[3].LatestPrice,
 			},
 		},
 		{
