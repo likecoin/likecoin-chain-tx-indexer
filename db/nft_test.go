@@ -993,7 +993,7 @@ func TestCollectors(t *testing.T) {
 		{Id: "likenft1bbbbbb", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/bbbbbb"}, LatestPrice: 1000},
 		{Id: "likenft1cccccc", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/cccccc"}, LatestPrice: 10000},
 	}
-	collectors := []string{ADDR_02_LIKE, ADDR_03_LIKE, ADDR_05_LIKE}
+	collectors := []string{ADDR_02_LIKE, ADDR_03_LIKE, ADDR_05_LIKE, ADDR_06_LIKE}
 	nfts := []Nft{
 		{
 			ClassId:     nftClasses[0].Id,
@@ -1063,10 +1063,32 @@ func TestCollectors(t *testing.T) {
 			Receiver: nfts[4].Owner,
 			Price:    nfts[4].LatestPrice,
 		},
+		// add action and txHash to comply with table constraint
+		// sender is for explanatory purposes only
 		{
+			Action:   ACTION_SEND,
 			ClassId:  nfts[5].ClassId,
 			NftId:    nfts[5].NftId,
 			Receiver: nfts[5].Owner,
+			TxHash:   "AAAAAA",
+			Price:    1,
+		},
+		{
+			Action:   ACTION_SELL,
+			ClassId:  nfts[5].ClassId,
+			NftId:    nfts[5].NftId,
+			Sender:   nfts[5].Owner,
+			Receiver: collectors[3],
+			TxHash:   "BBBBBB",
+			Price:    2,
+		},
+		{
+			Action:   ACTION_BUY,
+			ClassId:  nfts[5].ClassId,
+			NftId:    nfts[5].NftId,
+			Sender:   collectors[3],
+			Receiver: nfts[5].Owner,
+			TxHash:   "CCCCCC",
 			Price:    nfts[5].LatestPrice,
 		},
 	}
@@ -1079,6 +1101,7 @@ func TestCollectors(t *testing.T) {
 	// collectors[0]: 1 NFT, NFT price = 100, class price = 100, from himself
 	// collectors[1]: 2 NFTs, NFT price = 30, class price = 1100, 1 from himself, 1 from other
 	// collectors[2]: 3 NFTs, NFT price = 11100, class price = 11100, all from others
+	// collectors[3]: 0 NFT, bought 1 NFT from collectors[2], and sold it back
 
 	testCases := []struct {
 		name        string
@@ -1213,7 +1236,7 @@ func TestCreators(t *testing.T) {
 		{Id: "likenft1bbbbbb", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/bbbbbb"}, LatestPrice: 1000},
 		{Id: "likenft1cccccc", Parent: NftClassParent{IscnIdPrefix: "iscn://testing/cccccc"}, LatestPrice: 10000},
 	}
-	collectors := []string{ADDR_02_LIKE, ADDR_03_LIKE, ADDR_05_LIKE}
+	collectors := []string{ADDR_02_LIKE, ADDR_03_LIKE, ADDR_05_LIKE, ADDR_06_LIKE}
 	nfts := []Nft{
 		{
 			ClassId:     nftClasses[0].Id,
@@ -1283,10 +1306,32 @@ func TestCreators(t *testing.T) {
 			Receiver: nfts[4].Owner,
 			Price:    nfts[4].LatestPrice,
 		},
+		// add action and txHash to comply with table constraint
+		// sender is for explanatory purposes only
 		{
+			Action:   ACTION_SEND,
 			ClassId:  nfts[5].ClassId,
 			NftId:    nfts[5].NftId,
 			Receiver: nfts[5].Owner,
+			TxHash:   "AAAAAA",
+			Price:    1,
+		},
+		{
+			Action:   ACTION_SELL,
+			ClassId:  nfts[5].ClassId,
+			NftId:    nfts[5].NftId,
+			Sender:   nfts[5].Owner,
+			Receiver: collectors[3],
+			TxHash:   "BBBBBB",
+			Price:    2,
+		},
+		{
+			Action:   ACTION_BUY,
+			ClassId:  nfts[5].ClassId,
+			NftId:    nfts[5].NftId,
+			Sender:   collectors[3],
+			Receiver: nfts[5].Owner,
+			TxHash:   "CCCCCC",
 			Price:    nfts[5].LatestPrice,
 		},
 	}

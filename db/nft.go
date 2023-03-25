@@ -393,9 +393,17 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 		JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
+		JOIN (
+			SELECT nft_id, receiver, MAX(id) AS max_id
+			FROM nft_event
+			GROUP BY nft_id, receiver
+		) AS latest_e 
+		ON latest_e.nft_id = n.nft_id
+			AND latest_e.receiver = n.owner
 		JOIN nft_event AS e 
 		ON e.nft_id = n.nft_id
 			AND e.receiver = n.owner
+			AND e.id = latest_e.max_id
 		WHERE 
 			($6 = true OR n.owner != i.owner)
 			AND ($1::text[] IS NULL OR cardinality($1::text[]) = 0 OR i.owner = ANY($1))
@@ -451,9 +459,17 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 		JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
+		JOIN (
+			SELECT nft_id, receiver, MAX(id) AS max_id
+			FROM nft_event
+			GROUP BY nft_id, receiver
+		) AS latest_e 
+		ON latest_e.nft_id = n.nft_id
+			AND latest_e.receiver = n.owner
 		JOIN nft_event AS e 
 		ON e.nft_id = n.nft_id
 			AND e.receiver = n.owner
+			AND e.id = latest_e.max_id
 		WHERE 
 			($6 = true OR n.owner != i.owner)
 			AND ($1::text[] IS NULL OR cardinality($1::text[]) = 0 OR n.owner = ANY($1))
