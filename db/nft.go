@@ -396,6 +396,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 		JOIN (
 			SELECT nft_id, receiver, MAX(id) AS max_id
 			FROM nft_event
+			WHERE price IS NOT NULL
 			GROUP BY nft_id, receiver
 		) AS latest_e 
 		ON latest_e.nft_id = n.nft_id
@@ -407,7 +408,6 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 		WHERE 
 			($6 = true OR n.owner != i.owner)
 			AND ($1::text[] IS NULL OR cardinality($1::text[]) = 0 OR i.owner = ANY($1))
-			AND e.price IS NOT NULL
 		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
 	) AS r
 	GROUP BY owner
@@ -462,6 +462,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 		JOIN (
 			SELECT nft_id, receiver, MAX(id) AS max_id
 			FROM nft_event
+			WHERE price IS NOT NULL
 			GROUP BY nft_id, receiver
 		) AS latest_e 
 		ON latest_e.nft_id = n.nft_id
@@ -473,7 +474,6 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 		WHERE 
 			($6 = true OR n.owner != i.owner)
 			AND ($1::text[] IS NULL OR cardinality($1::text[]) = 0 OR n.owner = ANY($1))
-			AND e.price IS NOT NULL
 		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
 	) AS r
 	GROUP BY owner
