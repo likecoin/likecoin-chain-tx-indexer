@@ -3,6 +3,8 @@ package db_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
@@ -128,6 +130,16 @@ func TestNftTradeStats(t *testing.T) {
 			Sender:   ADDR_01_LIKE,
 			Receiver: ADDR_02_COSMOS,
 			TxHash:   "A2",
+			Price:    10,
+		},
+		{
+			ClassId:  "likenft1class1",
+			NftId:    "testing-nft-1209301",
+			Action:   ACTION_SEND,
+			Sender:   ADDR_01_LIKE,
+			Receiver: ADDR_02_COSMOS,
+			TxHash:   "A3",
+			Price:    0,
 		},
 		{
 			ClassId: "likenft1class2",
@@ -142,6 +154,7 @@ func TestNftTradeStats(t *testing.T) {
 			Sender:   ADDR_01_LIKE,
 			Receiver: ADDR_03_LIKE,
 			TxHash:   "B2",
+			Price:    20,
 		},
 		{
 			ClassId: "likenft1class3",
@@ -156,34 +169,39 @@ func TestNftTradeStats(t *testing.T) {
 			Sender:   ADDR_01_LIKE,
 			Receiver: ADDR_04_LIKE,
 			TxHash:   "C2",
+			Price:    30,
+		},
+		{
+			ClassId:  "likenft1class3",
+			NftId:    "testing-nft-1209303",
+			Action:   ACTION_BUY,
+			Sender:   ADDR_01_LIKE,
+			Receiver: ADDR_05_LIKE,
+			TxHash:   "C3",
+			Price:    40,
+		},
+		{
+			ClassId:  "likenft1class3",
+			NftId:    "testing-nft-1209303",
+			Action:   ACTION_SELL,
+			Sender:   ADDR_01_LIKE,
+			Receiver: ADDR_06_LIKE,
+			TxHash:   "C4",
+			Price:    50,
 		},
 	}
-	txs := []string{
-		`{"txhash":"A1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"1111"}]}]}]}}}`,
-		`{"txhash":"A2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"1000"}]}]}]}}}`,
-		`{"txhash":"B1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2222"}]}]}]}}}`,
-		`{"txhash":"B2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"2000"}]}]}]}}}`,
-		`{"txhash":"C1","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"3333"}]}]}]}}}`,
-		`{"txhash":"C2","tx":{"body":{"messages":[{"msgs":[{"amount":[{"amount":"3000"}]}]}]}}}`,
-	}
-	err := InsertTestData(DBTestData{NftEvents: nftEvents, Txs: txs})
+	err := InsertTestData(DBTestData{NftEvents: nftEvents})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	query := QueryNftTradeStatsRequest{
-		ApiAddresses: []string{ADDR_01_LIKE},
-	}
+	query := QueryNftTradeStatsRequest{}
 	res, err := GetNftTradeStats(Conn, query)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.Count != 3 {
-		t.Fatalf("expect count = 3, got %d. result = %#v", res.Count, res)
-	}
-	if res.TotalVolume != 6000 {
-		t.Fatalf("expect total volume = 6000, got %d. result = %#v", res.TotalVolume, res)
-	}
+	require.NoError(t, err)
+	require.Equal(t, QueryNftTradeStatsResponse{
+		Count:       5,
+		TotalVolume: 150,
+	}, res)
 }
 
 func TestNftCreatorCount(t *testing.T) {
