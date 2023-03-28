@@ -349,21 +349,33 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func getSourceTable(priceBy string) string {
+func getTotalValueSourceField(priceBy string) string {
 	switch priceBy {
 	case "class":
-		return "c"
+		return "c.latest_price"
 	case "nft":
 	default:
-		return "n"
+		return "e.price"
 	}
-	return "n"
+	return "e.price"
+}
+
+func convertOrderBy(orderBy string) string {
+	switch orderBy {
+	case "count":
+		return "total_count"
+	case "price":
+	default:
+		return "total_value"
+	}
+	return "total_value"
 }
 
 func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (res QueryCollectorResponse, err error) {
 	creatorVariations := utils.ConvertAddressPrefixes(q.Creator, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
-	priceSourceTable := getSourceTable(q.PriceBy)
+	totalValueSourceField := getTotalValueSourceField(q.PriceBy)
+	orderBy := convertOrderBy(q.OrderBy)
 	sql := fmt.Sprintf(`
 	SELECT owner, SUM(value) AS total_value, SUM(count) AS total_count,
 		array_agg(json_build_object(
@@ -373,7 +385,7 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 			'count', count)),
 		COUNT(*) OVER() AS row_count
 	FROM (
-		SELECT n.owner, i.iscn_id_prefix, c.class_id, SUM(%s.latest_price) AS value, COUNT(DISTINCT n.id) as count
+		SELECT n.owner, i.iscn_id_prefix, c.class_id, SUM(%[1]s) AS value, COUNT(DISTINCT n.id) as count
 		FROM iscn AS i
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
@@ -381,16 +393,30 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 		JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
+		JOIN LATERAL (
+			SELECT nft_id, receiver, MAX(id) AS max_id
+			FROM nft_event
+			WHERE price IS NOT NULL
+				AND nft_id = n.nft_id
+				AND receiver = n.owner
+			GROUP BY nft_id, receiver
+		) AS latest_e 
+		ON latest_e.nft_id = n.nft_id
+			AND latest_e.receiver = n.owner
+		JOIN nft_event AS e 
+		ON e.nft_id = n.nft_id
+			AND e.receiver = n.owner
+			AND e.id = latest_e.max_id
 		WHERE 
 			($6 = true OR n.owner != i.owner)
 			AND ($1::text[] IS NULL OR cardinality($1::text[]) = 0 OR i.owner = ANY($1))
 		GROUP BY n.owner, i.iscn_id_prefix, c.class_id
 	) AS r
 	GROUP BY owner
-	ORDER BY total_value DESC, owner DESC
+	ORDER BY %[2]s DESC, owner DESC
 	OFFSET $2
 	LIMIT $3
-	`, priceSourceTable)
+	`, totalValueSourceField, orderBy)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
@@ -416,7 +442,8 @@ func GetCollector(conn *pgxpool.Conn, q QueryCollectorRequest, p PageRequest) (r
 func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res QueryCreatorResponse, err error) {
 	collectorVariations := utils.ConvertAddressPrefixes(q.Collector, AddressPrefixes)
 	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
-	priceSourceTable := getSourceTable(q.PriceBy)
+	totalValueSourceField := getTotalValueSourceField(q.PriceBy)
+	orderBy := convertOrderBy(q.OrderBy)
 	sql := fmt.Sprintf(`
 	SELECT owner, SUM(value) as total_value, SUM(count) AS total_count,
 		array_agg(json_build_object(
@@ -426,7 +453,7 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 			'count', count)),
 		COUNT(*) OVER() AS row_count
 	FROM (
-		SELECT i.owner, i.iscn_id_prefix, c.class_id, SUM(%s.latest_price) AS value, COUNT(DISTINCT n.id) as count
+		SELECT i.owner, i.iscn_id_prefix, c.class_id, SUM(%[1]s) AS value, COUNT(DISTINCT n.id) as count
 		FROM iscn AS i
 		JOIN iscn_latest_version
 		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
@@ -434,16 +461,30 @@ func GetCreators(conn *pgxpool.Conn, q QueryCreatorRequest, p PageRequest) (res 
 		JOIN nft_class AS c ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN nft AS n ON c.class_id = n.class_id
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR n.owner != ALL($4))
+		JOIN LATERAL (
+			SELECT nft_id, receiver, MAX(id) AS max_id
+			FROM nft_event
+			WHERE price IS NOT NULL
+				AND nft_id = n.nft_id
+				AND receiver = n.owner
+			GROUP BY nft_id, receiver
+		) AS latest_e 
+		ON latest_e.nft_id = n.nft_id
+			AND latest_e.receiver = n.owner
+		JOIN nft_event AS e 
+		ON e.nft_id = n.nft_id
+			AND e.receiver = n.owner
+			AND e.id = latest_e.max_id
 		WHERE 
 			($6 = true OR n.owner != i.owner)
 			AND ($1::text[] IS NULL OR cardinality($1::text[]) = 0 OR n.owner = ANY($1))
 		GROUP BY i.owner, i.iscn_id_prefix, c.class_id
 	) AS r
 	GROUP BY owner
-	ORDER BY total_value DESC
+	ORDER BY %[2]s DESC
 	OFFSET $2
 	LIMIT $3
-	`, priceSourceTable)
+	`, totalValueSourceField, orderBy)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 

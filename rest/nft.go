@@ -145,6 +145,10 @@ func handleNftCollectors(c *gin.Context) {
 		c.AbortWithStatusJSON(400, gin.H{"error": "price_by should either be nft or class"})
 		return
 	}
+	if form.OrderBy != "price" && form.OrderBy != "count" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "order_by should either be price or count"})
+		return
+	}
 	p, err := getPagination(c)
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err})
@@ -170,6 +174,10 @@ func handleNftCreators(c *gin.Context) {
 	}
 	if form.PriceBy != "nft" && form.PriceBy != "class" {
 		c.AbortWithStatusJSON(400, gin.H{"error": "price_by should either be nft or class"})
+		return
+	}
+	if form.OrderBy != "price" && form.OrderBy != "count" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "order_by should either be price or count"})
 		return
 	}
 	p, err := getPagination(c)
