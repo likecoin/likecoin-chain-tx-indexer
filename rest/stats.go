@@ -23,14 +23,6 @@ func handleNftCount(c *gin.Context) {
 
 func handleNftTradeStats(c *gin.Context) {
 	var q db.QueryNftTradeStatsRequest
-	if err := c.ShouldBindQuery(&q); err != nil {
-		c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	if len(q.ApiAddresses) == 0 {
-		q.ApiAddresses = getDefaultApiAddresses(c)
-	}
 
 	res, err := db.GetNftTradeStats(getConn(c), q)
 	if err != nil {

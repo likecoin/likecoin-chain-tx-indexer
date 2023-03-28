@@ -33,23 +33,15 @@ func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountRe
 }
 
 func GetNftTradeStats(conn *pgxpool.Conn, q QueryNftTradeStatsRequest) (res QueryNftTradeStatsResponse, err error) {
-	// Message 0 is authz MsgExec
 	sql := `
-	SELECT COUNT(*), sum((tx #>> '{"tx", "body", "messages", 0, "msgs", 0, "amount", 0, "amount"}')::bigint)
-	FROM txs
-	JOIN (
-		SELECT DISTINCT tx_hash FROM nft_event
-		WHERE sender = ANY($1::text[])
-		AND action = '/cosmos.nft.v1beta1.MsgSend'
-	) t
-	ON tx_hash = tx ->> 'txhash'::text
+	SELECT COUNT(*), SUM(price)
+	FROM nft_event
+	WHERE price IS NOT NULL AND price > 0
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	err = conn.QueryRow(ctx, sql, q.ApiAddresses).Scan(
-		&res.Count, &res.TotalVolume,
-	)
+	err = conn.QueryRow(ctx, sql).Scan(&res.Count, &res.TotalVolume)
 	if err != nil {
 		err = fmt.Errorf("get nft trade stats failed: %w", err)
 		logger.L.Error(err, q)
