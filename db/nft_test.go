@@ -71,10 +71,7 @@ func TestQueryNftClass(t *testing.T) {
 			ClassId: nftClasses[2].Id,
 		},
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
 
 	testCases := []struct {
 		name     string
@@ -151,20 +148,11 @@ func TestQueryNftClass(t *testing.T) {
 NEXT_TESTCASE:
 	for i, testCase := range testCases {
 		res, err := GetClasses(Conn, testCase.query, p)
-		if err != nil {
-			t.Errorf("test case #%02d (%s): GetClasses returned error: %#v", i, testCase.name, err)
-			continue NEXT_TESTCASE
-		}
-		if len(res.Classes) != testCase.count {
-			t.Errorf("test case #%02d (%s): expect len(res.Classes) = %d, got %d. results = %#v", i, testCase.name, testCase.count, len(res.Classes), res.Classes)
-			continue NEXT_TESTCASE
-		}
+		require.NoError(t, err, "Error in test case #%02d (%s)", i, testCase.name)
+		require.Len(t, res.Classes, testCase.count, "error in test case #%02d (%s)", i, testCase.name)
 		for _, c := range res.Classes {
 			for _, n := range c.Nfts {
-				if n.ClassId != c.Id {
-					t.Errorf("test case #%02d (%s): expect all nft under nft class has same classId as the class (%s), got %s. results = %#v", i, testCase.name, c.Id, n.ClassId, res.Classes)
-					continue NEXT_TESTCASE
-				}
+				require.Equal(t, c.Id, n.ClassId, "error in test case #%02d (%s)", i, testCase.name)
 			}
 		}
 		if len(testCase.classIds) > 0 {
@@ -218,15 +206,12 @@ func TestQueryNftByOwner(t *testing.T) {
 			Timestamp: time.Unix(1, 0),
 		},
 	}
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns:      iscns,
 		NftClasses: nftClasses,
 		Nfts:       nfts,
 		NftEvents:  nftEvents,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	testCases := []struct {
 		owner string
@@ -240,43 +225,21 @@ func TestQueryNftByOwner(t *testing.T) {
 	p := PageRequest{
 		Limit: 10,
 	}
-NEXT_TESTCASE:
 	for i, testCase := range testCases {
 		query := QueryNftRequest{Owner: testCase.owner}
 		res, err := GetNfts(Conn, query, p)
-		if err != nil {
-			t.Errorf("test case #%02d (owner = %s, ExpandClasses = false): GetNfts returned error: %#v", i, testCase.owner, err)
-			continue NEXT_TESTCASE
-		}
-		if len(res.Nfts) != testCase.count {
-			t.Errorf("test case #%02d (owner = %s, ExpandClasses = false): expect len(res.Nfts) = %d, got %d. results = %#v", i, testCase.owner, testCase.count, len(res.Nfts), res.Nfts)
-			continue NEXT_TESTCASE
-		}
+		require.NoError(t, err, "Error in test case #%02d (owner = %s, ExpandClasses = false)", i, testCase.owner)
+		require.Len(t, res.Nfts, testCase.count, "error in test case #%02d (owner = %s, ExpandClasses = false)", i, testCase.owner)
 		for _, n := range res.Nfts {
-			if n.ClassData != nil {
-				t.Errorf("test case #%02d (owner = %s, ExpandClasses = false): ClassData should be nil. results = %#v", i, testCase.owner, res.Nfts)
-				continue NEXT_TESTCASE
-			}
+			require.Nil(t, n.ClassData, "error in test case #%02d (owner = %s, ExpandClasses = false)", i, testCase.owner)
 		}
 		query.ExpandClasses = true
 		res, err = GetNfts(Conn, query, p)
-		if err != nil {
-			t.Errorf("test case #%02d (owner = %s, ExpandClasses = true): GetNfts returned error: %#v", i, testCase.owner, err)
-			continue NEXT_TESTCASE
-		}
-		if len(res.Nfts) != testCase.count {
-			t.Errorf("test case #%02d (owner = %s, ExpandClasses = true): expect len(res.Nfts) = %d, got %d. results = %#v", i, testCase.owner, testCase.count, len(res.Nfts), res.Nfts)
-			continue NEXT_TESTCASE
-		}
+		require.NoError(t, err, "Error in test case #%02d (owner = %s, ExpandClasses = true)", i, testCase.owner)
+		require.Len(t, res.Nfts, testCase.count, "error in test case #%02d (owner = %s, ExpandClasses = true)", i, testCase.owner)
 		for _, n := range res.Nfts {
-			if n.ClassData == nil {
-				t.Errorf("test case #%02d (owner = %s, ExpandClasses = true): ClassData should not be nil. results = %#v", i, testCase.owner, res.Nfts)
-				continue NEXT_TESTCASE
-			}
-			if n.ClassData.Id != n.ClassId {
-				t.Errorf("test case #%02d (owner = %s, ExpandClasses = true): NFT class ID not equal to the ID in expanded class data. results = %#v", i, testCase.owner, res.Nfts)
-				continue NEXT_TESTCASE
-			}
+			require.NotNil(t, n.ClassData, "error in test case #%02d (owner = %s, ExpandClasses = true)", i, testCase.owner)
+			require.Equal(t, n.ClassId, n.ClassData.Id, "error in test case #%02d (owner = %s, ExpandClasses = true)", i, testCase.owner)
 		}
 	}
 }
@@ -315,10 +278,7 @@ func TestOwnerByClassId(t *testing.T) {
 			Owner:   ADDR_03_LIKE,
 		},
 	}
-	err := InsertTestData(DBTestData{Nfts: nfts})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Nfts: nfts})
 
 	testCases := []struct {
 		classId string
@@ -343,18 +303,11 @@ func TestOwnerByClassId(t *testing.T) {
 		{"likenft1notexist", nil, nil},
 	}
 
-NEXT_TESTCASE:
 	for i, testCase := range testCases {
 		query := QueryOwnerRequest{ClassId: testCase.classId}
 		res, err := GetOwners(Conn, query)
-		if err != nil {
-			t.Errorf("test case #%02d (classId = %s): GetOwners returned error: %#v", i, testCase.classId, err)
-			continue NEXT_TESTCASE
-		}
-		if len(res.Owners) != len(testCase.owners) {
-			t.Errorf("test case #%02d (classId = %s): expect len(res.Owners) = %d, got %d. results = %#v", i, testCase.classId, len(testCase.owners), len(res.Owners), res.Owners)
-			continue NEXT_TESTCASE
-		}
+		require.NoError(t, err, "Error in test case #%02d (classId = %s)", i, testCase.classId)
+		require.Len(t, res.Owners, len(testCase.owners), "error in test case #%02d (classId = %s)", i, testCase.classId)
 	NEXT_OWNER:
 		for j, owner := range testCase.owners {
 			if len(testCase.owners) == 0 {
@@ -362,10 +315,7 @@ NEXT_TESTCASE:
 			}
 			for _, ownerRes := range res.Owners {
 				if ownerRes.Owner == owner {
-					if ownerRes.Count != testCase.counts[j] {
-						t.Errorf("test case #%02d (classId = %s), owner %s: expect count = %d, got %d. results = %#v", i, testCase.classId, owner, testCase.counts[j], ownerRes.Count, res.Owners)
-						continue NEXT_TESTCASE
-					}
+					require.Equal(t, testCase.counts[j], ownerRes.Count, "error in test case #%02d (classId = %s)", i, testCase.classId)
 					continue NEXT_OWNER
 				}
 			}
@@ -432,15 +382,12 @@ func TestNftEvents(t *testing.T) {
 		`{"txhash":"BBBBBB","tx":{"body":{"memo":"BBBBBB"}}}`,
 		`{"txhash":"CCCCCC","tx":{"body":{"memo":"CCCCCC"}}}`,
 	}
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns:      iscns,
 		NftClasses: nftClasses,
 		NftEvents:  nftEvents,
 		Txs:        txs,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	testCases := []struct {
 		name    string
@@ -452,10 +399,7 @@ func TestNftEvents(t *testing.T) {
 			"empty request", QueryEventsRequest{}, 3,
 			func(i int, events []NftEvent) {
 				for _, e := range events {
-					if e.Memo != e.TxHash {
-						t.Errorf(`test case #%02d: expect memo = %s, got %s. events = %#v`, i, e.TxHash, e.Memo, events)
-						return
-					}
+					require.Equal(t, e.TxHash, e.Memo, "error in test case #%02d: expect memo = %s, got %s. events = %#v", i, e.TxHash, e.Memo, events)
 				}
 			},
 		},
@@ -463,10 +407,7 @@ func TestNftEvents(t *testing.T) {
 			"query by class ID (0)", QueryEventsRequest{ClassId: nftClasses[0].Id}, 2,
 			func(i int, events []NftEvent) {
 				for _, e := range events {
-					if e.ClassId != nftClasses[0].Id {
-						t.Errorf(`test case #%02d: expect classId = %s, got %s. events = %#v`, i, nftClasses[0].Id, e.ClassId, events)
-						return
-					}
+					require.Equal(t, e.ClassId, nftClasses[0].Id, "error in test case #%02d: expect classId = %s, got %s. events = %#v", i, nftClasses[0].Id, e.ClassId, events)
 				}
 			},
 		},
@@ -474,9 +415,7 @@ func TestNftEvents(t *testing.T) {
 			"query by class ID (1)", QueryEventsRequest{ClassId: nftClasses[1].Id}, 1,
 			func(i int, events []NftEvent) {
 				e := events[0]
-				if e.ClassId != nftClasses[1].Id {
-					t.Errorf(`test case #%02d: expect classId = %s, got %s. events = %#v`, i, nftClasses[0].Id, e.ClassId, events)
-				}
+				require.Equal(t, e.ClassId, nftClasses[1].Id, "error in test case #%02d: expect classId = %s, got %s. events = %#v", i, nftClasses[1].Id, e.ClassId, events)
 			},
 		},
 		{
@@ -486,11 +425,8 @@ func TestNftEvents(t *testing.T) {
 			1,
 			func(i int, events []NftEvent) {
 				e := events[0]
-				if e.ClassId != nftClasses[0].Id {
-					t.Errorf(`test case #%02d: expect classId = %s, got %s. events = %#v`, i, nftClasses[0].Id, e.ClassId, events)
-				} else if e.NftId != nftEvents[0].NftId {
-					t.Errorf(`test case #%02d: expect nftId = %s, got %s. events = %#v`, i, nftEvents[0].NftId, e.NftId, events)
-				}
+				require.Equal(t, e.ClassId, nftClasses[0].Id, "error in test case #%02d: expect classId = %s, got %s. events = %#v", i, nftClasses[0].Id, e.ClassId, events)
+				require.Equal(t, e.NftId, nftEvents[0].NftId, "error in test case #%02d: expect nftId = %s, got %s. events = %#v", i, nftEvents[0].NftId, e.NftId, events)
 			},
 		},
 		{
@@ -501,9 +437,7 @@ func TestNftEvents(t *testing.T) {
 			1,
 			func(i int, events []NftEvent) {
 				e := events[0]
-				if e.Action != nftEvents[0].Action {
-					t.Errorf(`test case #%02d: expect action = %s, got %s. events = %#v`, i, nftEvents[0].Action, e.Action, events)
-				}
+				require.Equal(t, e.Action, nftEvents[0].Action, "error in test case #%02d: expect action = %s, got %s. events = %#v", i, nftEvents[0].Action, e.Action, events)
 			},
 		},
 		{
@@ -514,10 +448,7 @@ func TestNftEvents(t *testing.T) {
 			2,
 			func(i int, events []NftEvent) {
 				for _, e := range events {
-					if e.Action != nftEvents[1].Action {
-						t.Errorf(`test case #%02d: expect action = %s, got %s. events = %#v`, i, nftEvents[1].Action, e.Action, events)
-						return
-					}
+					require.Equal(t, e.Action, nftEvents[1].Action, "error in test case #%02d: expect action = %s, got %s. events = %#v", i, nftEvents[1].Action, e.Action, events)
 				}
 			},
 		},
@@ -537,10 +468,7 @@ func TestNftEvents(t *testing.T) {
 				ignoredList := utils.ConvertAddressPrefixes(ADDR_01_COSMOS, AddressPrefixes)
 				for _, e := range events {
 					for _, ignoredAddr := range ignoredList {
-						if e.Sender == ignoredAddr {
-							t.Errorf(`test case #%02d: expect sender ignored, got sender = %s. events = %#v`, i, e.Sender, events)
-							return
-						}
+						require.NotEqual(t, e.Sender, ignoredAddr, "error in test case #%02d: expect sender ignored, got sender = %s. events = %#v", i, e.Sender, events)
 					}
 				}
 			},
@@ -553,10 +481,7 @@ func TestNftEvents(t *testing.T) {
 				ignoredList := utils.ConvertAddressArrayPrefixes([]string{ADDR_01_COSMOS, ADDR_02_LIKE}, AddressPrefixes)
 				for _, e := range events {
 					for _, ignoredAddr := range ignoredList {
-						if e.Sender == ignoredAddr {
-							t.Errorf(`test case #%02d: expect sender ignored, got sender = %s. events = %#v`, i, e.Sender, events)
-							return
-						}
+						require.NotEqual(t, e.Sender, ignoredAddr, "error in test case #%02d: expect sender ignored, got sender = %s. events = %#v", i, e.Sender, events)
 					}
 				}
 			},
@@ -569,10 +494,7 @@ func TestNftEvents(t *testing.T) {
 				ignoredList := utils.ConvertAddressPrefixes(ADDR_01_COSMOS, AddressPrefixes)
 				for _, e := range events {
 					for _, ignoredAddr := range ignoredList {
-						if e.Receiver == ignoredAddr {
-							t.Errorf(`test case #%02d: expect receiver ignored, got receiver = %s. events = %#v`, i, e.Receiver, events)
-							return
-						}
+						require.NotEqual(t, e.Receiver, ignoredAddr, "error in test case #%02d: expect receiver ignored, got receiver = %s. events = %#v", i, e.Receiver, events)
 					}
 				}
 			},
@@ -585,10 +507,7 @@ func TestNftEvents(t *testing.T) {
 				ignoredList := utils.ConvertAddressArrayPrefixes([]string{ADDR_01_COSMOS, ADDR_02_LIKE}, AddressPrefixes)
 				for _, e := range events {
 					for _, ignoredAddr := range ignoredList {
-						if e.Receiver == ignoredAddr {
-							t.Errorf(`test case #%02d: expect receiver ignored, got receiver = %s. events = %#v`, i, e.Receiver, events)
-							return
-						}
+						require.NotEqual(t, e.Receiver, ignoredAddr, "error in test case #%02d: expect receiver ignored, got receiver = %s. events = %#v", i, e.Receiver, events)
 					}
 				}
 			},
@@ -599,10 +518,7 @@ func TestNftEvents(t *testing.T) {
 			2,
 			func(i int, events []NftEvent) {
 				for _, e := range events {
-					if e.ClassId != nftClasses[0].Id {
-						t.Errorf(`test case #%02d: expect classId = %s (with ISCN prefix %s), got classId = %s. events = %#v`, i, nftClasses[0].Id, nftClasses[0].Parent.IscnIdPrefix, e.ClassId, events)
-						return
-					}
+					require.Equal(t, e.ClassId, nftClasses[0].Id, "error in test case #%02d: expect classId = %s (with ISCN prefix %s), got classId = %s. events = %#v", i, nftClasses[0].Id, nftClasses[0].Parent.IscnIdPrefix, e.ClassId, events)
 				}
 			},
 		},
@@ -612,10 +528,7 @@ func TestNftEvents(t *testing.T) {
 			1,
 			func(i int, events []NftEvent) {
 				for _, e := range events {
-					if e.ClassId != nftClasses[1].Id {
-						t.Errorf(`test case #%02d: expect classId = %s (with ISCN prefix %s), got classId = %s. events = %#v`, i, nftClasses[1].Id, nftClasses[1].Parent.IscnIdPrefix, e.ClassId, events)
-						return
-					}
+					require.Equal(t, e.ClassId, nftClasses[1].Id, "error in test case #%02d: expect classId = %s (with ISCN prefix %s), got classId = %s. events = %#v", i, nftClasses[1].Id, nftClasses[1].Parent.IscnIdPrefix, e.ClassId, events)
 				}
 			},
 		},
@@ -623,10 +536,7 @@ func TestNftEvents(t *testing.T) {
 			"query by sender with like prefix (0)", QueryEventsRequest{Sender: []string{ADDR_01_LIKE}}, 1,
 			func(i int, events []NftEvent) {
 				for _, e := range events {
-					if e.Sender != ADDR_01_LIKE {
-						t.Errorf(`test case #%02d: expect sender = %s, got sender = %s. events = %#v`, i, ADDR_01_LIKE, e.Sender, events)
-						return
-					}
+					require.Equal(t, e.Sender, ADDR_01_LIKE, "error in test case #%02d: expect sender = %s, got sender = %s. events = %#v", i, ADDR_01_LIKE, e.Sender, events)
 				}
 			},
 		},
@@ -634,10 +544,7 @@ func TestNftEvents(t *testing.T) {
 			"query by sender with cosmos prefix (1)", QueryEventsRequest{Sender: []string{ADDR_02_COSMOS}}, 1,
 			func(i int, events []NftEvent) {
 				for _, e := range events {
-					if e.Sender != ADDR_02_LIKE {
-						t.Errorf(`test case #%02d: expect sender = %s, got sender = %s. events = %#v`, i, ADDR_02_LIKE, e.Sender, events)
-						return
-					}
+					require.Equal(t, e.Sender, ADDR_02_LIKE, "error in test case #%02d: expect sender = %s, got sender = %s. events = %#v", i, ADDR_02_LIKE, e.Sender, events)
 				}
 			},
 		},
@@ -645,10 +552,7 @@ func TestNftEvents(t *testing.T) {
 			"query by receiver with cosmos prefix (0)", QueryEventsRequest{Receiver: []string{ADDR_02_COSMOS}}, 1,
 			func(i int, events []NftEvent) {
 				for _, e := range events {
-					if e.Receiver != ADDR_02_LIKE {
-						t.Errorf(`test case #%02d: expect receiver = %s, got receiver = %s. events = %#v`, i, ADDR_02_LIKE, e.Receiver, events)
-						return
-					}
+					require.Equal(t, e.Receiver, ADDR_02_LIKE, "error in test case #%02d: expect receiver = %s, got receiver = %s. events = %#v", i, ADDR_02_LIKE, e.Receiver, events)
 				}
 			},
 		},
@@ -656,10 +560,7 @@ func TestNftEvents(t *testing.T) {
 			"query by receiver with like prefix (1)", QueryEventsRequest{Receiver: []string{ADDR_03_LIKE}}, 1,
 			func(i int, events []NftEvent) {
 				for _, e := range events {
-					if e.Receiver != ADDR_03_LIKE {
-						t.Errorf(`test case #%02d: expect receiver = %s, got receiver = %s. events = %#v`, i, ADDR_03_LIKE, e.Receiver, events)
-						return
-					}
+					require.Equal(t, e.Receiver, ADDR_03_LIKE, "error in test case #%02d: expect receiver = %s, got receiver = %s. events = %#v", i, ADDR_03_LIKE, e.Receiver, events)
 				}
 			},
 		},
@@ -667,11 +568,7 @@ func TestNftEvents(t *testing.T) {
 			"query by creator", QueryEventsRequest{Creator: []string{iscns[1].Owner}}, 2,
 			func(i int, events []NftEvent) {
 				for _, e := range events {
-					if e.ClassId != nftClasses[0].Id {
-						t.Errorf(`test case #%02d: expect classId = %s (with ISCN Prefix %s), got classId = %s. events = %#v`,
-							i, nftClasses[0].Id, nftClasses[0].Parent.IscnIdPrefix, e.ClassId, events)
-						return
-					}
+					require.Equal(t, e.ClassId, nftClasses[0].Id, "error in test case #%02d: expect classId = %s (with ISCN Prefix %s), got classId = %s. events = %#v", i, nftClasses[0].Id, nftClasses[0].Parent.IscnIdPrefix, e.ClassId, events)
 				}
 			},
 		},
@@ -709,14 +606,8 @@ func TestNftEvents(t *testing.T) {
 	}
 	for i, testCase := range testCases {
 		res, err := GetNftEvents(Conn, testCase.query, p)
-		if err != nil {
-			t.Errorf("test case #%02d (%s): GetNftEvents returned error: %#v", i, testCase.name, err)
-			continue
-		}
-		if len(res.Events) != testCase.count {
-			t.Errorf("test case #%02d (%s): expect len(res.Events) = %d, got %d. results = %#v", i, testCase.name, testCase.count, len(res.Events), res.Events)
-			continue
-		}
+		require.NoError(t, err, "test case #%02d (%s): GetNftEvents returned error: %#v", i, testCase.name, err)
+		require.Len(t, res.Events, testCase.count, "test case #%02d (%s): expect len(res.Events) = %d, got %d. results = %#v", i, testCase.name, testCase.count, len(res.Events), res.Events)
 		if testCase.checker != nil {
 			testCase.checker(i, res.Events)
 		}
@@ -842,15 +733,12 @@ func TestQueryNftRanking(t *testing.T) {
 			Price:     2500,
 		},
 	}
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns:      iscns,
 		NftClasses: nftClasses,
 		Nfts:       nfts,
 		NftEvents:  nftEvents,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	testCases := []struct {
 		name            string
@@ -943,27 +831,12 @@ func TestQueryNftRanking(t *testing.T) {
 	for i, testCase := range testCases {
 		testCase.query.ApiAddresses = []string{ADDR_01_LIKE}
 		res, err := GetClassesRanking(Conn, testCase.query, p)
-		if err != nil {
-			t.Errorf("test case #%02d (%s): GetClassesRanking returned error: %#v", i, testCase.name, err)
-			continue
-		}
-		if len(res.Classes) != len(testCase.classIDs) {
-			t.Errorf("test case #%02d (%s): expect len(res.Classes) = %d, got %d. results = %#v", i, testCase.name, len(testCase.classIDs), len(res.Classes), res.Classes)
-			continue
-		}
+		require.NoError(t, err, "test case #%02d (%s): GetClassesRanking returned error: %#v", i, testCase.name, err)
+		require.Len(t, res.Classes, len(testCase.classIDs), "test case #%02d (%s): expect len(res.Classes) = %d, got %d. results = %#v", i, testCase.name, len(testCase.classIDs), len(res.Classes), res.Classes)
 		for j, class := range res.Classes {
-			if class.NftClass.Id != testCase.classIDs[j] {
-				t.Errorf("test case #%02d (%s), class %d: expect class ID = %s, got %s. results = %#v", i, testCase.name, j, testCase.classIDs[j], class.NftClass.Id, res.Classes)
-				continue
-			}
-			if class.SoldCount != testCase.soldCounts[j] {
-				t.Errorf("test case #%02d (%s), class %d: expect sold count = %d, got %d. results = %#v", i, testCase.name, j, testCase.soldCounts[j], class.SoldCount, res.Classes)
-				continue
-			}
-			if class.TotalSoldValue != testCase.totalSoldValues[j] {
-				t.Errorf("test case #%02d (%s), class %d: expect total sold value = %d, got %d. results = %#v", i, testCase.name, j, testCase.totalSoldValues[j], class.TotalSoldValue, res.Classes)
-				continue
-			}
+			require.Equal(t, testCase.classIDs[j], class.NftClass.Id, "test case #%02d (%s), class %d: expect class ID = %s, got %s. results = %#v", i, testCase.name, j, testCase.classIDs[j], class.NftClass.Id, res.Classes)
+			require.Equal(t, testCase.soldCounts[j], class.SoldCount, "test case #%02d (%s), class %d: expect sold count = %d, got %d. results = %#v", i, testCase.name, j, testCase.soldCounts[j], class.SoldCount, res.Classes)
+			require.Equal(t, testCase.totalSoldValues[j], class.TotalSoldValue, "test case #%02d (%s), class %d: expect total sold value = %d, got %d. results = %#v", i, testCase.name, j, testCase.totalSoldValues[j], class.TotalSoldValue, res.Classes)
 		}
 	}
 }
@@ -1092,10 +965,7 @@ func TestCollectors(t *testing.T) {
 			Price:    nfts[5].LatestPrice,
 		},
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts, NftEvents: nftEvents})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts, NftEvents: nftEvents})
 
 	// end state:
 	// collectors[0]: 1 NFT, NFT price = 100, class price = 100, from himself
@@ -1172,25 +1042,18 @@ func TestCollectors(t *testing.T) {
 	p := PageRequest{
 		Limit: 10,
 	}
-NEXT_TESTCASE:
 	for i, testCase := range testCases {
 		res, err := GetCollector(Conn, testCase.query, p)
-		if err != nil {
-			t.Errorf("test case #%02d (%s): GetCollector returned error: %#v", i, testCase.name, err)
-			continue NEXT_TESTCASE
-		}
-		if len(res.Collectors) != len(testCase.owners) {
-			t.Errorf("test case #%02d (%s): expect len(res.Collectors) = %d, got %d. results = %#v", i, testCase.name, len(testCase.owners), len(res.Collectors), res.Collectors)
-			continue NEXT_TESTCASE
-		}
+		require.NoError(t, err, "test case #%02d (%s): GetCollector returned error: %#v", i, testCase.name, err)
+		require.Len(t, res.Collectors, len(testCase.owners), "test case #%02d (%s): expect len(res.Collectors) = %d, got %d. results = %#v", i, testCase.name, len(testCase.owners), len(res.Collectors), res.Collectors)
 		if len(res.Collectors) > 1 {
 			for j := 1; j < len(res.Collectors); j++ {
 				prev := res.Collectors[j-1]
 				curr := res.Collectors[j]
-				if (testCase.query.OrderBy == "count" && curr.Count > prev.Count) ||
-					(testCase.query.OrderBy != "count" && curr.TotalValue > prev.TotalValue) {
-					t.Errorf("test case #%02d (%s): expect Collectors in descending order, got results = %#v", i, testCase.name, res.Collectors)
-					continue NEXT_TESTCASE
+				if testCase.query.OrderBy == "count" {
+					require.LessOrEqual(t, curr.Count, prev.Count, "test case #%02d (%s): expect Collectors in descending order, got results = %#v", i, testCase.name, res.Collectors)
+				} else {
+					require.LessOrEqual(t, curr.TotalValue, prev.TotalValue, "test case #%02d (%s): expect Collectors in descending order, got results = %#v", i, testCase.name, res.Collectors)
 				}
 			}
 		}
@@ -1198,10 +1061,7 @@ NEXT_TESTCASE:
 		for j, owner := range testCase.owners {
 			for _, collector := range res.Collectors {
 				if collector.Account == owner {
-					if collector.TotalValue != testCase.totalValues[j] {
-						t.Errorf("test case #%02d (%s), collector %s: expect total value = %d, got %d. results = %#v", i, testCase.name, owner, testCase.totalValues[j], collector.TotalValue, res.Collectors)
-						continue NEXT_TESTCASE
-					}
+					require.Equal(t, testCase.totalValues[j], collector.TotalValue, "test case #%02d (%s), collector %s: expect total value = %d, got %d. results = %#v", i, testCase.name, owner, testCase.totalValues[j], collector.TotalValue, res.Collectors)
 					continue NEXT_OWNER
 				}
 			}
@@ -1335,10 +1195,7 @@ func TestCreators(t *testing.T) {
 			Price:    nfts[5].LatestPrice,
 		},
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts, NftEvents: nftEvents})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts, NftEvents: nftEvents})
 
 	// end state:
 	// creators[0]: transfer ISCN ownership to collectors[1]
@@ -1412,25 +1269,18 @@ func TestCreators(t *testing.T) {
 	p := PageRequest{
 		Limit: 10,
 	}
-NEXT_TESTCASE:
 	for i, testCase := range testCases {
 		res, err := GetCreators(Conn, testCase.query, p)
-		if err != nil {
-			t.Errorf("test case #%02d (%s): GetCreators returned error: %#v", i, testCase.name, err)
-			continue NEXT_TESTCASE
-		}
-		if len(res.Creators) != len(testCase.owners) {
-			t.Errorf("test case #%02d (%s): expect len(res.Creators) = %d, got %d. results = %#v", i, testCase.name, len(testCase.owners), len(res.Creators), res.Creators)
-			continue NEXT_TESTCASE
-		}
+		require.NoError(t, err, "test case #%02d (%s)", i, testCase.name)
+		require.Len(t, res.Creators, len(testCase.owners), "test case #%02d (%s)", i, testCase.name)
 		if len(res.Creators) > 1 {
 			for j := 1; j < len(res.Creators); j++ {
 				prev := res.Creators[j-1]
 				curr := res.Creators[j]
-				if (testCase.query.OrderBy == "count" && curr.Count > prev.Count) ||
-					(testCase.query.OrderBy != "count" && curr.TotalValue > prev.TotalValue) {
-					t.Errorf("test case #%02d (%s): expect Creators in descending order, got results = %#v", i, testCase.name, res.Creators)
-					continue NEXT_TESTCASE
+				if testCase.query.OrderBy == "count" {
+					require.LessOrEqual(t, curr.Count, prev.Count, "test case #%02d (%s)", i, testCase.name)
+				} else {
+					require.LessOrEqual(t, curr.TotalValue, prev.TotalValue, "test case #%02d (%s)", i, testCase.name)
 				}
 			}
 		}
@@ -1438,10 +1288,7 @@ NEXT_TESTCASE:
 		for j, owner := range testCase.owners {
 			for _, creator := range res.Creators {
 				if creator.Account == owner {
-					if creator.TotalValue != testCase.totalValues[j] {
-						t.Errorf("test case #%02d (%s), creator %s: expect total value = %d, got %d. results = %#v", i, testCase.name, owner, testCase.totalValues[j], creator.TotalValue, res.Creators)
-						continue NEXT_TESTCASE
-					}
+					require.Equal(t, testCase.owners[j], creator.Account, "test case #%02d (%s)", i, testCase.name)
 					continue NEXT_OWNER
 				}
 			}
@@ -1490,8 +1337,7 @@ func TestGetCollectorTopRankedCreators(t *testing.T) {
 			}
 		}
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts, NftEvents: nftEvents})
-	require.NoError(t, err)
+	InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts, NftEvents: nftEvents})
 
 	p := PageRequest{
 		Limit:   100,

@@ -87,10 +87,9 @@ func TestExtractAuthz(t *testing.T) {
 			timestamp.UTC().Format(time.RFC3339),
 		),
 	}
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Txs: txs,
 	})
-	require.NoError(t, err)
 
 	finished, err := Extract(Conn, ExtractFunc)
 	require.NoError(t, err)

@@ -166,12 +166,12 @@ type DBTestData struct {
 	LatestBlockTime     *time.Time
 }
 
-func InsertTestData(testData DBTestData) error {
+func InsertTestData(testData DBTestData) {
 	b := db.NewBatch(Conn, 10000)
 	for _, i := range testData.Iscns {
 		iscnId, err := iscntypes.ParseIscnId(i.Iscn)
 		if err != nil {
-			return err
+			logger.L.Panicw("failed to parse iscn id", "err", err)
 		}
 		i.IscnPrefix = iscnId.Prefix.String()
 		i.Version = int(iscnId.Version)
@@ -266,7 +266,10 @@ func InsertTestData(testData DBTestData) error {
 	if testData.ExtractorHeight != 0 {
 		b.UpdateMetaHeight(db.META_EXTRACTOR, testData.ExtractorHeight)
 	}
-	return b.Flush()
+	err := b.Flush()
+	if err != nil {
+		logger.L.Panicw("failed to insert test data", "err", err)
+	}
 }
 
 func DebugSQL(conn *pgxpool.Conn, ctx context.Context, sql string, args ...interface{}) (err error) {

@@ -5,7 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/stretchr/testify/require"
+
 	. "github.com/likecoin/likecoin-chain-tx-indexer/rest"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
@@ -18,10 +19,7 @@ type Response struct {
 
 func TestStargate(t *testing.T) {
 	defer CleanupTestData(Conn)
-	b := db.NewBatch(Conn, 10000)
-	b.Batch.Queue(
-		"INSERT INTO txs (height, tx_index, tx, events) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", 1, 1,
-		[]byte(`
+	tx := `
 {
   "height": "1",
   "txhash": "AAAAAA",
@@ -91,27 +89,15 @@ func TestStargate(t *testing.T) {
   "timestamp": "2022-01-01T00:00:00Z",
   "events": []
 }
-`),
-		[]string{`iscn_record.iscn_id="iscn://testing/AAAAAA/1"`},
-	)
-	err := b.Flush()
-	if err != nil {
-		t.Fatal(err)
-	}
+`
+	InsertTestData(DBTestData{Txs: []string{tx}})
 
 	req := httptest.NewRequest(
 		"GET",
 		STARGATE_ENDPOINT+"?events=iscn_record.iscn_id='iscn://testing/AAAAAA/1'", nil)
 	res, body := request(req)
-	if res.StatusCode != 200 {
-		t.Fatal(body)
-	}
+	require.Equal(t, 200, res.StatusCode)
 	var result Response
-	err = json.Unmarshal([]byte(body), &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(result.Txs) == 0 {
-		t.Fatal("No response:", result)
-	}
+	require.NoError(t, json.Unmarshal([]byte(body), &result))
+	require.NotEmpty(t, result.Txs)
 }

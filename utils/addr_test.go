@@ -1,6 +1,10 @@
 package utils
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func TestConvertAddressPrefixes(t *testing.T) {
 	prefixes := []string{"like", "cosmos"}
@@ -9,39 +13,16 @@ func TestConvertAddressPrefixes(t *testing.T) {
 	expected := []string{addr1, addr2}
 
 	convertedAddrs1 := ConvertAddressPrefixes(addr1, prefixes)
-	if len(convertedAddrs1) != len(expected) {
-		t.Errorf("ConvertAddressPrefixes failed, expect %#v, got %#v", expected, convertedAddrs1)
-	}
-	for i := range convertedAddrs1 {
-		if convertedAddrs1[i] != expected[i] {
-			t.Errorf("ConvertAddressPrefixes failed, expect %#v, got %#v", expected, convertedAddrs1)
-		}
-	}
+	require.Equal(t, convertedAddrs1, expected)
 
 	convertedAddrs2 := ConvertAddressPrefixes(addr2, prefixes)
-	if len(convertedAddrs2) != len(expected) {
-		t.Errorf("ConvertAddressPrefixes failed, expect %#v, got %#v", expected, convertedAddrs2)
-	}
-	for i := range convertedAddrs1 {
-		if convertedAddrs2[i] != expected[i] {
-			t.Errorf("ConvertAddressPrefixes failed, expect %#v, got %#v", expected, convertedAddrs2)
-		}
-	}
+	require.Equal(t, convertedAddrs2, expected)
 
 	wrongAddr := "like1hggde2u9lrjy9x9kqfwzzgjwkxe2y9wz9ykdd6" // wrong checksum
 	convertedAddrs3 := ConvertAddressPrefixes(wrongAddr, prefixes)
 	expected = []string{wrongAddr}
-	if len(convertedAddrs3) != len(expected) {
-		t.Errorf("ConvertAddressPrefixes failed, expect %#v, got %#v", expected, convertedAddrs3)
-	}
-	for i := range convertedAddrs3 {
-		if convertedAddrs3[i] != expected[i] {
-			t.Errorf("ConvertAddressPrefixes failed, expect %#v, got %#v", expected, convertedAddrs3)
-		}
-	}
+	require.Equal(t, convertedAddrs3, expected)
 
 	convertedAddrs4 := ConvertAddressPrefixes("", prefixes)
-	if len(convertedAddrs4) != 0 {
-		t.Errorf("ConvertAddressPrefixes failed, expect empty array, got %#v", convertedAddrs4)
-	}
+	require.Empty(t, convertedAddrs4)
 }
