@@ -37,15 +37,12 @@ func TestBuyNftOwnership(t *testing.T) {
 	txs := []string{
 		fmt.Sprintf(`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgBuyNFT","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","seller":"%[4]s","price":"100000000000"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"likechain.likenft.v1.EventBuyNFT","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[4]s\""},{"key":"buyer","value":"\"%[1]s\""},{"key":"price","value":"\"100000000000\""}]},{"type":"message","attributes":[{"key":"action","value":"buy_nft"},{"key":"sender","value":"%[1]s"}]}]}]}`, ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_01_LIKE),
 	}
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns:      iscns,
 		NftClasses: nftClasses,
 		Nfts:       nfts,
 		Txs:        txs,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	ownersRes, err := GetOwners(Conn, QueryOwnerRequest{
 		ClassId: nftClasses[0].Id,
@@ -108,15 +105,12 @@ func TestSellNftOwnership(t *testing.T) {
 	txs := []string{
 		fmt.Sprintf(`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgSellNFT","creator":"%[4]s","class_id":"%[2]s","nft_id":"%[3]s","buyer":"%[1]s","price":"100000000000"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"likechain.likenft.v1.EventSellNFT","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[4]s\""},{"key":"buyer","value":"\"%[1]s\""},{"key":"price","value":"\"100000000000\""}]},{"type":"message","attributes":[{"key":"action","value":"sell_nft"},{"key":"sender","value":"%[4]s"}]}]}]}`, ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_01_LIKE),
 	}
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns:      iscns,
 		NftClasses: nftClasses,
 		Nfts:       nfts,
 		Txs:        txs,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	ownersRes, err := GetOwners(Conn, QueryOwnerRequest{
 		ClassId: nftClasses[0].Id,
@@ -193,16 +187,13 @@ func TestListing(t *testing.T) {
 		),
 	}
 	blockTime := expiration.Add(-10000 * time.Second)
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns:           iscns,
 		NftClasses:      nftClasses,
 		Nfts:            nfts,
 		Txs:             txs,
 		LatestBlockTime: &blockTime,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	ownersRes, err := GetOwners(Conn, QueryOwnerRequest{
 		ClassId: nftClasses[0].Id,
@@ -246,10 +237,7 @@ func TestListing(t *testing.T) {
 			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000002), expiration.Add(2*time.Second).Format(time.RFC3339),
 		),
 	}
-	err = InsertTestData(DBTestData{Txs: txs})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Txs: txs})
 
 	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
@@ -283,10 +271,7 @@ func TestListing(t *testing.T) {
 			ADDR_02_LIKE, nftClasses[0].Id, nfts[1].NftId,
 		),
 	}
-	err = InsertTestData(DBTestData{Txs: txs})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Txs: txs})
 
 	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
@@ -314,10 +299,7 @@ func TestListing(t *testing.T) {
 			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_01_LIKE,
 		),
 	}
-	err = InsertTestData(DBTestData{Txs: txs})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Txs: txs})
 
 	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
@@ -387,16 +369,13 @@ func TestOffer(t *testing.T) {
 		),
 	}
 	blockTime := expiration.Add(-10000 * time.Second)
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns:           iscns,
 		NftClasses:      nftClasses,
 		Nfts:            nfts,
 		Txs:             txs,
 		LatestBlockTime: &blockTime,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	ownersRes, err := GetOwners(Conn, QueryOwnerRequest{
 		ClassId: nftClasses[0].Id,
@@ -440,10 +419,7 @@ func TestOffer(t *testing.T) {
 			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000002), expiration.Add(2*time.Second).Format(time.RFC3339),
 		),
 	}
-	err = InsertTestData(DBTestData{Txs: txs})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Txs: txs})
 
 	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
@@ -477,10 +453,7 @@ func TestOffer(t *testing.T) {
 			ADDR_01_LIKE, nftClasses[0].Id, nfts[1].NftId,
 		),
 	}
-	err = InsertTestData(DBTestData{Txs: txs})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Txs: txs})
 
 	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
@@ -508,10 +481,7 @@ func TestOffer(t *testing.T) {
 			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_02_LIKE,
 		),
 	}
-	err = InsertTestData(DBTestData{Txs: txs})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Txs: txs})
 
 	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)

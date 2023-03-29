@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/rest"
@@ -32,10 +33,7 @@ func TestISCNCombine(t *testing.T) {
 			Fingerprints: []string{"hash://unknown/asdf", "hash://unknown/qwer"},
 		},
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Iscns: iscns})
 
 	table := []struct {
 		name    string
@@ -129,9 +127,7 @@ func TestISCNCombine(t *testing.T) {
 			if v.status == 0 {
 				v.status = 200
 			}
-			if res.StatusCode != v.status {
-				t.Fatalf("expect %d, got %d\n%s\n%s", v.status, res.StatusCode, v.query, body)
-			}
+			require.Equal(t, v.status, res.StatusCode)
 			if res.StatusCode != 200 {
 				return
 			}
@@ -139,25 +135,17 @@ func TestISCNCombine(t *testing.T) {
 				Records []json.RawMessage
 			}
 
-			if err := json.Unmarshal([]byte(body), &records); err != nil {
-				t.Fatal(err)
-			}
-			if len(records.Records) == 0 {
-				t.Fatalf("No response, %s", body)
-				return
-			}
-			if v.length != 0 && len(records.Records) != v.length {
-				t.Errorf("Length should be %d, got %d.\n%s\n", v.length, len(records.Records), v.query)
+			require.NoError(t, json.Unmarshal([]byte(body), &records))
+			require.NotEmpty(t, records.Records, "No response, body = %s", body)
+			if v.length > 0 {
+				require.Len(t, records.Records, v.length, "query: %s", v.query)
 			}
 			if v.contain != nil {
 				for _, record := range records.Records {
 					for _, s := range v.contain {
-						if !strings.Contains(string(record), s) {
-							t.Errorf("record should contain %s, but not found: %s", s, string(record))
-						}
+						require.Contains(t, string(record), s)
 					}
 				}
-
 			}
 		})
 	}

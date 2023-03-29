@@ -38,11 +38,10 @@ func TestCreateAndUpdateNft(t *testing.T) {
 			config,
 		),
 	}
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns: iscns,
 		Txs:   txs,
 	})
-	require.NoError(t, err)
 
 	finished, err := Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
@@ -87,11 +86,10 @@ func TestCreateAndUpdateNft(t *testing.T) {
 			config,
 		),
 	}
-	err = InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns: iscns,
 		Txs:   txs,
 	})
-	require.NoError(t, err)
 
 	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
@@ -147,15 +145,12 @@ func TestSendNft(t *testing.T) {
 	txs := []string{
 		fmt.Sprintf(`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/cosmos.nft.v1beta1.MsgSend","sender":"%[4]s","class_id":"%[2]s","id":"%[3]s","receiver":"%[1]s"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"id","value":"\"%[3]s\""},{"key":"sender","value":"\"%[4]s\""},{"key":"receiver","value":"\"%[1]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]}]}`, ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_01_LIKE),
 	}
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns:      iscns,
 		NftClasses: nftClasses,
 		Nfts:       nfts,
 		Txs:        txs,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	ownersRes, err := GetOwners(Conn, QueryOwnerRequest{
 		ClassId: nftClasses[0].Id,
@@ -223,15 +218,12 @@ func TestSendNftWithPrice(t *testing.T) {
 			ADDR_01_LIKE, ADDR_02_LIKE, ADDR_03_LIKE, nftClasses[0].Id, nfts[0].NftId,
 			timestamp.Format(time.RFC3339)),
 	}
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns:      iscns,
 		NftClasses: nftClasses,
 		Nfts:       nfts,
 		Txs:        txs,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	finished, err := Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
@@ -293,14 +285,11 @@ func TestMintNft(t *testing.T) {
 			nftClasses[0].Id, prefixA, timestamp.Format(time.RFC3339),
 		),
 	}
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns:      iscns,
 		NftClasses: nftClasses,
 		Txs:        txs,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	finished, err := Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
@@ -308,7 +297,7 @@ func TestMintNft(t *testing.T) {
 
 	// hack: since currently GetNfts requires event with receiver = owner,
 	// we insert a dummy event here for testing purpose
-	err = InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		NftEvents: []NftEvent{
 			{
 				Action:    "dummy",
@@ -320,7 +309,6 @@ func TestMintNft(t *testing.T) {
 			},
 		},
 	})
-	require.NoError(t, err)
 
 	res, err := GetNfts(Conn, QueryNftRequest{Owner: ADDR_01_LIKE}, PageRequest{Limit: 10})
 	require.NoError(t, err)

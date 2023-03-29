@@ -1,18 +1,17 @@
 package utils
 
 import (
-	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestSanitizeJSON(t *testing.T) {
 	input := []byte(`"\t\\\b\c\d\e\r\n\uD83D\uDe02\"\/\f\b\uDe02\uD83D\u0000\u0001XXXX\u012X"`)
 	output := SanitizeJSON(input)
 	expected := []byte(`"\t\\\bcde\r\n\uD83D\uDe02\"\/\f\b\u0001XXXX012X"`)
-	if !bytes.Equal(output, expected) {
-		t.Errorf("sanitizeJSON failed, expect %#v, got %#v", string(expected), string(output))
-	}
+	require.Equal(t, output, expected)
 
 	input2 := `
 {
@@ -444,7 +443,5 @@ func TestSanitizeJSON(t *testing.T) {
 `
 	output2 := SanitizeJSON([]byte(input2))
 	expected2 := []byte(strings.ReplaceAll(input2, `\ud83d`, ``))
-	if !bytes.Equal(output2, expected2) {
-		t.Errorf("sanitizeJSON failed, expect %#v, got %#v", string(expected), string(output))
-	}
+	require.Equal(t, expected2, output2)
 }

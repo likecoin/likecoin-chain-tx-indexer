@@ -73,10 +73,7 @@ func TestNftCount(t *testing.T) {
 			Owner:   ADDR_03_COSMOS,
 		},
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
 
 	testCases := []struct {
 		name  string
@@ -103,14 +100,8 @@ func TestNftCount(t *testing.T) {
 	}
 	for i, testCase := range testCases {
 		res, err := GetNftCount(Conn, testCase.query)
-		if err != nil {
-			t.Errorf("test case #%02d (%s): GetNftCount returned error: %#v", i, testCase.name, err)
-			continue
-		}
-		if res.Count != testCase.count {
-			t.Errorf("test case #%02d (%s): expect count = %d, got %d.", i, testCase.name, testCase.count, res.Count)
-			continue
-		}
+		require.NoError(t, err, "test case #%02d (%s): GetNftCount returned error: %#v", i, testCase.name, err)
+		require.Equal(t, testCase.count, res.Count, "test case #%02d (%s): expect count = %d, got %d.", i, testCase.name, testCase.count, res.Count)
 	}
 }
 
@@ -190,10 +181,7 @@ func TestNftTradeStats(t *testing.T) {
 			Price:    50,
 		},
 	}
-	err := InsertTestData(DBTestData{NftEvents: nftEvents})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{NftEvents: nftEvents})
 
 	query := QueryNftTradeStatsRequest{}
 	res, err := GetNftTradeStats(Conn, query)
@@ -260,18 +248,11 @@ func TestNftCreatorCount(t *testing.T) {
 			Sender:  ADDR_03_LIKE,
 		},
 	}
-	err := InsertTestData(DBTestData{NftEvents: nftEvents})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{NftEvents: nftEvents})
 
 	res, err := GetNftCreatorCount(Conn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.Count != 3 {
-		t.Fatalf("expect count = 3, got %d. result = %#v", res.Count, res)
-	}
+	require.NoError(t, err)
+	require.Equal(t, uint64(3), res.Count)
 }
 
 func TestNftOwnerCount(t *testing.T) {
@@ -302,18 +283,11 @@ func TestNftOwnerCount(t *testing.T) {
 			Owner: ADDR_03_LIKE,
 		},
 	}
-	err := InsertTestData(DBTestData{Nfts: nfts})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Nfts: nfts})
 
 	res, err := GetNftOwnerCount(Conn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.Count != 3 {
-		t.Fatalf("expect count = 3, got %d. result = %#v", res.Count, res)
-	}
+	require.NoError(t, err)
+	require.Equal(t, uint64(3), res.Count)
 }
 
 func TestNftOwnerList(t *testing.T) {
@@ -344,10 +318,7 @@ func TestNftOwnerList(t *testing.T) {
 			Owner: ADDR_03_LIKE,
 		},
 	}
-	err := InsertTestData(DBTestData{Nfts: nfts})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Nfts: nfts})
 
 	testCases := []struct {
 		name       string
@@ -375,26 +346,13 @@ func TestNftOwnerList(t *testing.T) {
 		},
 	}
 
-NEXT_TESTCASE:
 	for i, testCase := range testCases {
 		res, err := GetNftOwnerList(Conn, testCase.pagination)
-		if err != nil {
-			t.Errorf("test case #%02d: GetNftOwnerList returned error: %#v", i, err)
-			continue NEXT_TESTCASE
-		}
-		if len(res.Owners) != len(testCase.owners) {
-			t.Errorf("test case #%02d: expect owners count = %d, got %d. results = %#v", i, len(testCase.owners), len(res.Owners), res.Owners)
-			continue NEXT_TESTCASE
-		}
+		require.NoError(t, err)
+		require.Equal(t, len(testCase.owners), len(res.Owners), "test case #%02d: %s", i, testCase.name)
 		for j, resOwner := range res.Owners {
-			if resOwner.Owner != testCase.owners[j] {
-				t.Errorf("test case #%02d: expect owner = %s, got %s. results = %#v", i, testCase.owners[j], resOwner.Owner, res.Owners)
-				continue NEXT_TESTCASE
-			}
-			if resOwner.Count != testCase.counts[j] {
-				t.Errorf("test case #%02d: expect count for owner %s = %d, got %d. results = %#v", i, testCase.owners[j], testCase.counts[j], resOwner.Count, res.Owners)
-				continue NEXT_TESTCASE
-			}
+			require.Equal(t, testCase.owners[j], resOwner.Owner, "test case #%02d: %s", i, testCase.name)
+			require.Equal(t, testCase.counts[j], resOwner.Count, "test case #%02d: %s", i, testCase.name)
 		}
 	}
 }

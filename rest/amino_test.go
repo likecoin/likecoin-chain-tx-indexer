@@ -4,6 +4,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
@@ -87,9 +89,7 @@ func TestAmino(t *testing.T) {
 		[]string{`message.module="iscn"`},
 	)
 	err := b.Flush()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	table := []struct {
 		query  string
@@ -103,8 +103,9 @@ func TestAmino(t *testing.T) {
 	for _, v := range table {
 		req := httptest.NewRequest("GET", v.query, nil)
 		res, body := request(req)
-		if (v.status != 0 && res.StatusCode != v.status) || res.StatusCode != 200 {
-			t.Fatal(body)
+		require.Equal(t, 200, res.StatusCode)
+		if v.status != 0 {
+			require.Equal(t, v.status, res.StatusCode, "body: %s", body)
 		}
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	iscntypes "github.com/likecoin/likecoin-chain/v3/x/iscn/types"
 
 	. "github.com/likecoin/likecoin-chain-tx-indexer/db"
@@ -28,10 +30,7 @@ func TestIscnCombineQuery(t *testing.T) {
 		Keywords:     []string{"apple", "boy"},
 		Fingerprints: []string{"hash://unknown/asdf", "hash://unknown/qwer"},
 	}
-	err := InsertTestData(DBTestData{Iscns: []IscnInsert{iscn}})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Iscns: []IscnInsert{iscn}})
 
 	tables := []struct {
 		name string
@@ -125,22 +124,19 @@ func TestIscnCombineQuery(t *testing.T) {
 					Reverse: true,
 				}
 				res, err := QueryIscn(Conn, v.IscnQuery, p)
-				if err != nil {
-					t.Fatal(err)
+				require.NoError(t, err)
+				if v.hasResult {
+					require.NotEmpty(t, res.Records, "Test %d (%s, AllIscnVersions = %v): should have result", i, v.name, v.IscnQuery.AllIscnVersions)
+				} else {
+					require.Empty(t, res.Records, "Test %d (%s, AllIscnVersions = %v): should not have result", i, v.name, v.IscnQuery.AllIscnVersions)
 				}
-				hasResult := (len(res.Records) > 0)
-				if hasResult != v.hasResult {
-					t.Fatalf("Test %d (%s, AllIscnVersions = %v): hasResult should be %t, got %d results instead. Results = %#v", i, v.name, v.IscnQuery.AllIscnVersions, v.hasResult, len(res.Records), res.Records)
-				}
-
 				if v.SearchTerm != "" {
 					res, err := QueryIscnSearch(Conn, v.IscnQuery.SearchTerm, p, v.AllIscnVersions)
-					if err != nil {
-						t.Fatal(err)
-					}
-					hasResult := (len(res.Records) > 0)
-					if hasResult != v.hasResult {
-						t.Fatalf("Test %d (%s on QueryIscnSearch, AllIscnVersions = %v): hasResult should be %t, got %d results instead. Results = %#v\n", i, v.name, v.IscnQuery.AllIscnVersions, v.hasResult, len(res.Records), res.Records)
+					require.NoError(t, err)
+					if v.hasResult {
+						require.NotEmpty(t, res.Records, "Test %d (%s on QueryIscnSearch, AllIscnVersions = %v): should have result", i, v.name, v.IscnQuery.AllIscnVersions)
+					} else {
+						require.Empty(t, res.Records, "Test %d (%s on QueryIscnSearch, AllIscnVersions = %v): should not have result", i, v.name, v.IscnQuery.AllIscnVersions)
 					}
 				}
 			}
@@ -160,10 +156,7 @@ func TestIscnQueryLatestVersion(t *testing.T) {
 			Owner: ADDR_02_LIKE,
 		},
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Iscns: iscns})
 
 	p := PageRequest{
 		Limit: 100,
@@ -176,53 +169,29 @@ func TestIscnQueryLatestVersion(t *testing.T) {
 	term := "iscn://testing/abcdef"
 
 	res, err := QueryIscn(Conn, query, p)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(res.Records) != 2 {
-		t.Fatalf("QueryIscn with AllIscnVersions: true should return 2 records, got %d records", len(res.Records))
-	}
+	require.NoError(t, err)
+	require.Len(t, res.Records, 2)
 
 	res, err = QueryIscnSearch(Conn, term, p, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(res.Records) != 2 {
-		t.Fatalf("QueryIscnSearch with AllIscnVersions: true should return 2 records, got %d records", len(res.Records))
-	}
+	require.NoError(t, err)
+	require.Len(t, res.Records, 2)
 
 	query.AllIscnVersions = false
 	res, err = QueryIscn(Conn, query, p)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(res.Records) != 1 {
-		t.Fatalf("QueryIscn with AllIscnVersions: false should only return latest record, got %d records", len(res.Records))
-	}
+	require.NoError(t, err)
+	require.Len(t, res.Records, 1)
 	iscnIdStr := res.Records[0].Data.Id
 	iscnId, err := iscntypes.ParseIscnId(iscnIdStr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if iscnId.Version != 2 {
-		t.Fatalf("QueryIscn with AllIscnVersions: false should return record with latest version, expect version = 2, got version = %d", iscnId.Version)
-	}
+	require.NoError(t, err)
+	require.Equal(t, uint64(2), iscnId.Version)
 
 	res, err = QueryIscnSearch(Conn, term, p, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(res.Records) != 1 {
-		t.Fatalf("QueryIscnSearch with AllIscnVersions: false should only return latest record, got %d records", len(res.Records))
-	}
+	require.NoError(t, err)
+	require.Len(t, res.Records, 1)
 	iscnIdStr = res.Records[0].Data.Id
 	iscnId, err = iscntypes.ParseIscnId(iscnIdStr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if iscnId.Version != 2 {
-		t.Fatalf("QueryIscnSearch with AllIscnVersions: false should return record with latest version, expect version = 2, got version = %d", iscnId.Version)
-	}
+	require.NoError(t, err)
+	require.Equal(t, uint64(2), iscnId.Version)
 
 	query = IscnQuery{
 		Owner:           iscns[0].Owner,
@@ -230,53 +199,29 @@ func TestIscnQueryLatestVersion(t *testing.T) {
 	}
 	term = iscns[0].Owner
 	res, err = QueryIscn(Conn, query, p)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(res.Records) != 1 {
-		t.Fatalf("QueryIscn old owner with AllIscnVersions: true should return exactly 1 record, got %d records", len(res.Records))
-	}
+	require.NoError(t, err)
+	require.Len(t, res.Records, 1)
 	iscnIdStr = res.Records[0].Data.Id
 	iscnId, err = iscntypes.ParseIscnId(iscnIdStr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if iscnId.Version != 1 {
-		t.Fatalf("QueryIscn old owner with AllIscnVersions: true should return record with version 1, got version = %d", iscnId.Version)
-	}
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), iscnId.Version)
 
 	res, err = QueryIscnSearch(Conn, term, p, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(res.Records) != 1 {
-		t.Fatalf("QueryIscnSearch old owner with AllIscnVersions: true should return exactly 1 record, got %d records", len(res.Records))
-	}
+	require.NoError(t, err)
+	require.Len(t, res.Records, 1)
 	iscnIdStr = res.Records[0].Data.Id
 	iscnId, err = iscntypes.ParseIscnId(iscnIdStr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if iscnId.Version != 1 {
-		t.Fatalf("QueryIscnSearch old owner with AllIscnVersions: true should return record with version 1, got version = %d", iscnId.Version)
-	}
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), iscnId.Version)
 
 	query.AllIscnVersions = false
 	res, err = QueryIscn(Conn, query, p)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(res.Records) > 0 {
-		t.Fatalf("QueryIscn old owner with AllIscnVersions: false should return no record, got %d records", len(res.Records))
-	}
+	require.NoError(t, err)
+	require.Empty(t, res.Records)
 
 	res, err = QueryIscnSearch(Conn, term, p, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(res.Records) > 0 {
-		t.Fatalf("QueryIscnSearch old owner with AllIscnVersions: false should return no record, got %d records", len(res.Records))
-	}
+	require.NoError(t, err)
+	require.Empty(t, res.Records)
 }
 
 func TestIscnList(t *testing.T) {
@@ -293,39 +238,24 @@ func TestIscnList(t *testing.T) {
 		{Iscn: "iscn://testing/eeeeee/1"},
 		{Iscn: "iscn://testing/ffffff/1"},
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Iscns: iscns})
 
 	p := PageRequest{
 		Limit: 5,
 	}
 
 	res, err := QueryIscnList(Conn, p, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if (len(res.Records)) != p.Limit {
-		t.Fatalf("QueryIscnList (allIscnVersion = true, limit = 5) should return %d results, got %d. reuslts = %#v", p.Limit, len(res.Records), res.Records)
-	}
+	require.NoError(t, err)
+	require.Len(t, res.Records, p.Limit)
 
 	p.Limit = 100
 	res, err = QueryIscnList(Conn, p, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if (len(res.Records)) != len(iscns) {
-		t.Fatalf("QueryIscnList (allIscnVersion = true) should return %d results, got %d. results = %#v", len(iscns), len(res.Records), res.Records)
-	}
+	require.NoError(t, err)
+	require.Len(t, res.Records, len(iscns))
 
 	res, err = QueryIscnList(Conn, p, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if (len(res.Records)) != 6 {
-		t.Fatalf("QueryIscnList (allIscnVersion = false) should return %d results, got %d. results = %#v", 6, len(res.Records), res.Records)
-	}
+	require.NoError(t, err)
+	require.Len(t, res.Records, 6)
 }
 
 func TestIscnPagination(t *testing.T) {
@@ -342,96 +272,51 @@ func TestIscnPagination(t *testing.T) {
 		{Iscn: "iscn://testing/iiiiii/1", Timestamp: time.Unix(8, 0)},
 		{Iscn: "iscn://testing/jjjjjj/1", Timestamp: time.Unix(9, 0)},
 	}
-	err := InsertTestData(DBTestData{Iscns: iscns})
-	if err != nil {
-		t.Fatal(err)
-	}
+	InsertTestData(DBTestData{Iscns: iscns})
 
 	p := PageRequest{Limit: 1}
 	res, err := QueryIscnList(Conn, p, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.Pagination.Count != p.Limit {
-		t.Errorf("for pagination %#v, expect count = %d, got %d\n", p, p.Limit, res.Pagination.Count)
-	}
-	if len(res.Records) != res.Pagination.Count {
-		t.Errorf(
-			"for pagination %#v, expect len(res.Records) == res.Pagination.Count, got %d and %d\n",
-			p, len(res.Records), res.Pagination.Count,
-		)
-	}
+	require.NoError(t, err)
+	require.Equal(t, p.Limit, res.Pagination.Count)
+	require.Len(t, res.Records, res.Pagination.Count)
+
 	prevTimestamp := res.Records[0].Data.RecordTimestamp
 	p.Key = res.Pagination.NextKey
 	p.Limit = 6
 	res, err = QueryIscnList(Conn, p, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.Pagination.Count != p.Limit {
-		t.Errorf("for pagination %#v, expect count = %d, got %d\n", p, p.Limit, res.Pagination.Count)
-	}
-	if len(res.Records) != res.Pagination.Count {
-		t.Errorf(
-			"for pagination %#v, expect len(res.Records) == res.Pagination.Count, got %d and %d\n",
-			p, len(res.Records), res.Pagination.Count,
-		)
-	}
-	if int(res.Pagination.NextKey) == 0 {
-		t.Errorf("for pagination %#v, expect next_key > 0, got 0", p)
-	}
+	require.NoError(t, err)
+	require.Equal(t, p.Limit, res.Pagination.Count)
+	require.Len(t, res.Records, res.Pagination.Count)
+	require.Greater(t, res.Pagination.NextKey, uint64(0))
 	for i, r := range res.Records {
 		timestamp := r.Data.RecordTimestamp
-		if timestamp.Before(prevTimestamp) {
-			t.Errorf(
-				"for pagination %#v, expect records in ascending order, but records[%d] has smaller timestamp (%#v) than before (%#v)\n",
-				p, i, timestamp, prevTimestamp,
-			)
-		}
+		require.False(t, timestamp.Before(prevTimestamp),
+			"for pagination %#v, expect records in ascending order, but records[%d] has smaller timestamp (%#v) than before (%#v)\n",
+			p, i, timestamp, prevTimestamp,
+		)
 		prevTimestamp = timestamp
 	}
 
 	p = PageRequest{Limit: 1, Reverse: true}
 	res, err = QueryIscnList(Conn, p, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.Pagination.Count != p.Limit {
-		t.Errorf("for pagination %#v, expect count = %d, got %d\n", p, p.Limit, res.Pagination.Count)
-	}
-	if len(res.Records) != res.Pagination.Count {
-		t.Errorf(
-			"for pagination %#v, expect len(res.Records) == res.Pagination.Count, got %d and %d\n",
-			p, len(res.Records), res.Pagination.Count,
-		)
-	}
+	require.NoError(t, err)
+	require.Equal(t, p.Limit, res.Pagination.Count)
+	require.Len(t, res.Records, res.Pagination.Count)
+
 	prevTimestamp = res.Records[0].Data.RecordTimestamp
 	p.Key = res.Pagination.NextKey
 	p.Limit = 6
 	res, err = QueryIscnList(Conn, p, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.Pagination.Count != p.Limit {
-		t.Errorf("for pagination %#v, expect count = %d, got %d\n", p, p.Limit, res.Pagination.Count)
-	}
-	if len(res.Records) != res.Pagination.Count {
-		t.Errorf(
-			"for pagination %#v, expect len(res.Records) == res.Pagination.Count, got %d and %d\n",
-			p, len(res.Records), res.Pagination.Count,
-		)
-	}
-	if int(res.Pagination.NextKey) == 0 {
-		t.Errorf("for pagination %#v, expect next_key > 0, got 0", p)
-	}
+	require.NoError(t, err)
+	require.Equal(t, p.Limit, res.Pagination.Count)
+	require.Len(t, res.Records, res.Pagination.Count)
+	require.Greater(t, res.Pagination.NextKey, uint64(0))
 	for i, r := range res.Records {
 		timestamp := r.Data.RecordTimestamp
-		if timestamp.After(prevTimestamp) {
-			t.Errorf(
-				"for pagination %#v, expect records in descending order, but records[%d] has greater timestamp (%#v) than before (%#v)\n",
-				p, i, timestamp, prevTimestamp,
-			)
-		}
+		require.False(t, timestamp.After(prevTimestamp),
+			"for pagination %#v, expect records in descending order, but records[%d] has greater timestamp (%#v) than before (%#v)\n",
+			p, i, timestamp, prevTimestamp,
+		)
 		prevTimestamp = timestamp
 	}
 }

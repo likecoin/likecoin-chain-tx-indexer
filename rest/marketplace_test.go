@@ -127,16 +127,13 @@ func TestMarketplace(t *testing.T) {
 		},
 	}
 	blockTime := expiration.Add(-100 * time.Second)
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Iscns:               iscns,
 		NftClasses:          nftClasses,
 		Nfts:                nfts,
 		NftMarketplaceItems: marketplaceItems,
 		LatestBlockTime:     &blockTime,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	table := []struct {
 		name          string

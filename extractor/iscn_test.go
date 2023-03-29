@@ -33,9 +33,8 @@ func TestIscnVersion(t *testing.T) {
 		},
 	}
 	for _, v := range table {
-		if a := extractor.GetIscnVersion(v.iscn); a != v.version {
-			t.Errorf("parse %s expect %d got %d\n", v.iscn, v.version, a)
-		}
+		iscnVersion := extractor.GetIscnVersion(v.iscn)
+		require.Equal(t, v.version, iscnVersion)
 	}
 }
 
@@ -66,10 +65,9 @@ func TestIscn(t *testing.T) {
 			timestamp.UTC().Format(time.RFC3339),
 		),
 	}
-	err := InsertTestData(DBTestData{
+	InsertTestData(DBTestData{
 		Txs: txs,
 	})
-	require.NoError(t, err)
 
 	finished, err := Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
@@ -134,10 +132,7 @@ func TestIscn(t *testing.T) {
 			ipld, timestamp.UTC().Format(time.RFC3339),
 		),
 	}
-	err = InsertTestData(DBTestData{
-		Txs: txs,
-	})
-	require.NoError(t, err)
+	InsertTestData(DBTestData{Txs: txs})
 
 	finished, err = Extract(Conn, extractor.ExtractFunc)
 	require.NoError(t, err)
@@ -180,9 +175,7 @@ func TestIscn(t *testing.T) {
 			ADDR_01_LIKE, iscnId2, ADDR_02_LIKE, iscnIdPrefix, timestamp2.UTC().Format(time.RFC3339),
 		),
 	}
-	err = InsertTestData(DBTestData{
-		Txs: txs,
-	})
+	InsertTestData(DBTestData{Txs: txs})
 	require.NoError(t, err)
 
 	finished, err = Extract(Conn, extractor.ExtractFunc)
