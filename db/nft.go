@@ -662,3 +662,34 @@ func GetCollectorTopRankedCreators(conn *pgxpool.Conn, q QueryCollectorTopRanked
 	}
 	return
 }
+
+func GetClassesOwned(conn *pgxpool.Conn, q QueryClassesOwnedRequest) (QueryClassesOwnedResponse, error) {
+	ownerVariations := utils.ConvertAddressPrefixes(q.Owner, AddressPrefixes)
+	sql := `
+		SELECT DISTINCT ON (c.id) c.class_id
+		FROM nft_class as c
+		JOIN nft as n ON c.class_id = n.class_id
+		WHERE n.owner = ANY($1)
+			AND c.class_id = ANY($2)
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	rows, err := conn.Query(ctx, sql, ownerVariations, q.ClassIds)
+	if err != nil {
+		logger.L.Errorw("Failed to query nft classes owned by owner", "error", err, "q", q)
+		return QueryClassesOwnedResponse{}, fmt.Errorf("query nft classes owned by owner error: %w", err)
+	}
+
+	res := QueryClassesOwnedResponse{
+		ClassIds: make([]string, 0),
+	}
+	for rows.Next() {
+		var classId string
+		if err := rows.Scan(&classId); err != nil {
+			logger.L.Errorw("failed to scan class ID", "error", err)
+			return QueryClassesOwnedResponse{}, fmt.Errorf("query nft classes owned by owner error: %w", err)
+		}
+		res.ClassIds = append(res.ClassIds, classId)
+	}
+	return res, nil
+}

@@ -413,3 +413,12 @@ type CollectorTopRankedCreator struct {
 type QueryCollectorTopRankedCreatorsResponse struct {
 	Creators []CollectorTopRankedCreator `json:"creators"`
 }
+
+type QueryClassesOwnedRequest struct {
+	Owner    string   `form:"owner" binding:"required"`
+	ClassIds []string `form:"class_ids" binding:"required"`
+}
+
+type QueryClassesOwnedResponse struct {
+	ClassIds []string `json:"class_ids"`
+}

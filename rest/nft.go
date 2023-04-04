@@ -231,3 +231,19 @@ func handleNftCollectorTopRankedCreatorsRequest(c *gin.Context) {
 
 	c.JSON(200, res)
 }
+
+func handleClassesOwnedRequest(c *gin.Context) {
+	var form db.QueryClassesOwnedRequest
+	if err := c.ShouldBindQuery(&form); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
+		return
+	}
+	conn := getConn(c)
+	res, err := db.GetClassesOwned(conn, form)
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, res)
+}
