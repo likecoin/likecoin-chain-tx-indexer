@@ -16,7 +16,7 @@ func MigrateNftRoyalty(conn *pgxpool.Conn, batchSize uint64) error {
 	if err != nil {
 		return err
 	}
-	err = checkMinSchemaVersion(conn, 13)
+	err = checkMinSchemaVersion(conn, 14)
 	if err != nil {
 		return err
 	}
