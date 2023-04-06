@@ -1387,7 +1387,7 @@ func TestGetCollectorTopRankedCreators(t *testing.T) {
 	}
 }
 
-func TestQueryClassesOwned(t *testing.T) {
+func TestQueryClassesOwners(t *testing.T) {
 	defer CleanupTestData(Conn)
 	nftClasses := []NftClass{
 		{
@@ -1399,6 +1399,9 @@ func TestQueryClassesOwned(t *testing.T) {
 		{
 			Id: "nftlike1ccccc1",
 		},
+		{
+			Id: "nftlike1ddddd1",
+		},
 	}
 	nfts := []Nft{
 		{
@@ -1409,7 +1412,7 @@ func TestQueryClassesOwned(t *testing.T) {
 		{
 			NftId:   "testing-nft-109283749",
 			ClassId: nftClasses[0].Id,
-			Owner:   ADDR_02_LIKE,
+			Owner:   ADDR_02_COSMOS,
 		},
 		{
 			NftId:   "testing-nft-109283750",
@@ -1429,84 +1432,91 @@ func TestQueryClassesOwned(t *testing.T) {
 		{
 			NftId:   "testing-nft-109283753",
 			ClassId: nftClasses[2].Id,
-			Owner:   ADDR_02_LIKE,
+			Owner:   ADDR_02_COSMOS,
+		},
+		{
+			NftId:   "testing-nft-109283754",
+			ClassId: nftClasses[3].Id,
+			Owner:   "nobody",
 		},
 	}
 	InsertTestData(DBTestData{NftClasses: nftClasses, Nfts: nfts})
 
+	classIds012 := []string{nftClasses[0].Id, nftClasses[1].Id, nftClasses[2].Id}
+	classIds02 := []string{nftClasses[0].Id, nftClasses[2].Id}
+	classIds0 := []string{nftClasses[0].Id}
+	classIds1 := []string{nftClasses[1].Id}
+
 	testCases := []struct {
-		name     string
-		query    QueryClassesOwnedRequest
-		classIds []string
+		name  string
+		query QueryClassesOwnersRequest
+		res   QueryClassesOwnersResponse
 	}{
 		{
-			"query owner 01, class IDs (0, 1, 2)",
-			QueryClassesOwnedRequest{
-				ClassIds: []string{nftClasses[0].Id, nftClasses[1].Id, nftClasses[2].Id},
-				Owner:    ADDR_01_LIKE,
-			}, []string{nftClasses[0].Id, nftClasses[1].Id, nftClasses[2].Id},
+			"class IDs (0, 1, 2) without owners",
+			QueryClassesOwnersRequest{
+				ClassIds: classIds012,
+			},
+			QueryClassesOwnersResponse{
+				Owners: map[string][]string{
+					ADDR_01_LIKE: classIds012,
+					ADDR_02_LIKE: classIds02,
+					ADDR_03_LIKE: classIds1,
+				},
+			},
 		},
 		{
-			"query owner 02, class IDs (0, 1, 2)",
-			QueryClassesOwnedRequest{
-				ClassIds: []string{nftClasses[0].Id, nftClasses[1].Id, nftClasses[2].Id},
-				Owner:    ADDR_02_LIKE,
-			}, []string{nftClasses[0].Id, nftClasses[2].Id},
+			"class IDs (0, 1, 2), owners (01, 02)",
+			QueryClassesOwnersRequest{
+				ClassIds: classIds012,
+				Owners:   []string{ADDR_01_LIKE, ADDR_02_LIKE},
+			},
+			QueryClassesOwnersResponse{
+				Owners: map[string][]string{
+					ADDR_01_LIKE: classIds012,
+					ADDR_02_LIKE: classIds02,
+				},
+			},
 		},
 		{
-			"query owner 03, class IDs (0, 1, 2)",
-			QueryClassesOwnedRequest{
-				ClassIds: []string{nftClasses[0].Id, nftClasses[1].Id, nftClasses[2].Id},
-				Owner:    ADDR_03_LIKE,
-			}, []string{nftClasses[1].Id},
+			"class IDs (0), without owners",
+			QueryClassesOwnersRequest{
+				ClassIds: classIds0,
+			},
+			QueryClassesOwnersResponse{
+				Owners: map[string][]string{
+					ADDR_01_LIKE: classIds0,
+					ADDR_02_LIKE: classIds0,
+				},
+			},
 		},
 		{
-			"query owner 01, class IDs (0)",
-			QueryClassesOwnedRequest{
-				ClassIds: []string{nftClasses[0].Id},
-				Owner:    ADDR_01_LIKE,
-			}, []string{nftClasses[0].Id},
+			"class IDs (0), owners (01, 03)",
+			QueryClassesOwnersRequest{
+				ClassIds: classIds0,
+				Owners:   []string{ADDR_01_LIKE, ADDR_03_LIKE},
+			},
+			QueryClassesOwnersResponse{
+				Owners: map[string][]string{
+					ADDR_01_LIKE: classIds0,
+				},
+			},
 		},
 		{
-			"query owner 02, class IDs (0)",
-			QueryClassesOwnedRequest{
-				ClassIds: []string{nftClasses[0].Id},
-				Owner:    ADDR_02_LIKE,
-			}, []string{nftClasses[0].Id},
-		},
-		{
-			"query owner 03, class IDs (0)",
-			QueryClassesOwnedRequest{
-				ClassIds: []string{nftClasses[0].Id},
-				Owner:    ADDR_03_LIKE,
-			}, []string{},
-		},
-		{
-			"query owner 01, class IDs (0, 1)",
-			QueryClassesOwnedRequest{
-				ClassIds: []string{nftClasses[0].Id, nftClasses[1].Id},
-				Owner:    ADDR_01_LIKE,
-			}, []string{nftClasses[0].Id, nftClasses[1].Id},
-		},
-		{
-			"query owner 02, class IDs (0, 1)",
-			QueryClassesOwnedRequest{
-				ClassIds: []string{nftClasses[0].Id, nftClasses[1].Id},
-				Owner:    ADDR_02_LIKE,
-			}, []string{nftClasses[0].Id},
-		},
-		{
-			"query owner 03, class IDs (0, 1)",
-			QueryClassesOwnedRequest{
-				ClassIds: []string{nftClasses[0].Id, nftClasses[1].Id},
-				Owner:    ADDR_03_LIKE,
-			}, []string{nftClasses[1].Id},
+			"class IDs (3), owners (01, 02, 03)",
+			QueryClassesOwnersRequest{
+				ClassIds: []string{nftClasses[3].Id},
+				Owners:   []string{ADDR_01_LIKE, ADDR_02_LIKE, ADDR_03_LIKE},
+			},
+			QueryClassesOwnersResponse{
+				Owners: map[string][]string{},
+			},
 		},
 	}
 
 	for i, testCase := range testCases {
-		res, err := GetClassesOwned(Conn, testCase.query)
+		res, err := GetClassesOwners(Conn, testCase.query)
 		require.NoError(t, err, "Error in test case #%02d (%s)", i, testCase.name)
-		require.ElementsMatch(t, res.ClassIds, testCase.classIds, "Error in test case #%02d (%s)", i, testCase.name)
+		require.Equal(t, testCase.res, res, "Error in test case #%02d (%s)", i, testCase.name)
 	}
 }
