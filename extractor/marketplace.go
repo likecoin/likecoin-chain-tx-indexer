@@ -121,10 +121,10 @@ func marketplaceDeal(payload *Payload, event *types.StringEvent, actionType db.N
 	e.Action = actionType
 	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
 	payload.Batch.Batch.Queue(sql, e.Receiver, e.ClassId, e.NftId)
-	royalties := extractNftRoyalties(payload.EventsList)
-	for _, r := range royalties {
-		attachNftRoyalty(&r, payload, event, "nft_id")
-		payload.Batch.InsertNftRoyalty(r)
+	incomes := extractNftIncomes(payload.EventsList)
+	for _, r := range incomes {
+		attachNftIncome(&r, payload, event, "nft_id")
+		payload.Batch.InsertNftIncome(r)
 	}
 	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)

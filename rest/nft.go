@@ -197,15 +197,15 @@ func handleNftCreators(c *gin.Context) {
 	c.JSON(200, res)
 }
 
-func handleNftRoyalty(c *gin.Context) {
-	var form db.QueryRoyaltiesRequest
+func handleNftIncome(c *gin.Context) {
+	var form db.QueryIncomesRequest
 	if err := c.ShouldBindQuery(&form); err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
 		return
 	}
 
-	if form.ClassId == "" && form.NftId == "" && form.Owner == "" && form.Stakeholder == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "must provide either class_id, nft_id, owner or stakeholder"})
+	if form.ClassId == "" && form.NftId == "" && form.Owner == "" && form.Address == "" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "must provide either class_id, nft_id, owner or address"})
 		return
 	}
 
@@ -218,8 +218,8 @@ func handleNftRoyalty(c *gin.Context) {
 		}
 	}
 
-	if form.OrderBy != "" && form.OrderBy != "price" && form.OrderBy != "royalty" && form.OrderBy != "default" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "order_by should either be price, royalty or default"})
+	if form.OrderBy != "" && form.OrderBy != "price" && form.OrderBy != "income" && form.OrderBy != "default" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "order_by should either be price, income or default"})
 		return
 	}
 
@@ -231,7 +231,7 @@ func handleNftRoyalty(c *gin.Context) {
 
 	conn := getConn(c)
 
-	res, err := db.GetNftRoyalties(conn, form, p)
+	res, err := db.GetNftIncomes(conn, form, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

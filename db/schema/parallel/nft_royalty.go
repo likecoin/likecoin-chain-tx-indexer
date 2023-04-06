@@ -11,7 +11,7 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
-func MigrateNftRoyalty(conn *pgxpool.Conn, batchSize uint64) error {
+func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 	err := checkBatchSize(batchSize)
 	if err != nil {
 		return err
@@ -22,7 +22,7 @@ func MigrateNftRoyalty(conn *pgxpool.Conn, batchSize uint64) error {
 	}
 	return conn.BeginFunc(context.Background(), func(dbTx pgx.Tx) error {
 		_, err := dbTx.Exec(context.Background(), `
-			DECLARE nft_royalty_migration_cursor CURSOR FOR
+			DECLARE nft_income_migration_cursor CURSOR FOR
 				SELECT id, class_id, nft_id, tx_hash, events
 				FROM nft_event
 				ORDER BY id
@@ -34,7 +34,7 @@ func MigrateNftRoyalty(conn *pgxpool.Conn, batchSize uint64) error {
 		}
 
 		for {
-			rows, err := dbTx.Query(context.Background(), fmt.Sprintf(`FETCH %d FROM nft_royalty_migration_cursor`, batchSize))
+			rows, err := dbTx.Query(context.Background(), fmt.Sprintf(`FETCH %d FROM nft_income_migration_cursor`, batchSize))
 			if err != nil {
 				logger.L.Errorw("Error when fetching from cursor", "error", err)
 				return err
@@ -45,7 +45,7 @@ func MigrateNftRoyalty(conn *pgxpool.Conn, batchSize uint64) error {
 			}
 
 			var pkeyId int64
-			var royalties []db.NftRoyalty
+			var incomes []db.NftIncome
 			for rows.Next() {
 				var classId string
 				var nftId string
@@ -65,42 +65,42 @@ func MigrateNftRoyalty(conn *pgxpool.Conn, batchSize uint64) error {
 
 				msgAction := utils.GetEventsValue(events, "message", "action")
 				if msgAction == "/cosmos.bank.v1beta1.MsgSend" || msgAction == string(db.ACTION_BUY) || msgAction == string(db.ACTION_SELL) {
-					royaltyMap := utils.GetRoyaltyMap(events)
-					for stakeholder, amount := range royaltyMap {
-						royalties = append(royalties, db.NftRoyalty{
-							ClassId:     classId,
-							NftId:       nftId,
-							TxHash:      txHash,
-							Stakeholder: stakeholder,
-							Royalty:     amount,
+					incomeMap := utils.GetIncomeMap(events)
+					for address, amount := range incomeMap {
+						incomes = append(incomes, db.NftIncome{
+							ClassId: classId,
+							NftId:   nftId,
+							TxHash:  txHash,
+							Address: address,
+							Amount:  amount,
 						})
 					}
 				}
 			}
-			count := len(royalties)
+			count := len(incomes)
 			if count == 0 {
 				continue
 			}
 			for i := 0; i < count; i++ {
-				royalty := royalties[i]
+				income := incomes[i]
 				_, err = dbTx.Exec(context.Background(), `
-						INSERT INTO nft_royalty (class_id, nft_id, tx_hash, stakeholder_address, royalty)
+						INSERT INTO nft_income (class_id, nft_id, tx_hash, address, amount)
 						VALUES ($1, $2, $3, $4, $5);
-					`, royalty.ClassId, royalty.NftId, royalty.TxHash, royalty.Stakeholder, royalty.Royalty)
+					`, income.ClassId, income.NftId, income.TxHash, income.Address, income.Amount)
 				if err != nil {
-					logger.L.Errorw("Error when inserting into nft_royalty", "error", err)
+					logger.L.Errorw("Error when inserting into nft_income", "error", err)
 					return err
 				}
 			}
-			lastRoyalty := royalties[count-1]
+			lastIncome := incomes[count-1]
 			logger.L.Infow(
-				"NFT royalty table migration progress",
+				"NFT income table migration progress",
 				"pkey_id", pkeyId,
-				"class_id", lastRoyalty.ClassId,
-				"nft_id", lastRoyalty.NftId,
-				"tx_hash", lastRoyalty.TxHash,
-				"stakeholder_address", lastRoyalty.Stakeholder,
-				"royalty", lastRoyalty.Royalty,
+				"class_id", lastIncome.ClassId,
+				"nft_id", lastIncome.NftId,
+				"tx_hash", lastIncome.TxHash,
+				"address", lastIncome.Address,
+				"amount", lastIncome.Amount,
 			)
 		}
 		return nil

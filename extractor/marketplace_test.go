@@ -337,23 +337,23 @@ func TestListing(t *testing.T) {
 	require.Len(t, eventsRes.Events, 1)
 	require.Equal(t, updatedPrice1, eventsRes.Events[0].Price)
 
-	royalties, err := GetNftRoyalties(Conn,
-		QueryRoyaltiesRequest{
+	royalties, err := GetNftIncomes(Conn,
+		QueryIncomesRequest{
 			ClassId:    nftClasses[0].Id,
 			NftId:      nfts[0].NftId,
-			OrderBy:    "royalty",
+			OrderBy:    "income",
 			ActionType: []NftEventAction{ACTION_BUY},
 		}, PageRequest{Limit: 10},
 	)
 	require.NoError(t, err)
-	require.Len(t, royalties.Royalties, 2)
-	require.Equal(t, nftClasses[0].Id, royalties.Royalties[0].ClassId)
-	require.Equal(t, nfts[0].NftId, royalties.Royalties[0].NftId)
-	require.Equal(t, "AAAAAE", royalties.Royalties[0].TxHash)
-	require.Equal(t, stakeholder1, royalties.Royalties[0].Stakeholder)
-	require.Equal(t, royalty1, royalties.Royalties[0].Royalty)
-	require.Equal(t, stakeholder2, royalties.Royalties[1].Stakeholder)
-	require.Equal(t, royalty2, royalties.Royalties[1].Royalty)
+	require.Len(t, royalties.Incomes, 2)
+	require.Equal(t, nftClasses[0].Id, royalties.Incomes[0].ClassId)
+	require.Equal(t, nfts[0].NftId, royalties.Incomes[0].NftId)
+	require.Equal(t, "AAAAAE", royalties.Incomes[0].TxHash)
+	require.Equal(t, stakeholder1, royalties.Incomes[0].Address)
+	require.Equal(t, royalty1, royalties.Incomes[0].Amount)
+	require.Equal(t, stakeholder2, royalties.Incomes[1].Address)
+	require.Equal(t, royalty2, royalties.Incomes[1].Amount)
 }
 
 func TestOffer(t *testing.T) {
@@ -545,21 +545,21 @@ func TestOffer(t *testing.T) {
 	require.Len(t, eventsRes.Events, 1)
 	require.Equal(t, updatedPrice1, eventsRes.Events[0].Price)
 
-	royalties, err := GetNftRoyalties(Conn,
-		QueryRoyaltiesRequest{
+	incomes, err := GetNftIncomes(Conn,
+		QueryIncomesRequest{
 			ClassId:    nftClasses[0].Id,
 			NftId:      nfts[0].NftId,
-			OrderBy:    "royalty",
+			OrderBy:    "income",
 			ActionType: []NftEventAction{ACTION_SELL},
 		}, PageRequest{Limit: 10},
 	)
 	require.NoError(t, err)
-	require.Len(t, royalties.Royalties, 2)
-	require.Equal(t, nftClasses[0].Id, royalties.Royalties[0].ClassId)
-	require.Equal(t, nfts[0].NftId, royalties.Royalties[0].NftId)
-	require.Equal(t, "AAAAAE", royalties.Royalties[0].TxHash)
-	require.Equal(t, stakeholder1, royalties.Royalties[0].Stakeholder)
-	require.Equal(t, royalty1, royalties.Royalties[0].Royalty)
-	require.Equal(t, stakeholder2, royalties.Royalties[1].Stakeholder)
-	require.Equal(t, royalty2, royalties.Royalties[1].Royalty)
+	require.Len(t, incomes.Incomes, 2)
+	require.Equal(t, nftClasses[0].Id, incomes.Incomes[0].ClassId)
+	require.Equal(t, nfts[0].NftId, incomes.Incomes[0].NftId)
+	require.Equal(t, "AAAAAE", incomes.Incomes[0].TxHash)
+	require.Equal(t, stakeholder1, incomes.Incomes[0].Address)
+	require.Equal(t, royalty1, incomes.Incomes[0].Amount)
+	require.Equal(t, stakeholder2, incomes.Incomes[1].Address)
+	require.Equal(t, royalty2, incomes.Incomes[1].Amount)
 }

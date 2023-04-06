@@ -349,34 +349,34 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func GetNftRoyalties(conn *pgxpool.Conn, q QueryRoyaltiesRequest, p PageRequest) (QueryRoyaltiesResponse, error) {
+func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (QueryIncomesResponse, error) {
 	ownerVariations := utils.ConvertAddressPrefixes(q.Owner, AddressPrefixes)
-	stakeholderVariations := utils.ConvertAddressPrefixes(q.Stakeholder, AddressPrefixes)
-	orderBy := "r.id"
+	stakeholderVariations := utils.ConvertAddressPrefixes(q.Address, AddressPrefixes)
+	orderBy := "i.id"
 	switch q.OrderBy {
 	case "price":
 		orderBy = "e.price"
-	case "royalty":
-		orderBy = "r.royalty"
+	case "income":
+		orderBy = "i.amount"
 	case "default":
 	default:
-		orderBy = "r.id"
+		orderBy = "i.id"
 	}
 
 	sql := fmt.Sprintf(`
 		SELECT e.class_id, e.nft_id, e.tx_hash, e.timestamp, e.receiver, 
-			r.stakeholder_address, e.price, r.royalty 
+			i.address, e.price, i.amount 
 		FROM nft_event AS e
-		JOIN nft_royalty AS r
-			ON e.class_id = r.class_id 
-			AND e.nft_id = r.nft_id
-			AND e.tx_hash = r.tx_hash
-		WHERE ($2 = 0 OR r.id > $2)
-			AND ($3 = 0 OR r.id < $3)
+		JOIN nft_income AS i
+			ON e.class_id = i.class_id 
+			AND e.nft_id = i.nft_id
+			AND e.tx_hash = i.tx_hash
+		WHERE ($2 = 0 OR i.id > $2)
+			AND ($3 = 0 OR i.id < $3)
 			AND ($4 = '' OR e.class_id = $4)
 			AND ($5 = '' OR e.nft_id = $5)
 			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR e.receiver = ANY($6))
-			AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR r.stakeholder_address = ANY($7))
+			AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR i.address = ANY($7))
 			AND ($8 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($8)))
 			AND ($9 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($9)))
 			AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.action = ANY($10))
@@ -393,25 +393,25 @@ func GetNftRoyalties(conn *pgxpool.Conn, q QueryRoyaltiesRequest, p PageRequest)
 		ownerVariations, stakeholderVariations, q.After, q.Before, q.ActionType,
 	)
 	if err != nil {
-		logger.L.Errorw("Failed to query nft royalties", "error", err)
-		return QueryRoyaltiesResponse{}, fmt.Errorf("query nft royalties error: %w", err)
+		logger.L.Errorw("Failed to query nft incomes", "error", err)
+		return QueryIncomesResponse{}, fmt.Errorf("query nft royalties error: %w", err)
 	}
 
-	res := QueryRoyaltiesResponse{
-		Royalties: make([]NftRoyaltyResponse, 0),
+	res := QueryIncomesResponse{
+		Incomes: make([]NftIncomeResponse, 0),
 	}
 	for rows.Next() {
-		var r NftRoyaltyResponse
+		var r NftIncomeResponse
 		if err = rows.Scan(
 			&r.ClassId, &r.NftId, &r.TxHash, &r.Timestamp, &r.Owner,
-			&r.Stakeholder, &r.Price, &r.Royalty,
+			&r.Address, &r.Price, &r.Amount,
 		); err != nil {
-			logger.L.Errorw("failed to scan nft royalties", "error", err, "q", q)
-			return QueryRoyaltiesResponse{}, fmt.Errorf("query nft royalties data failed: %w", err)
+			logger.L.Errorw("failed to scan nft incomes", "error", err, "q", q)
+			return QueryIncomesResponse{}, fmt.Errorf("query nft incomes data failed: %w", err)
 		}
-		res.Royalties = append(res.Royalties, r)
+		res.Incomes = append(res.Incomes, r)
 	}
-	res.Pagination.Count = len(res.Royalties)
+	res.Pagination.Count = len(res.Incomes)
 	return res, nil
 }
 
@@ -678,16 +678,16 @@ func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatR
 	}
 
 	sql = `
-	SELECT COALESCE(SUM(r.royalty), 0)
-	FROM nft_royalty AS r
-	WHERE r.stakeholder_address = $1
+	SELECT COALESCE(SUM(amount), 0)
+	FROM nft_income
+	WHERE address = $1
 	`
 
 	row = conn.QueryRow(ctx, sql, q.User)
 
-	err = row.Scan(&res.TotalRoyalties)
+	err = row.Scan(&res.TotalIncomes)
 	if err != nil {
-		err = fmt.Errorf("scan total royalty error: %w", err)
+		err = fmt.Errorf("scan total income error: %w", err)
 		return
 	}
 

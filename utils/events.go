@@ -76,33 +76,33 @@ func ParseCoinFromEventString(coinStr string) (uint64, error) {
 	return coin.Amount.Uint64(), nil
 }
 
-func GetRoyaltyMap(events types.StringEvents) map[string]uint64 {
-	royaltyMap := make(map[string]uint64)
+func GetIncomeMap(events types.StringEvents) map[string]uint64 {
+	incomeMap := make(map[string]uint64)
 	for _, event := range events {
 		if event.Type == "coin_received" {
-			stakeholder := ""
+			address := ""
 			amount := uint64(0)
 			for _, attr := range event.Attributes {
 				if attr.Key == "receiver" {
-					stakeholder = attr.Value
+					address = attr.Value
 				}
 				if attr.Key == "amount" {
 					amountStr := attr.Value
 					coin, err := types.ParseCoinNormalized(amountStr)
 					if err != nil {
-						logger.L.Warnw("Failed to parse royalty from event", "royalty_str", amountStr, "error", err)
-						stakeholder = ""
+						logger.L.Warnw("Failed to parse income from event", "income_str", amountStr, "error", err)
+						address = ""
 						continue
 					}
 					amount = coin.Amount.Uint64()
 				}
-				if stakeholder != "" && amount != 0 {
-					royaltyMap[stakeholder] += amount
-					stakeholder = ""
+				if address != "" && amount != 0 {
+					incomeMap[address] += amount
+					address = ""
 					amount = 0
 				}
 			}
 		}
 	}
-	return royaltyMap
+	return incomeMap
 }

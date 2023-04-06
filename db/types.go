@@ -138,12 +138,12 @@ type NftMarketplaceItem struct {
 	Expiration time.Time `json:"expiration,omitempty"`
 }
 
-type NftRoyalty struct {
-	ClassId     string `json:"class_id"`
-	NftId       string `json:"nft_id"`
-	TxHash      string `json:"tx_hash"`
-	Stakeholder string `json:"stakeholder"`
-	Royalty     uint64 `json:"royalty"`
+type NftIncome struct {
+	ClassId string `json:"class_id"`
+	NftId   string `json:"nft_id"`
+	TxHash  string `json:"tx_hash"`
+	Address string `json:"address"`
+	Amount  uint64 `json:"amount"`
 }
 
 type LegacyPageRequest struct {
@@ -277,31 +277,31 @@ type QueryEventsResponse struct {
 	Events     []NftEvent   `json:"events"`
 }
 
-type QueryRoyaltiesRequest struct {
-	ClassId     string           `form:"class_id"`
-	NftId       string           `form:"nft_id"`
-	Owner       string           `form:"owner"`
-	Stakeholder string           `form:"stakeholder"`
-	After       int64            `form:"after"`
-	Before      int64            `form:"before"`
-	ActionType  []NftEventAction `form:"action_type"`
-	OrderBy     string           `form:"order_by"`
+type QueryIncomesRequest struct {
+	ClassId    string           `form:"class_id"`
+	NftId      string           `form:"nft_id"`
+	Owner      string           `form:"owner"`
+	Address    string           `form:"address"`
+	After      int64            `form:"after"`
+	Before     int64            `form:"before"`
+	ActionType []NftEventAction `form:"action_type"`
+	OrderBy    string           `form:"order_by"`
 }
 
-type NftRoyaltyResponse struct {
-	ClassId     string    `json:"class_id"`
-	NftId       string    `json:"nft_id"`
-	TxHash      string    `json:"tx_hash"`
-	Timestamp   time.Time `json:"timestamp"`
-	Owner       string    `json:"owner"`
-	Price       uint64    `json:"price"`
-	Stakeholder string    `json:"stakeholder"`
-	Royalty     uint64    `json:"royalty"`
+type NftIncomeResponse struct {
+	ClassId   string    `json:"class_id"`
+	NftId     string    `json:"nft_id"`
+	TxHash    string    `json:"tx_hash"`
+	Timestamp time.Time `json:"timestamp"`
+	Owner     string    `json:"owner"`
+	Price     uint64    `json:"price"`
+	Address   string    `json:"address"`
+	Amount    uint64    `json:"amount"`
 }
 
-type QueryRoyaltiesResponse struct {
-	Royalties  []NftRoyaltyResponse `json:"royalties"`
-	Pagination PageResponse         `json:"pagination"`
+type QueryIncomesResponse struct {
+	Incomes    []NftIncomeResponse `json:"incomes"`
+	Pagination PageResponse        `json:"pagination"`
 }
 
 type QueryRankingRequest struct {
@@ -384,7 +384,7 @@ type QueryUserStatResponse struct {
 	CreatedCount     int              `json:"created_count"`
 	CollectorCount   int              `json:"collector_count"`
 	TotalSales       uint64           `json:"total_sales"`
-	TotalRoyalties   uint64           `json:"total_royalties"`
+	TotalIncomes     uint64           `json:"total_incomes"`
 }
 
 type CollectedClass struct {

@@ -8,9 +8,9 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
-var MigrationNftRoyaltyCommand = &cobra.Command{
-	Use:   "nft-royalty",
-	Short: "Setup nft_royalty table by scanning nft_event table",
+var MigrationNftIncomeCommand = &cobra.Command{
+	Use:   "nft-income",
+	Short: "Setup nft_income table by scanning nft_event table",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		batchSize, err := cmd.Flags().GetUint64(CmdBatchSize)
 		if err != nil {
@@ -25,12 +25,12 @@ var MigrationNftRoyaltyCommand = &cobra.Command{
 			logger.L.Panicw("Cannot acquire connection from database connection pool", "error", err)
 		}
 		defer conn.Release()
-		return parallel.MigrateNftRoyalty(conn, batchSize)
+		return parallel.MigrateNftIncome(conn, batchSize)
 	},
 }
 
 func init() {
-	MigrationNftRoyaltyCommand.PersistentFlags().Uint64(
+	MigrationNftIncomeCommand.PersistentFlags().Uint64(
 		CmdBatchSize,
 		1000,
 		"number of ids in nft_event table to scan each time",
