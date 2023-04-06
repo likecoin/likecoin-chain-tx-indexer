@@ -97,7 +97,7 @@ func GetRoyaltyMap(events types.StringEvents) map[string]uint64 {
 					amount = coin.Amount.Uint64()
 				}
 				if stakeholder != "" && amount != 0 {
-					royaltyMap[stakeholder] = amount
+					royaltyMap[stakeholder] += amount
 					stakeholder = ""
 					amount = 0
 				}
