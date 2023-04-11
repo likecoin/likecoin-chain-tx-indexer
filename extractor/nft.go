@@ -18,6 +18,12 @@ func attachNftEvent(e *db.NftEvent, payload *Payload) {
 	e.Memo = payload.Memo
 }
 
+func attachNftIncome(r *db.NftIncome, payload *Payload, event *types.StringEvent, nftIdField string) {
+	r.ClassId = utils.GetEventValue(event, "class_id")
+	r.NftId = utils.GetEventValue(event, nftIdField)
+	r.TxHash = payload.TxHash
+}
+
 type nftClassMessage struct {
 	Input   db.NftClass `json:"input"`
 	Creator string      `json:"creator"`
@@ -130,6 +136,23 @@ func extractNftEvent(event *types.StringEvent, classIdField, nftIdField, senderF
 	return e
 }
 
+func extractNftIncomes(eventsList db.EventsList) []db.NftIncome {
+	var incomes []db.NftIncome
+	for _, msgEvents := range eventsList {
+		msgAction := utils.GetEventsValue(msgEvents.Events, "message", "action")
+		if msgAction == "/cosmos.bank.v1beta1.MsgSend" || msgAction == string(db.ACTION_BUY) || msgAction == string(db.ACTION_SELL) {
+			incomeMap := utils.GetIncomeMap(msgEvents.Events)
+			for address, amount := range incomeMap {
+				incomes = append(incomes, db.NftIncome{
+					Address: address,
+					Amount:  amount,
+				})
+			}
+		}
+	}
+	return incomes
+}
+
 func sendNft(payload *Payload, event *types.StringEvent) error {
 	e := extractNftEvent(event, "class_id", "id", "sender", "receiver")
 	e.Action = db.ACTION_SEND
@@ -145,10 +168,15 @@ func sendNft(payload *Payload, event *types.StringEvent) error {
 
 	// We assume the first message is the authz message with token send
 	// TODO: also check if authz grantee is API address
-	events := payload.EventsList[0].Events
-	msgAction := utils.GetEventsValue(events, "message", "action")
-	if msgAction == "/cosmos.authz.v1beta1.MsgExec" {
-		e.Price = extractPriceFromEvents(events)
+	firstMsgEvents := payload.EventsList[0].Events
+	firstMsgAction := utils.GetEventsValue(firstMsgEvents, "message", "action")
+	if firstMsgAction == "/cosmos.authz.v1beta1.MsgExec" {
+		e.Price = extractPriceFromEvents(firstMsgEvents)
+		royalties := extractNftIncomes(payload.EventsList)
+		for _, r := range royalties {
+			attachNftIncome(&r, payload, event, "id")
+			payload.Batch.InsertNftIncome(r)
+		}
 	}
 	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)

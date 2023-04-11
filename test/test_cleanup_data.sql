@@ -6,6 +6,7 @@ DELETE FROM nft_event;
 DELETE FROM nft;
 DELETE FROM nft_class;
 DELETE FROM nft_marketplace;
+DELETE FROM nft_income;
 UPDATE meta SET height = 0
   WHERE id = 'extractor_v1'
       OR id = 'latest_block_height'

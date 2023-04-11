@@ -138,6 +138,14 @@ type NftMarketplaceItem struct {
 	Expiration time.Time `json:"expiration,omitempty"`
 }
 
+type NftIncome struct {
+	ClassId string `json:"class_id"`
+	NftId   string `json:"nft_id"`
+	TxHash  string `json:"tx_hash"`
+	Address string `json:"address"`
+	Amount  uint64 `json:"amount"`
+}
+
 type LegacyPageRequest struct {
 	Key     uint64 `form:"key"`
 	Limit   int    `form:"limit,default=100" binding:"gte=1,lte=100"`
@@ -269,6 +277,33 @@ type QueryEventsResponse struct {
 	Events     []NftEvent   `json:"events"`
 }
 
+type QueryIncomesRequest struct {
+	ClassId    string           `form:"class_id"`
+	NftId      string           `form:"nft_id"`
+	Owner      string           `form:"owner"`
+	Address    string           `form:"address"`
+	After      int64            `form:"after"`
+	Before     int64            `form:"before"`
+	ActionType []NftEventAction `form:"action_type"`
+	OrderBy    string           `form:"order_by"`
+}
+
+type NftIncomeResponse struct {
+	ClassId   string    `json:"class_id"`
+	NftId     string    `json:"nft_id"`
+	TxHash    string    `json:"tx_hash"`
+	Timestamp time.Time `json:"timestamp"`
+	Owner     string    `json:"owner"`
+	Price     uint64    `json:"price"`
+	Address   string    `json:"address"`
+	Amount    uint64    `json:"amount"`
+}
+
+type QueryIncomesResponse struct {
+	Incomes    []NftIncomeResponse `json:"incomes"`
+	Pagination PageResponse        `json:"pagination"`
+}
+
 type QueryRankingRequest struct {
 	StakeholderId   string   `form:"stakeholder_id"`
 	StakeholderName string   `form:"stakeholder_name"`
@@ -349,6 +384,7 @@ type QueryUserStatResponse struct {
 	CreatedCount     int              `json:"created_count"`
 	CollectorCount   int              `json:"collector_count"`
 	TotalSales       uint64           `json:"total_sales"`
+	TotalIncomes     uint64           `json:"total_incomes"`
 }
 
 type CollectedClass struct {

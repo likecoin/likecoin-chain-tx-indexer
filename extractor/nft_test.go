@@ -212,11 +212,17 @@ func TestSendNftWithPrice(t *testing.T) {
 		},
 	}
 	timestamp := time.Unix(1234567890, 0).UTC()
+	receiver := ADDR_01_LIKE
+	stakeholder1 := ADDR_02_LIKE
+	stakeholder2 := ADDR_03_LIKE
+	price := 100
+	royalty1 := 78
+	royalty2 := price - royalty1
 	txs := []string{
 		fmt.Sprintf(`
-{"height":"1234","txhash":"AAAAAA","logs":[{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[1]s"},{"key":"amount","value":"100nanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"100nanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"cosmos.authz.v1beta1.EventRevoke","attributes":[{"key":"grantee","value":"\"%[1]s\""},{"key":"granter","value":"\"%[2]s\""},{"key":"msg_type_url","value":"\"/cosmos.bank.v1beta1.MsgSend\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.authz.v1beta1.MsgExec"},{"key":"sender","value":"%[2]s"},{"key":"authz_msg_index","value":"0"},{"key":"module","value":"bank"},{"key":"authz_msg_index","value":"0"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[1]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"100nanolike"},{"key":"authz_msg_index","value":"0"}]}]},{"events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[4]s\""},{"key":"id","value":"\"%[5]s\""},{"key":"receiver","value":"\"%[2]s\""},{"key":"sender","value":"\"%[1]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]},{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[3]s"},{"key":"amount","value":"2nanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"2nanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[1]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[3]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"2nanolike"}]}]},{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[2]s"},{"key":"amount","value":"78nanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"78nanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[1]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[2]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"78nanolike"}]}]}],"tx":{"body":{"messages":[{"@type":"/cosmos.authz.v1beta1.MsgExec","grantee":"%[1]s","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[1]s","amount":[{"denom":"nanolike","amount":"100"}]}]},{"@type":"/cosmos.nft.v1beta1.MsgSend","class_id":"%[4]s","id":"%[5]s","sender":"%[1]s","receiver":"%[2]s"},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[3]s","amount":[{"denom":"nanolike","amount":"2"}]},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[2]s","amount":[{"denom":"nanolike","amount":"78"}]}],"memo":"AAAAAA"}},"timestamp":"%[6]s"}`,
-			ADDR_01_LIKE, ADDR_02_LIKE, ADDR_03_LIKE, nftClasses[0].Id, nfts[0].NftId,
-			timestamp.Format(time.RFC3339)),
+{"height":"1234","txhash":"AAAAAA","logs":[{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[1]s"},{"key":"amount","value":"%[7]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[7]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"cosmos.authz.v1beta1.EventRevoke","attributes":[{"key":"grantee","value":"\"%[1]s\""},{"key":"granter","value":"\"%[2]s\""},{"key":"msg_type_url","value":"\"/cosmos.bank.v1beta1.MsgSend\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.authz.v1beta1.MsgExec"},{"key":"sender","value":"%[2]s"},{"key":"authz_msg_index","value":"0"},{"key":"module","value":"bank"},{"key":"authz_msg_index","value":"0"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[1]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[7]dnanolike"},{"key":"authz_msg_index","value":"0"}]}]},{"events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[4]s\""},{"key":"id","value":"\"%[5]s\""},{"key":"receiver","value":"\"%[2]s\""},{"key":"sender","value":"\"%[1]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]},{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[3]s"},{"key":"amount","value":"%[9]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[9]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[1]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[3]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"%[9]dnanolike"}]}]},{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[2]s"},{"key":"amount","value":"%[8]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[8]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[1]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[2]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"%[8]dnanolike"}]}]}],"tx":{"body":{"messages":[{"@type":"/cosmos.authz.v1beta1.MsgExec","grantee":"%[1]s","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[1]s","amount":[{"denom":"nanolike","amount":"%[7]d"}]}]},{"@type":"/cosmos.nft.v1beta1.MsgSend","class_id":"%[4]s","id":"%[5]s","sender":"%[1]s","receiver":"%[2]s"},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[3]s","amount":[{"denom":"nanolike","amount":"%[9]d"}]},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[2]s","amount":[{"denom":"nanolike","amount":"%[8]d"}]}],"memo":"AAAAAA"}},"timestamp":"%[6]s"}`,
+			receiver, stakeholder1, stakeholder2, nftClasses[0].Id, nfts[0].NftId,
+			timestamp.Format(time.RFC3339), price, royalty1, royalty2),
 	}
 	InsertTestData(DBTestData{
 		Iscns:      iscns,
@@ -246,14 +252,30 @@ func TestSendNftWithPrice(t *testing.T) {
 	require.Equal(t, ADDR_02_LIKE, eventRes.Events[0].Receiver)
 	require.Equal(t, "AAAAAA", eventRes.Events[0].TxHash)
 	require.Equal(t, ACTION_SEND, eventRes.Events[0].Action)
-	require.Equal(t, uint64(100), eventRes.Events[0].Price)
+	require.Equal(t, uint64(price), eventRes.Events[0].Price)
+
+	incomeRes, err := GetNftIncomes(Conn, QueryIncomesRequest{
+		ClassId:    nftClasses[0].Id,
+		OrderBy:    "royalty",
+		ActionType: []NftEventAction{ACTION_SEND},
+	}, PageRequest{Limit: 10, Reverse: true})
+	require.NoError(t, err)
+	require.Len(t, incomeRes.Incomes, 2)
+	require.Equal(t, nfts[0].ClassId, incomeRes.Incomes[0].ClassId)
+	require.Equal(t, nfts[0].NftId, incomeRes.Incomes[0].NftId)
+	require.Equal(t, ADDR_02_LIKE, incomeRes.Incomes[0].Owner)
+	require.Equal(t, stakeholder1, incomeRes.Incomes[0].Address)
+	require.Equal(t, uint64(royalty1), incomeRes.Incomes[0].Amount)
+	require.Equal(t, stakeholder2, incomeRes.Incomes[1].Address)
+	require.Equal(t, uint64(royalty2), incomeRes.Incomes[1].Amount)
+	require.Equal(t, uint64(price), incomeRes.Incomes[0].Amount+incomeRes.Incomes[1].Amount)
 
 	row := Conn.QueryRow(context.Background(), `SELECT latest_price, price_updated_at FROM nft WHERE class_id = $1 AND nft_id = $2`, nftClasses[0].Id, nfts[0].NftId)
-	var price uint64
+	var lastPrice uint64
 	var priceUpdatedAt time.Time
-	err = row.Scan(&price, &priceUpdatedAt)
+	err = row.Scan(&lastPrice, &priceUpdatedAt)
 	require.NoError(t, err)
-	require.Equal(t, uint64(100), price)
+	require.Equal(t, uint64(price), lastPrice)
 	require.Equal(t, timestamp.UTC(), priceUpdatedAt.UTC())
 }
 

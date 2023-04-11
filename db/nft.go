@@ -349,6 +349,72 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
+func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (QueryIncomesResponse, error) {
+	ownerVariations := utils.ConvertAddressPrefixes(q.Owner, AddressPrefixes)
+	stakeholderVariations := utils.ConvertAddressPrefixes(q.Address, AddressPrefixes)
+	orderBy := "i.id"
+	switch q.OrderBy {
+	case "price":
+		orderBy = "e.price"
+	case "income":
+		orderBy = "i.amount"
+	case "default":
+	default:
+		orderBy = "i.id"
+	}
+
+	sql := fmt.Sprintf(`
+		SELECT e.class_id, e.nft_id, e.tx_hash, e.timestamp, e.receiver, 
+			i.address, e.price, i.amount 
+		FROM nft_event AS e
+		JOIN nft_income AS i
+			ON e.class_id = i.class_id 
+			AND e.nft_id = i.nft_id
+			AND e.tx_hash = i.tx_hash
+		WHERE ($2 = 0 OR i.id > $2)
+			AND ($3 = 0 OR i.id < $3)
+			AND ($4 = '' OR e.class_id = $4)
+			AND ($5 = '' OR e.nft_id = $5)
+			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR e.receiver = ANY($6))
+			AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR i.address = ANY($7))
+			AND ($8 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($8)))
+			AND ($9 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($9)))
+			AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.action = ANY($10))
+		ORDER BY %[1]s %[2]s
+		LIMIT $1
+	`, orderBy, p.Order())
+
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	rows, err := conn.Query(
+		ctx, sql,
+		p.Limit, p.After(), p.Before(), q.ClassId, q.NftId,
+		ownerVariations, stakeholderVariations, q.After, q.Before, q.ActionType,
+	)
+	if err != nil {
+		logger.L.Errorw("Failed to query nft incomes", "error", err)
+		return QueryIncomesResponse{}, fmt.Errorf("query nft royalties error: %w", err)
+	}
+
+	res := QueryIncomesResponse{
+		Incomes: make([]NftIncomeResponse, 0),
+	}
+	for rows.Next() {
+		var r NftIncomeResponse
+		if err = rows.Scan(
+			&r.ClassId, &r.NftId, &r.TxHash, &r.Timestamp, &r.Owner,
+			&r.Address, &r.Price, &r.Amount,
+		); err != nil {
+			logger.L.Errorw("failed to scan nft incomes", "error", err, "q", q)
+			return QueryIncomesResponse{}, fmt.Errorf("query nft incomes data failed: %w", err)
+		}
+		res.Incomes = append(res.Incomes, r)
+	}
+	res.Pagination.Count = len(res.Incomes)
+	return res, nil
+}
+
 func getTotalValueSourceField(priceBy string) string {
 	switch priceBy {
 	case "class":
@@ -608,6 +674,20 @@ func GetUserStat(conn *pgxpool.Conn, q QueryUserStatRequest) (res QueryUserStatR
 	err = row.Scan(&res.TotalSales)
 	if err != nil {
 		err = fmt.Errorf("scan total sales error: %w", err)
+		return
+	}
+
+	sql = `
+	SELECT COALESCE(SUM(amount), 0)
+	FROM nft_income
+	WHERE address = $1
+	`
+
+	row = conn.QueryRow(ctx, sql, q.User)
+
+	err = row.Scan(&res.TotalIncomes)
+	if err != nil {
+		err = fmt.Errorf("scan total income error: %w", err)
 		return
 	}
 

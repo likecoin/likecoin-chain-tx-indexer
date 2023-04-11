@@ -197,6 +197,49 @@ func handleNftCreators(c *gin.Context) {
 	c.JSON(200, res)
 }
 
+func handleNftIncome(c *gin.Context) {
+	var form db.QueryIncomesRequest
+	if err := c.ShouldBindQuery(&form); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
+		return
+	}
+
+	if form.ClassId == "" && form.NftId == "" && form.Owner == "" && form.Address == "" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "must provide either class_id, nft_id, owner or address"})
+		return
+	}
+
+	if len(form.ActionType) != 0 {
+		for _, t := range form.ActionType {
+			if t != db.ACTION_SEND && t != db.ACTION_BUY && t != db.ACTION_SELL {
+				c.AbortWithStatusJSON(400, gin.H{"error": "action_type should only include /cosmos.nft.v1beta1.MsgSend, buy_nft or sell_nft"})
+				return
+			}
+		}
+	}
+
+	if form.OrderBy != "" && form.OrderBy != "price" && form.OrderBy != "income" && form.OrderBy != "default" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "order_by should either be price, income or default"})
+		return
+	}
+
+	p, err := getPagination(c)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": err})
+		return
+	}
+
+	conn := getConn(c)
+
+	res, err := db.GetNftIncomes(conn, form, p)
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, res)
+}
+
 func handleNftUserStat(c *gin.Context) {
 	var form db.QueryUserStatRequest
 	if err := c.ShouldBindQuery(&form); err != nil {

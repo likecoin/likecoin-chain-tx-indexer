@@ -175,15 +175,17 @@ func TestListing(t *testing.T) {
 			Owner:   ADDR_02_LIKE,
 		},
 	}
+	initPrice1 := uint64(100000000000)
+	initPrice2 := uint64(100000000001)
 	expiration := time.Unix(1700000000, 0).UTC()
 	txs := []string{
 		fmt.Sprintf(
 			`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateListing","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_listing"}]},{"type":"likechain.likenft.v1.EventCreateListing","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[1]s\""}]}]}]}`,
-			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000000), expiration.Format(time.RFC3339),
+			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, initPrice1, expiration.Format(time.RFC3339),
 		),
 		fmt.Sprintf(
 			`{"txhash":"AAAAAB","height":"1235","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateListing","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAB"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_listing"}]},{"type":"likechain.likenft.v1.EventCreateListing","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[1]s\""}]}]}]}`,
-			ADDR_02_LIKE, nftClasses[0].Id, nfts[1].NftId, uint64(100000000001), expiration.Add(1*time.Second).Format(time.RFC3339),
+			ADDR_02_LIKE, nftClasses[0].Id, nfts[1].NftId, initPrice2, expiration.Add(1*time.Second).Format(time.RFC3339),
 		),
 	}
 	blockTime := expiration.Add(-10000 * time.Second)
@@ -222,19 +224,20 @@ func TestListing(t *testing.T) {
 	require.Equal(t, nftClasses[0].Id, itemsRes.Items[0].ClassId)
 	require.Equal(t, nfts[0].NftId, itemsRes.Items[0].NftId)
 	require.Equal(t, ADDR_01_LIKE, itemsRes.Items[0].Creator)
-	require.Equal(t, uint64(100000000000), itemsRes.Items[0].Price)
+	require.Equal(t, initPrice1, itemsRes.Items[0].Price)
 	require.Equal(t, expiration, itemsRes.Items[0].Expiration)
 	require.Equal(t, "listing", itemsRes.Items[1].Type)
 	require.Equal(t, nftClasses[0].Id, itemsRes.Items[1].ClassId)
 	require.Equal(t, nfts[1].NftId, itemsRes.Items[1].NftId)
 	require.Equal(t, ADDR_02_LIKE, itemsRes.Items[1].Creator)
-	require.Equal(t, uint64(100000000001), itemsRes.Items[1].Price)
+	require.Equal(t, initPrice2, itemsRes.Items[1].Price)
 	require.Equal(t, expiration.Add(1*time.Second), itemsRes.Items[1].Expiration)
 
+	updatedPrice1 := uint64(100000000002)
 	txs = []string{
 		fmt.Sprintf(
 			`{"txhash":"AAAAAC","height":"1236","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgUpdateListing","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAC"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"update_listing"}]},{"type":"likechain.likenft.v1.EventUpdateListing","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[1]s\""}]}]}]}`,
-			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000002), expiration.Add(2*time.Second).Format(time.RFC3339),
+			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, updatedPrice1, expiration.Add(2*time.Second).Format(time.RFC3339),
 		),
 	}
 	InsertTestData(DBTestData{Txs: txs})
@@ -256,13 +259,13 @@ func TestListing(t *testing.T) {
 	require.Equal(t, nftClasses[0].Id, itemsRes.Items[0].ClassId)
 	require.Equal(t, nfts[1].NftId, itemsRes.Items[0].NftId)
 	require.Equal(t, ADDR_02_LIKE, itemsRes.Items[0].Creator)
-	require.Equal(t, uint64(100000000001), itemsRes.Items[0].Price)
+	require.Equal(t, initPrice2, itemsRes.Items[0].Price)
 	require.Equal(t, expiration.Add(1*time.Second), itemsRes.Items[0].Expiration)
 	require.Equal(t, "listing", itemsRes.Items[1].Type)
 	require.Equal(t, nftClasses[0].Id, itemsRes.Items[1].ClassId)
 	require.Equal(t, nfts[0].NftId, itemsRes.Items[1].NftId)
 	require.Equal(t, ADDR_01_LIKE, itemsRes.Items[1].Creator)
-	require.Equal(t, uint64(100000000002), itemsRes.Items[1].Price)
+	require.Equal(t, updatedPrice1, itemsRes.Items[1].Price)
 	require.Equal(t, expiration.Add(2*time.Second), itemsRes.Items[1].Expiration)
 
 	txs = []string{
@@ -290,13 +293,18 @@ func TestListing(t *testing.T) {
 	require.Equal(t, nftClasses[0].Id, itemsRes.Items[0].ClassId)
 	require.Equal(t, nfts[0].NftId, itemsRes.Items[0].NftId)
 	require.Equal(t, ADDR_01_LIKE, itemsRes.Items[0].Creator)
-	require.Equal(t, uint64(100000000002), itemsRes.Items[0].Price)
+	require.Equal(t, updatedPrice1, itemsRes.Items[0].Price)
 	require.Equal(t, expiration.Add(2*time.Second), itemsRes.Items[0].Expiration)
+
+	stakeholder1 := ADDR_03_LIKE
+	stakeholder2 := ADDR_01_LIKE
+	royalty1 := uint64(10000000000)
+	royalty2 := updatedPrice1 - royalty1
 
 	txs = []string{
 		fmt.Sprintf(
-			`{"txhash":"AAAAAE","height":"1238","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgBuyNFT","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","seller":"%[4]s","price":"100000000002"}],"memo":"AAAAAE"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"likechain.likenft.v1.EventBuyNFT","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[4]s\""},{"key":"buyer","value":"\"%[1]s\""},{"key":"price","value":"\"100000000002\""}]},{"type":"likechain.likenft.v1.EventDeleteListing","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[4]s\""}]},{"type":"message","attributes":[{"key":"action","value":"buy_nft"},{"key":"sender","value":"%[1]s"}]}]}]}`,
-			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_01_LIKE,
+			`{"txhash":"AAAAAE","height":"1238","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgBuyNFT","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","seller":"%[4]s","price":"%[5]d"}],"memo":"AAAAAE"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[6]s"},{"key":"amount","value":"%[8]dnanolike"},{"key":"receiver","value":"%[7]s"},{"key":"amount","value":"%[9]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[8]dnanolike"},{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[9]dnanolike"}]},{"type":"likechain.likenft.v1.EventBuyNFT","attributes":[{"key":"buyer","value":"\"%[1]s\""},{"key":"price","value":"\"%[5]d\""},{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[4]s\""}]},{"type":"likechain.likenft.v1.EventDeleteListing","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"seller","value":"\"%[4]s\""}]},{"type":"message","attributes":[{"key":"action","value":"buy_nft"},{"key":"sender","value":"%[1]s"},{"key":"sender","value":"%[1]s"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[6]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"%[8]dnanolike"},{"key":"recipient","value":"%[7]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"%[9]dnanolike"}]}]}]}`,
+			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_01_LIKE, updatedPrice1, stakeholder1, stakeholder2, royalty1, royalty2,
 		),
 	}
 	InsertTestData(DBTestData{Txs: txs})
@@ -327,7 +335,25 @@ func TestListing(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Len(t, eventsRes.Events, 1)
-	require.Equal(t, uint64(100000000002), eventsRes.Events[0].Price)
+	require.Equal(t, updatedPrice1, eventsRes.Events[0].Price)
+
+	royalties, err := GetNftIncomes(Conn,
+		QueryIncomesRequest{
+			ClassId:    nftClasses[0].Id,
+			NftId:      nfts[0].NftId,
+			OrderBy:    "income",
+			ActionType: []NftEventAction{ACTION_BUY},
+		}, PageRequest{Limit: 10},
+	)
+	require.NoError(t, err)
+	require.Len(t, royalties.Incomes, 2)
+	require.Equal(t, nftClasses[0].Id, royalties.Incomes[0].ClassId)
+	require.Equal(t, nfts[0].NftId, royalties.Incomes[0].NftId)
+	require.Equal(t, "AAAAAE", royalties.Incomes[0].TxHash)
+	require.Equal(t, stakeholder1, royalties.Incomes[0].Address)
+	require.Equal(t, royalty1, royalties.Incomes[0].Amount)
+	require.Equal(t, stakeholder2, royalties.Incomes[1].Address)
+	require.Equal(t, royalty2, royalties.Incomes[1].Amount)
 }
 
 func TestOffer(t *testing.T) {
@@ -357,15 +383,17 @@ func TestOffer(t *testing.T) {
 			Owner:   ADDR_02_LIKE,
 		},
 	}
+	initPrice1 := uint64(100000000000)
+	initPrice2 := uint64(100000000001)
 	expiration := time.Unix(1700000000, 0).UTC()
 	txs := []string{
 		fmt.Sprintf(
 			`{"txhash":"AAAAAA","height":"1234","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateOffer","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAA"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_offer"}]},{"type":"likechain.likenft.v1.EventCreateOffer","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[1]s\""}]}]}]}`,
-			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000000), expiration.Format(time.RFC3339),
+			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, initPrice1, expiration.Format(time.RFC3339),
 		),
 		fmt.Sprintf(
 			`{"txhash":"AAAAAB","height":"1235","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgCreateOffer","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAB"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"create_offer"}]},{"type":"likechain.likenft.v1.EventCreateOffer","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[1]s\""}]}]}]}`,
-			ADDR_01_LIKE, nftClasses[0].Id, nfts[1].NftId, uint64(100000000001), expiration.Add(1*time.Second).Format(time.RFC3339),
+			ADDR_01_LIKE, nftClasses[0].Id, nfts[1].NftId, initPrice2, expiration.Add(1*time.Second).Format(time.RFC3339),
 		),
 	}
 	blockTime := expiration.Add(-10000 * time.Second)
@@ -404,19 +432,20 @@ func TestOffer(t *testing.T) {
 	require.Equal(t, nftClasses[0].Id, itemsRes.Items[0].ClassId)
 	require.Equal(t, nfts[0].NftId, itemsRes.Items[0].NftId)
 	require.Equal(t, ADDR_02_LIKE, itemsRes.Items[0].Creator)
-	require.Equal(t, uint64(100000000000), itemsRes.Items[0].Price)
+	require.Equal(t, initPrice1, itemsRes.Items[0].Price)
 	require.Equal(t, expiration, itemsRes.Items[0].Expiration)
 	require.Equal(t, "offer", itemsRes.Items[1].Type)
 	require.Equal(t, nftClasses[0].Id, itemsRes.Items[1].ClassId)
 	require.Equal(t, nfts[1].NftId, itemsRes.Items[1].NftId)
 	require.Equal(t, ADDR_01_LIKE, itemsRes.Items[1].Creator)
-	require.Equal(t, uint64(100000000001), itemsRes.Items[1].Price)
+	require.Equal(t, initPrice2, itemsRes.Items[1].Price)
 	require.Equal(t, expiration.Add(1*time.Second), itemsRes.Items[1].Expiration)
 
+	updatedPrice1 := uint64(100000000002)
 	txs = []string{
 		fmt.Sprintf(
 			`{"txhash":"AAAAAC","height":"1236","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgUpdateOffer","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","price":"%[4]d","expiration":"%[5]s"}],"memo":"AAAAAC"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"update_offer"}]},{"type":"likechain.likenft.v1.EventUpdateOffer","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[1]s\""}]}]}]}`,
-			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, uint64(100000000002), expiration.Add(2*time.Second).Format(time.RFC3339),
+			ADDR_02_LIKE, nftClasses[0].Id, nfts[0].NftId, updatedPrice1, expiration.Add(2*time.Second).Format(time.RFC3339),
 		),
 	}
 	InsertTestData(DBTestData{Txs: txs})
@@ -438,13 +467,13 @@ func TestOffer(t *testing.T) {
 	require.Equal(t, nftClasses[0].Id, itemsRes.Items[0].ClassId)
 	require.Equal(t, nfts[1].NftId, itemsRes.Items[0].NftId)
 	require.Equal(t, ADDR_01_LIKE, itemsRes.Items[0].Creator)
-	require.Equal(t, uint64(100000000001), itemsRes.Items[0].Price)
+	require.Equal(t, initPrice2, itemsRes.Items[0].Price)
 	require.Equal(t, expiration.Add(1*time.Second), itemsRes.Items[0].Expiration)
 	require.Equal(t, "offer", itemsRes.Items[1].Type)
 	require.Equal(t, nftClasses[0].Id, itemsRes.Items[1].ClassId)
 	require.Equal(t, nfts[0].NftId, itemsRes.Items[1].NftId)
 	require.Equal(t, ADDR_02_LIKE, itemsRes.Items[1].Creator)
-	require.Equal(t, uint64(100000000002), itemsRes.Items[1].Price)
+	require.Equal(t, updatedPrice1, itemsRes.Items[1].Price)
 	require.Equal(t, expiration.Add(2*time.Second), itemsRes.Items[1].Expiration)
 
 	txs = []string{
@@ -472,13 +501,18 @@ func TestOffer(t *testing.T) {
 	require.Equal(t, nftClasses[0].Id, itemsRes.Items[0].ClassId)
 	require.Equal(t, nfts[0].NftId, itemsRes.Items[0].NftId)
 	require.Equal(t, ADDR_02_LIKE, itemsRes.Items[0].Creator)
-	require.Equal(t, uint64(100000000002), itemsRes.Items[0].Price)
+	require.Equal(t, updatedPrice1, itemsRes.Items[0].Price)
 	require.Equal(t, expiration.Add(2*time.Second), itemsRes.Items[0].Expiration)
+
+	stakeholder1 := ADDR_03_LIKE
+	stakeholder2 := ADDR_01_LIKE
+	royalty1 := uint64(10000000000)
+	royalty2 := updatedPrice1 - royalty1
 
 	txs = []string{
 		fmt.Sprintf(
-			`{"txhash":"AAAAAE","height":"1238","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgSellNFT","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","buyer":"%[4]s","price":"100000000002"}],"memo":"AAAAAE"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"likechain.likenft.v1.EventSellNFT","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[4]s\""},{"key":"seller","value":"\"%[1]s\""},{"key":"price","value":"\"100000000002\""}]},{"type":"likechain.likenft.v1.EventDeleteOffer","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[4]s\""}]},{"type":"message","attributes":[{"key":"action","value":"sell_nft"},{"key":"sender","value":"%[1]s"}]}]}]}`,
-			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_02_LIKE,
+			`{"txhash":"AAAAAE","height":"1238","tx":{"body":{"messages":[{"@type":"/likechain.likenft.v1.MsgSellNFT","creator":"%[1]s","class_id":"%[2]s","nft_id":"%[3]s","buyer":"%[4]s","price":"%[5]d"}],"memo":"AAAAAE"}},"logs":[{"msg_index":0,"log":"","events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[6]s"},{"key":"amount","value":"%[8]dnanolike"},{"key":"receiver","value":"%[7]s"},{"key":"amount","value":"%[9]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[8]dnanolike"},{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[9]dnanolike"}]},{"type":"likechain.likenft.v1.EventSellNFT","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[4]s\""},{"key":"seller","value":"\"%[1]s\""},{"key":"price","value":"\"%[5]d\""}]},{"type":"likechain.likenft.v1.EventDeleteOffer","attributes":[{"key":"class_id","value":"\"%[2]s\""},{"key":"nft_id","value":"\"%[3]s\""},{"key":"buyer","value":"\"%[4]s\""}]},{"type":"message","attributes":[{"key":"action","value":"sell_nft"},{"key":"sender","value":"%[1]s"},{"key":"sender","value":"%[1]s"}]}]}]}`,
+			ADDR_01_LIKE, nftClasses[0].Id, nfts[0].NftId, ADDR_02_LIKE, updatedPrice1, stakeholder1, stakeholder2, royalty1, royalty2,
 		),
 	}
 	InsertTestData(DBTestData{Txs: txs})
@@ -509,5 +543,23 @@ func TestOffer(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Len(t, eventsRes.Events, 1)
-	require.Equal(t, uint64(100000000002), eventsRes.Events[0].Price)
+	require.Equal(t, updatedPrice1, eventsRes.Events[0].Price)
+
+	incomes, err := GetNftIncomes(Conn,
+		QueryIncomesRequest{
+			ClassId:    nftClasses[0].Id,
+			NftId:      nfts[0].NftId,
+			OrderBy:    "income",
+			ActionType: []NftEventAction{ACTION_SELL},
+		}, PageRequest{Limit: 10},
+	)
+	require.NoError(t, err)
+	require.Len(t, incomes.Incomes, 2)
+	require.Equal(t, nftClasses[0].Id, incomes.Incomes[0].ClassId)
+	require.Equal(t, nfts[0].NftId, incomes.Incomes[0].NftId)
+	require.Equal(t, "AAAAAE", incomes.Incomes[0].TxHash)
+	require.Equal(t, stakeholder1, incomes.Incomes[0].Address)
+	require.Equal(t, royalty1, incomes.Incomes[0].Amount)
+	require.Equal(t, stakeholder2, incomes.Incomes[1].Address)
+	require.Equal(t, royalty2, incomes.Incomes[1].Amount)
 }
