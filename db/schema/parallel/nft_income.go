@@ -77,6 +77,9 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 					}
 				}
 			}
+			if pkeyId == 0 {
+				break
+			}
 			count := len(incomes)
 			if count == 0 {
 				continue
