@@ -82,6 +82,11 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 			}
 			count := len(incomes)
 			if count == 0 {
+				logger.L.Infow(
+					"NFT income table migration progress",
+					"pkey_id", pkeyId,
+					"count", count,
+				)
 				continue
 			}
 			for i := 0; i < count; i++ {
@@ -106,6 +111,7 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 				"amount", lastIncome.Amount,
 			)
 		}
+		logger.L.Infow("NFT income table migration completed")
 		return nil
 	})
 }
