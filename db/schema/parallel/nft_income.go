@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
+	"github.com/likecoin/likecoin-chain-tx-indexer/rest"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
@@ -24,7 +25,16 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 		_, err := dbTx.Exec(context.Background(), `
 			DECLARE nft_income_migration_cursor CURSOR FOR
 				SELECT id, class_id, nft_id, tx_hash, events
-				FROM nft_event
+				FROM (
+					SELECT e.id, e.class_id, e.nft_id, e.tx_hash, t.events, ROW_NUMBER() OVER (PARTITION BY e.tx_hash ORDER BY e.id DESC) AS rn
+					FROM nft_event AS e
+					JOIN (
+						SELECT DISTINCT ON (tx ->> 'txhash') tx ->> 'txhash' AS tx_hash, events
+						FROM txs
+					) AS t ON e.tx_hash = t.tx_hash
+					WHERE e.action IN ('/cosmos.nft.v1beta1.MsgSend', 'buy_nft', 'sell_nft')
+				) subquery
+				WHERE rn = 1
 				ORDER BY id
 			;
 		`)
@@ -57,15 +67,18 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 					return err
 				}
 
-				events, err := utils.ParseEvents(eventRaw)
+				spreadEvents, err := utils.ParseEvents(eventRaw)
 				if err != nil {
 					logger.L.Errorw("Error when parsing events", "error", err)
 					return err
 				}
 
-				msgAction := utils.GetEventsValue(events, "message", "action")
-				if msgAction == "/cosmos.bank.v1beta1.MsgSend" || msgAction == string(db.ACTION_BUY) || msgAction == string(db.ACTION_SELL) {
-					incomeMap := utils.GetIncomeMap(events)
+				firstMsgAction := utils.GetEventsValue(spreadEvents, "message", "action")
+				if firstMsgAction == "/cosmos.authz.v1beta1.MsgExec" || firstMsgAction == string(db.ACTION_BUY) || firstMsgAction == string(db.ACTION_SELL) {
+					incomeMap := utils.GetIncomeMap(spreadEvents)
+					for _, address := range rest.DefaultApiAddresses {
+						delete(incomeMap, address)
+					}
 					for address, amount := range incomeMap {
 						incomes = append(incomes, db.NftIncome{
 							ClassId: classId,
