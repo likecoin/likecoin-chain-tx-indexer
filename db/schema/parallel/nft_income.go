@@ -22,6 +22,8 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 		return err
 	}
 	return conn.BeginFunc(context.Background(), func(dbTx pgx.Tx) error {
+		// use `WHERE rn = 1` to ensure only the latest event with same tx_hash is processed,
+		// that way we can skip most unused `mint_nft` actions mixed in the `/cosmos.nft.v1beta1.MsgSend` actions
 		_, err := dbTx.Exec(context.Background(), `
 			DECLARE nft_income_migration_cursor CURSOR FOR
 				SELECT id, class_id, nft_id, tx_hash, events
@@ -67,6 +69,8 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 					return err
 				}
 
+				// `spreadEvents` includes events of 'ALL' messages in the tx, not just a message.
+				// this is different from the case in `extractNftIncomes()`
 				spreadEvents, err := utils.ParseEvents(eventRaw)
 				if err != nil {
 					logger.L.Errorw("Error when parsing events", "error", err)
