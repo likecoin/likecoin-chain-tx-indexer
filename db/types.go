@@ -277,7 +277,7 @@ type QueryEventsResponse struct {
 	Events     []NftEvent   `json:"events"`
 }
 
-type QueryIncomesRequest struct {
+type QueryIncomeDetailsRequest struct {
 	ClassId    string           `form:"class_id"`
 	NftId      string           `form:"nft_id"`
 	Owner      string           `form:"owner"`
@@ -288,7 +288,7 @@ type QueryIncomesRequest struct {
 	OrderBy    string           `form:"order_by"`
 }
 
-type NftIncomeResponse struct {
+type NftIncomeDetailResponse struct {
 	ClassId   string    `json:"class_id"`
 	NftId     string    `json:"nft_id"`
 	TxHash    string    `json:"tx_hash"`
@@ -299,9 +299,9 @@ type NftIncomeResponse struct {
 	Amount    uint64    `json:"amount"`
 }
 
-type QueryIncomesResponse struct {
-	Incomes    []NftIncomeResponse `json:"incomes"`
-	Pagination PageResponse        `json:"pagination"`
+type QueryIncomeDetailsResponse struct {
+	IncomeDetails []NftIncomeDetailResponse `json:"income_details"`
+	Pagination    PageResponse              `json:"pagination"`
 }
 
 type QueryRankingRequest struct {

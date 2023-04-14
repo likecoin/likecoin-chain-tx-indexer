@@ -349,7 +349,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	return res, nil
 }
 
-func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (QueryIncomesResponse, error) {
+func GetNftIncomeDetails(conn *pgxpool.Conn, q QueryIncomeDetailsRequest, p PageRequest) (QueryIncomeDetailsResponse, error) {
 	ownerVariations := utils.ConvertAddressPrefixes(q.Owner, AddressPrefixes)
 	stakeholderVariations := utils.ConvertAddressPrefixes(q.Address, AddressPrefixes)
 	orderBy := "i.id"
@@ -393,25 +393,25 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 		ownerVariations, stakeholderVariations, q.After, q.Before, q.ActionType,
 	)
 	if err != nil {
-		logger.L.Errorw("Failed to query nft incomes", "error", err)
-		return QueryIncomesResponse{}, fmt.Errorf("query nft royalties error: %w", err)
+		logger.L.Errorw("Failed to query nft income details", "error", err)
+		return QueryIncomeDetailsResponse{}, fmt.Errorf("query nft income details error: %w", err)
 	}
 
-	res := QueryIncomesResponse{
-		Incomes: make([]NftIncomeResponse, 0),
+	res := QueryIncomeDetailsResponse{
+		IncomeDetails: make([]NftIncomeDetailResponse, 0),
 	}
 	for rows.Next() {
-		var r NftIncomeResponse
+		var r NftIncomeDetailResponse
 		if err = rows.Scan(
 			&r.ClassId, &r.NftId, &r.TxHash, &r.Timestamp, &r.Owner,
 			&r.Address, &r.Price, &r.Amount,
 		); err != nil {
-			logger.L.Errorw("failed to scan nft incomes", "error", err, "q", q)
-			return QueryIncomesResponse{}, fmt.Errorf("query nft incomes data failed: %w", err)
+			logger.L.Errorw("failed to scan nft income details", "error", err, "q", q)
+			return QueryIncomeDetailsResponse{}, fmt.Errorf("query nft income details data failed: %w", err)
 		}
-		res.Incomes = append(res.Incomes, r)
+		res.IncomeDetails = append(res.IncomeDetails, r)
 	}
-	res.Pagination.Count = len(res.Incomes)
+	res.Pagination.Count = len(res.IncomeDetails)
 	return res, nil
 }
 

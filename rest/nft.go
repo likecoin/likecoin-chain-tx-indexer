@@ -197,8 +197,8 @@ func handleNftCreators(c *gin.Context) {
 	c.JSON(200, res)
 }
 
-func handleNftIncome(c *gin.Context) {
-	var form db.QueryIncomesRequest
+func handleNftIncomeDetail(c *gin.Context) {
+	var form db.QueryIncomeDetailsRequest
 	if err := c.ShouldBindQuery(&form); err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
 		return
@@ -231,7 +231,7 @@ func handleNftIncome(c *gin.Context) {
 
 	conn := getConn(c)
 
-	res, err := db.GetNftIncomes(conn, form, p)
+	res, err := db.GetNftIncomeDetails(conn, form, p)
 	if err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
 		return

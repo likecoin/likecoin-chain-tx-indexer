@@ -254,21 +254,21 @@ func TestSendNftWithPrice(t *testing.T) {
 	require.Equal(t, ACTION_SEND, eventRes.Events[0].Action)
 	require.Equal(t, uint64(price), eventRes.Events[0].Price)
 
-	incomeRes, err := GetNftIncomes(Conn, QueryIncomesRequest{
+	incomeDetailRes, err := GetNftIncomeDetails(Conn, QueryIncomeDetailsRequest{
 		ClassId:    nftClasses[0].Id,
 		OrderBy:    "royalty",
 		ActionType: []NftEventAction{ACTION_SEND},
 	}, PageRequest{Limit: 10, Reverse: true})
 	require.NoError(t, err)
-	require.Len(t, incomeRes.Incomes, 2)
-	require.Equal(t, nfts[0].ClassId, incomeRes.Incomes[0].ClassId)
-	require.Equal(t, nfts[0].NftId, incomeRes.Incomes[0].NftId)
-	require.Equal(t, ADDR_02_LIKE, incomeRes.Incomes[0].Owner)
-	require.Equal(t, stakeholder1, incomeRes.Incomes[0].Address)
-	require.Equal(t, uint64(royalty1), incomeRes.Incomes[0].Amount)
-	require.Equal(t, stakeholder2, incomeRes.Incomes[1].Address)
-	require.Equal(t, uint64(royalty2), incomeRes.Incomes[1].Amount)
-	require.Equal(t, uint64(price), incomeRes.Incomes[0].Amount+incomeRes.Incomes[1].Amount)
+	require.Len(t, incomeDetailRes.IncomeDetails, 2)
+	require.Equal(t, nfts[0].ClassId, incomeDetailRes.IncomeDetails[0].ClassId)
+	require.Equal(t, nfts[0].NftId, incomeDetailRes.IncomeDetails[0].NftId)
+	require.Equal(t, ADDR_02_LIKE, incomeDetailRes.IncomeDetails[0].Owner)
+	require.Equal(t, stakeholder1, incomeDetailRes.IncomeDetails[0].Address)
+	require.Equal(t, uint64(royalty1), incomeDetailRes.IncomeDetails[0].Amount)
+	require.Equal(t, stakeholder2, incomeDetailRes.IncomeDetails[1].Address)
+	require.Equal(t, uint64(royalty2), incomeDetailRes.IncomeDetails[1].Amount)
+	require.Equal(t, uint64(price), incomeDetailRes.IncomeDetails[0].Amount+incomeDetailRes.IncomeDetails[1].Amount)
 
 	row := Conn.QueryRow(context.Background(), `SELECT latest_price, price_updated_at FROM nft WHERE class_id = $1 AND nft_id = $2`, nftClasses[0].Id, nfts[0].NftId)
 	var lastPrice uint64
