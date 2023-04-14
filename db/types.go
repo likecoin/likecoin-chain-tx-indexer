@@ -277,6 +277,27 @@ type QueryEventsResponse struct {
 	Events     []NftEvent   `json:"events"`
 }
 
+type QueryIncomesRequest struct {
+	ClassId    string           `form:"class_id"`
+	NftId      string           `form:"nft_id"`
+	Owner      string           `form:"owner"`
+	Address    string           `form:"address"`
+	After      int64            `form:"after"`
+	Before     int64            `form:"before"`
+	ActionType []NftEventAction `form:"action_type"`
+}
+
+type NftIncomeResponse struct {
+	Address string `json:"address"`
+	Amount  uint64 `json:"amount"`
+}
+
+type QueryIncomesResponse struct {
+	TotalAmount uint64              `json:"total_amount"`
+	Incomes     []NftIncomeResponse `json:"incomes"`
+	Pagination  PageResponse        `json:"pagination"`
+}
+
 type QueryIncomeDetailsRequest struct {
 	ClassId    string           `form:"class_id"`
 	NftId      string           `form:"nft_id"`
