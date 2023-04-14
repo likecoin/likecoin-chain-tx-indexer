@@ -276,31 +276,61 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 			e.id, e.action, e.class_id, e.nft_id, e.sender,
 			e.receiver, e.timestamp, e.tx_hash, e.events, e.price,
 			e.memo
-		FROM nft_event as e
-		JOIN nft_class as c
-		ON e.class_id = c.class_id
-		JOIN iscn AS i
-		ON i.iscn_id_prefix = c.parent_iscn_id_prefix
-		JOIN iscn_latest_version
-		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-			AND i.version = iscn_latest_version.latest_version
-		WHERE ($4 = '' OR e.class_id = $4)
-			AND ($12::text[] IS NULL OR cardinality($12::text[]) = 0 OR i.owner = ANY($12))
-			AND (nft_id = '' OR $5 = '' OR nft_id = $5)
-			AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
-			AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.sender = ANY($10))
-			AND ($11::text[] IS NULL OR cardinality($11::text[]) = 0 OR e.receiver = ANY($11))
-			AND ($13::text[] IS NULL OR cardinality($13::text[]) = 0
-				OR e.sender = ANY($13)
-				OR e.receiver = ANY($13)
-				OR i.owner = ANY($13)
+		FROM (
+			(
+				SELECT DISTINCT ON (e.id) e.*
+				FROM nft_event as e
+				JOIN nft_class as c
+				ON e.class_id = c.class_id
+				JOIN iscn AS i
+				ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+				JOIN iscn_latest_version
+				ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+					AND i.version = iscn_latest_version.latest_version
+				WHERE ($4 = '' OR e.class_id = $4)
+					AND ($12::text[] IS NULL OR cardinality($12::text[]) = 0 OR i.owner = ANY($12))
+					AND (nft_id = '' OR $5 = '' OR nft_id = $5)
+					AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
+					AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.sender = ANY($10))
+					AND ($11::text[] IS NULL OR cardinality($11::text[]) = 0 OR e.receiver = ANY($11))
+					AND ($13::text[] IS NULL OR cardinality($13::text[]) = 0
+						OR e.sender = ANY($13)
+						OR e.receiver = ANY($13)
+					)
+					AND ($1 = 0 OR e.id > $1)
+					AND ($2 = 0 OR e.id < $2)
+					AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR e.action = ANY($7))
+					AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR e.sender != ALL($8))
+					AND ($9::text[] IS NULL OR cardinality($9::text[]) = 0 OR e.receiver != ALL($9))
+				ORDER BY e.id %[1]s
+				LIMIT $3
+			) UNION ALL (
+				SELECT DISTINCT ON (e.id) e.*
+				FROM nft_event as e
+				JOIN nft_class as c
+				ON e.class_id = c.class_id
+				JOIN iscn AS i
+				ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+				JOIN iscn_latest_version
+				ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+					AND i.version = iscn_latest_version.latest_version
+				WHERE ($4 = '' OR e.class_id = $4)
+					AND ($12::text[] IS NULL OR cardinality($12::text[]) = 0 OR i.owner = ANY($12))
+					AND (nft_id = '' OR $5 = '' OR nft_id = $5)
+					AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
+					AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.sender = ANY($10))
+					AND ($11::text[] IS NULL OR cardinality($11::text[]) = 0 OR e.receiver = ANY($11))
+					AND ($13::text[] IS NULL OR cardinality($13::text[]) = 0 OR i.owner = ANY($13))
+					AND ($1 = 0 OR e.id > $1)
+					AND ($2 = 0 OR e.id < $2)
+					AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR e.action = ANY($7))
+					AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR e.sender != ALL($8))
+					AND ($9::text[] IS NULL OR cardinality($9::text[]) = 0 OR e.receiver != ALL($9))
+				ORDER BY e.id %[1]s
+				LIMIT $3
 			)
-			AND ($1 = 0 OR e.id > $1)
-			AND ($2 = 0 OR e.id < $2)
-			AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR e.action = ANY($7))
-			AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR e.sender != ALL($8))
-			AND ($9::text[] IS NULL OR cardinality($9::text[]) = 0 OR e.receiver != ALL($9))
-		ORDER BY e.id %s
+		) AS e
+		ORDER BY e.id %[1]s
 		LIMIT $3
 	`, p.Order())
 
