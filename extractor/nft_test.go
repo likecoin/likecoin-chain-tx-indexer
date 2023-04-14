@@ -256,7 +256,7 @@ func TestSendNftWithPrice(t *testing.T) {
 
 	incomeDetailRes, err := GetNftIncomeDetails(Conn, QueryIncomeDetailsRequest{
 		ClassId:    nftClasses[0].Id,
-		OrderBy:    "royalty",
+		OrderBy:    "income",
 		ActionType: []NftEventAction{ACTION_SEND},
 	}, PageRequest{Limit: 10, Reverse: true})
 	require.NoError(t, err)
