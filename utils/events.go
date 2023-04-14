@@ -78,10 +78,10 @@ func ParseCoinFromEventString(coinStr string) (uint64, error) {
 
 func GetIncomeMap(events types.StringEvents) map[string]uint64 {
 	incomeMap := make(map[string]uint64)
+	address := ""
+	amount := uint64(0)
 	for _, event := range events {
 		if event.Type == "coin_received" {
-			address := ""
-			amount := uint64(0)
 			for _, attr := range event.Attributes {
 				if attr.Key == "receiver" {
 					address = attr.Value
