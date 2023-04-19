@@ -215,8 +215,8 @@ func TestSendNftWithPrice(t *testing.T) {
 	receiver := ADDR_01_LIKE
 	stakeholder1 := ADDR_02_LIKE
 	stakeholder2 := ADDR_03_LIKE
-	price := 100
-	royalty1 := 78
+	price := uint64(100)
+	royalty1 := uint64(78)
 	royalty2 := price - royalty1
 	txs := []string{
 		fmt.Sprintf(`
@@ -252,30 +252,43 @@ func TestSendNftWithPrice(t *testing.T) {
 	require.Equal(t, ADDR_02_LIKE, eventRes.Events[0].Receiver)
 	require.Equal(t, "AAAAAA", eventRes.Events[0].TxHash)
 	require.Equal(t, ACTION_SEND, eventRes.Events[0].Action)
-	require.Equal(t, uint64(price), eventRes.Events[0].Price)
+	require.Equal(t, price, eventRes.Events[0].Price)
 
-	incomeRes, err := GetNftIncomes(Conn, QueryIncomesRequest{
+	incomesRes, err := GetNftIncomes(Conn,
+		QueryIncomesRequest{
+			ClassId: nftClasses[0].Id,
+		}, PageRequest{Limit: 10, Reverse: true},
+	)
+	require.NoError(t, err)
+	require.Len(t, incomesRes.Incomes, 2)
+	require.Equal(t, stakeholder1, incomesRes.Incomes[0].Address)
+	require.Equal(t, royalty1, incomesRes.Incomes[0].Amount)
+	require.Equal(t, stakeholder2, incomesRes.Incomes[1].Address)
+	require.Equal(t, royalty2, incomesRes.Incomes[1].Amount)
+	require.Equal(t, price, incomesRes.TotalAmount)
+
+	incomeDetailsRes, err := GetNftIncomeDetails(Conn, QueryIncomeDetailsRequest{
 		ClassId:    nftClasses[0].Id,
-		OrderBy:    "royalty",
+		OrderBy:    "income",
 		ActionType: []NftEventAction{ACTION_SEND},
 	}, PageRequest{Limit: 10, Reverse: true})
 	require.NoError(t, err)
-	require.Len(t, incomeRes.Incomes, 2)
-	require.Equal(t, nfts[0].ClassId, incomeRes.Incomes[0].ClassId)
-	require.Equal(t, nfts[0].NftId, incomeRes.Incomes[0].NftId)
-	require.Equal(t, ADDR_02_LIKE, incomeRes.Incomes[0].Owner)
-	require.Equal(t, stakeholder1, incomeRes.Incomes[0].Address)
-	require.Equal(t, uint64(royalty1), incomeRes.Incomes[0].Amount)
-	require.Equal(t, stakeholder2, incomeRes.Incomes[1].Address)
-	require.Equal(t, uint64(royalty2), incomeRes.Incomes[1].Amount)
-	require.Equal(t, uint64(price), incomeRes.Incomes[0].Amount+incomeRes.Incomes[1].Amount)
+	require.Len(t, incomeDetailsRes.IncomeDetails, 2)
+	require.Equal(t, nfts[0].ClassId, incomeDetailsRes.IncomeDetails[0].ClassId)
+	require.Equal(t, nfts[0].NftId, incomeDetailsRes.IncomeDetails[0].NftId)
+	require.Equal(t, ADDR_02_LIKE, incomeDetailsRes.IncomeDetails[0].Owner)
+	require.Equal(t, stakeholder1, incomeDetailsRes.IncomeDetails[0].Address)
+	require.Equal(t, royalty1, incomeDetailsRes.IncomeDetails[0].Amount)
+	require.Equal(t, stakeholder2, incomeDetailsRes.IncomeDetails[1].Address)
+	require.Equal(t, royalty2, incomeDetailsRes.IncomeDetails[1].Amount)
+	require.Equal(t, price, incomeDetailsRes.IncomeDetails[0].Amount+incomeDetailsRes.IncomeDetails[1].Amount)
 
 	row := Conn.QueryRow(context.Background(), `SELECT latest_price, price_updated_at FROM nft WHERE class_id = $1 AND nft_id = $2`, nftClasses[0].Id, nfts[0].NftId)
 	var lastPrice uint64
 	var priceUpdatedAt time.Time
 	err = row.Scan(&lastPrice, &priceUpdatedAt)
 	require.NoError(t, err)
-	require.Equal(t, uint64(price), lastPrice)
+	require.Equal(t, price, lastPrice)
 	require.Equal(t, timestamp.UTC(), priceUpdatedAt.UTC())
 }
 
