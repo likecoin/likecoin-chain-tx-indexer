@@ -826,3 +826,40 @@ func GetCollectorTopRankedCreators(conn *pgxpool.Conn, q QueryCollectorTopRanked
 	}
 	return
 }
+
+func GetClassesOwners(conn *pgxpool.Conn, q QueryClassesOwnersRequest) (QueryClassesOwnersResponse, error) {
+	ownersVariations := utils.ConvertAddressArrayPrefixes(q.Owners, AddressPrefixes)
+	sql := `
+		SELECT DISTINCT owner, class_id
+		FROM nft
+		WHERE class_id = ANY($1)
+			AND ($2::text[] IS NULL OR cardinality($2::text[]) = 0 OR owner = ANY($2))
+		ORDER BY owner, class_id
+;
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+	rows, err := conn.Query(ctx, sql, q.ClassIds, ownersVariations)
+	if err != nil {
+		logger.L.Errorw("Failed to query nft classes owners", "error", err, "q", q)
+		return QueryClassesOwnersResponse{}, fmt.Errorf("error on query nft classes owners: %w", err)
+	}
+
+	classIds := make(map[string][]string)
+	for rows.Next() {
+		var owner string
+		var classId string
+		if err := rows.Scan(&owner, &classId); err != nil {
+			logger.L.Errorw("failed to scan owner address and class ID", "error", err)
+			return QueryClassesOwnersResponse{}, fmt.Errorf("failed to scan owner address and class ID: %w", err)
+		}
+		convertedOwner, err := utils.ConvertAddressPrefix(owner, MainAddressPrefix)
+		if err != nil {
+			logger.L.Errorw("failed to convert address prefix when processing QueryClassesOwnersRequest", "error", err, "owner", owner, "class_id", classId, "request", q)
+			// non-critical error, just skip this row
+			continue
+		}
+		classIds[convertedOwner] = append(classIds[convertedOwner], classId)
+	}
+	return QueryClassesOwnersResponse{Owners: classIds}, nil
+}
