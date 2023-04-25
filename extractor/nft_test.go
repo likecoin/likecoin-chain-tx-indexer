@@ -369,3 +369,90 @@ func TestMintNft(t *testing.T) {
 	require.Equal(t, ADDR_01_LIKE, eventsRes.Events[0].Sender)
 	require.Equal(t, "AAAAAA", eventsRes.Events[0].Memo)
 }
+
+func TestNftEventIscnOwner(t *testing.T) {
+	defer CleanupTestData(Conn)
+	prefixA := "iscn://testing/aaaaaa"
+	iscns := []IscnInsert{
+		{
+			Iscn:  "iscn://testing/aaaaaa/1",
+			Owner: ADDR_02_LIKE,
+		},
+		{
+			Iscn:  "iscn://testing/aaaaaa/2",
+			Owner: ADDR_01_LIKE,
+		},
+	}
+	nftClasses := []NftClass{
+		{
+			Id:     "nftlike1aaaaa1",
+			Parent: NftClassParent{IscnIdPrefix: prefixA},
+		},
+		{
+			Id:     "nftlike1aaaaa2",
+			Parent: NftClassParent{IscnIdPrefix: "no_such_iscn"},
+		},
+	}
+	noSuchClass := "no_such_class"
+
+	nftId := "testing-nft-1092934"
+	uri := "https://testing.com/aaaaaa"
+	uriHash := "asdf"
+	metadata := `{"a": "b", "c": "d"}`
+	timestamp := time.Unix(1234567890, 0).UTC()
+	txs := []string{
+		fmt.Sprintf(`
+		{"txhash":"AAAAAA","height":"1234","tx":{"body":{"memo":"AAAAAA","messages":[{"id":"%[1]s","@type":"/likechain.likenft.v1.MsgMintNFT","input":{"uri":"%[2]s","uri_hash":"%[3]s","metadata":%[4]s},"creator":"%[5]s","class_id":"%[6]s"}]}},"logs":[{"events":[{"type":"cosmos.nft.v1beta1.EventMint","attributes":[{"key":"id","value":"\"%[1]s\""},{"key":"owner","value":"\"%[5]s\""},{"key":"class_id","value":"\"%[6]s\""}]},{"type":"likechain.likenft.v1.EventMintNFT","attributes":[{"key":"class_id","value":"\"%[6]s\""},{"key":"nft_id","value":"\"%[1]s\""},{"key":"owner","value":"\"%[5]s\""},{"key":"class_parent_iscn_id_prefix","value":"\"%[7]s\""},{"key":"class_parent_account","value":"\"\""}]},{"type":"message","attributes":[{"key":"action","value":"mint_nft"},{"key":"sender","value":"%[5]s"}]}],"msg_index":0}],"timestamp":"%[8]s"}`,
+			nftId, uri, uriHash, metadata, ADDR_01_LIKE,
+			nftClasses[0].Id, prefixA, timestamp.Format(time.RFC3339),
+		),
+		fmt.Sprintf(`
+		{"txhash":"AAAAAB","height":"1234","tx":{"body":{"memo":"AAAAAB","messages":[{"id":"%[1]s","@type":"/likechain.likenft.v1.MsgMintNFT","input":{"uri":"%[2]s","uri_hash":"%[3]s","metadata":%[4]s},"creator":"%[5]s","class_id":"%[6]s"}]}},"logs":[{"events":[{"type":"cosmos.nft.v1beta1.EventMint","attributes":[{"key":"id","value":"\"%[1]s\""},{"key":"owner","value":"\"%[5]s\""},{"key":"class_id","value":"\"%[6]s\""}]},{"type":"likechain.likenft.v1.EventMintNFT","attributes":[{"key":"class_id","value":"\"%[6]s\""},{"key":"nft_id","value":"\"%[1]s\""},{"key":"owner","value":"\"%[5]s\""},{"key":"class_parent_iscn_id_prefix","value":"\"%[7]s\""},{"key":"class_parent_account","value":"\"\""}]},{"type":"message","attributes":[{"key":"action","value":"mint_nft"},{"key":"sender","value":"%[5]s"}]}],"msg_index":0}],"timestamp":"%[8]s"}`,
+			nftId, uri, uriHash, metadata, ADDR_01_LIKE,
+			nftClasses[1].Id, prefixA, timestamp.Format(time.RFC3339),
+		),
+		fmt.Sprintf(`
+		{"txhash":"AAAAAC","height":"1234","tx":{"body":{"memo":"AAAAAC","messages":[{"id":"%[1]s","@type":"/likechain.likenft.v1.MsgMintNFT","input":{"uri":"%[2]s","uri_hash":"%[3]s","metadata":%[4]s},"creator":"%[5]s","class_id":"%[6]s"}]}},"logs":[{"events":[{"type":"cosmos.nft.v1beta1.EventMint","attributes":[{"key":"id","value":"\"%[1]s\""},{"key":"owner","value":"\"%[5]s\""},{"key":"class_id","value":"\"%[6]s\""}]},{"type":"likechain.likenft.v1.EventMintNFT","attributes":[{"key":"class_id","value":"\"%[6]s\""},{"key":"nft_id","value":"\"%[1]s\""},{"key":"owner","value":"\"%[5]s\""},{"key":"class_parent_iscn_id_prefix","value":"\"%[7]s\""},{"key":"class_parent_account","value":"\"\""}]},{"type":"message","attributes":[{"key":"action","value":"mint_nft"},{"key":"sender","value":"%[5]s"}]}],"msg_index":0}],"timestamp":"%[8]s"}`,
+			nftId, uri, uriHash, metadata, ADDR_01_LIKE,
+			noSuchClass, prefixA, timestamp.Format(time.RFC3339),
+		),
+	}
+	InsertTestData(DBTestData{
+		Iscns:      iscns,
+		NftClasses: nftClasses,
+		Txs:        txs,
+	})
+
+	finished, err := Extract(Conn, extractor.ExtractFunc)
+	require.NoError(t, err)
+	require.True(t, finished)
+
+	var iscnOwner string
+
+	row := Conn.QueryRow(
+		context.Background(),
+		`SELECT iscn_owner_at_the_time FROM nft_event WHERE nft_id = $1 AND class_id = $2`,
+		nftId, nftClasses[0].Id,
+	)
+	err = row.Scan(&iscnOwner)
+	require.NoError(t, err)
+	require.Equal(t, ADDR_01_LIKE, iscnOwner)
+
+	row = Conn.QueryRow(
+		context.Background(),
+		`SELECT iscn_owner_at_the_time FROM nft_event WHERE nft_id = $1 AND class_id = $2`,
+		nftId, nftClasses[1].Id,
+	)
+	err = row.Scan(&iscnOwner)
+	require.NoError(t, err)
+	require.Equal(t, "", iscnOwner)
+
+	row = Conn.QueryRow(
+		context.Background(),
+		`SELECT iscn_owner_at_the_time FROM nft_event WHERE nft_id = $1 AND class_id = $2`,
+		nftId, noSuchClass,
+	)
+	err = row.Scan(&iscnOwner)
+	require.NoError(t, err)
+	require.Equal(t, "", iscnOwner)
+}

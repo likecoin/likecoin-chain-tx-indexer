@@ -246,9 +246,23 @@ func (batch *Batch) InsertNftEvent(e NftEvent) {
 	sql := `
 	INSERT INTO nft_event (
 		action, class_id, nft_id, sender, receiver,
-		events, tx_hash, timestamp, price, memo
+		events, tx_hash, timestamp, price, memo,
+		iscn_owner_at_the_time
 	)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+		COALESCE(
+			(SELECT i.owner
+			FROM nft_class AS c
+			JOIN iscn AS i
+				ON i.iscn_id_prefix = c.parent_iscn_id_prefix
+			JOIN iscn_latest_version AS v
+				ON i.iscn_id_prefix = v.iscn_id_prefix
+					AND i.version = v.latest_version
+			WHERE c.class_id = $2
+			LIMIT 1)
+		, '')
+	)
 	ON CONFLICT DO NOTHING`
 	batch.Batch.Queue(sql,
 		e.Action, e.ClassId, e.NftId, e.Sender, e.Receiver,
