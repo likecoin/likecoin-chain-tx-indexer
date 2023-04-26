@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"encoding/base64"
+	"encoding/binary"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -12,6 +14,22 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
+
+func getKey(query url.Values) (uint64, error) {
+	valueStr := query.Get("pagination.key")
+	if valueStr == "" {
+		return 0, nil
+	}
+	bz, err := base64.StdEncoding.DecodeString(valueStr)
+	if err != nil {
+		return 0, fmt.Errorf("cannot decode pagination.key as base64: %w", err)
+	}
+	if len(bz) != 8 {
+		return 0, fmt.Errorf("pagination.key must be 8 bytes base64, while input (%s) is %d bytes", valueStr, len(bz))
+	}
+	key := binary.BigEndian.Uint64(bz)
+	return key, nil
+}
 
 func getEventMapAndHeight(eventArray []string) (url.Values, uint64, error) {
 	var height = uint64(0)
