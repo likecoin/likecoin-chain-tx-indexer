@@ -16,7 +16,7 @@ func checkMinSchemaVersion(conn *pgxpool.Conn, minVersion uint64) error {
 	}
 	if version < minVersion {
 		logger.L.Errorw("Schema version does not meet minimum requirement", "minimum_version", minVersion, "current_version", version)
-		return fmt.Errorf("schema version too low")
+		return fmt.Errorf("schema version too low, expect at least %d, got %d", minVersion, version)
 	}
 	return nil
 }
