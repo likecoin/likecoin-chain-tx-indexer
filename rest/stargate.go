@@ -27,7 +27,7 @@ func getKey(query url.Values) (uint64, error) {
 	if len(bz) != 8 {
 		return 0, fmt.Errorf("pagination.key must be 8 bytes base64, while input (%s) is %d bytes", valueStr, len(bz))
 	}
-	key := binary.BigEndian.Uint64(bz)
+	key := binary.LittleEndian.Uint64(bz)
 	return key, nil
 }
 
