@@ -32,14 +32,6 @@ func getUint(query url.Values, key string) (uint64, error) {
 	}
 }
 
-func getKey(query url.Values) (uint64, error) {
-	key, err := getUint(query, "pagination.key")
-	if err != nil {
-		return 0, fmt.Errorf("cannot parse pagination.key to unsigned int: %w", err)
-	}
-	return key, nil
-}
-
 func getOffset(query url.Values) (uint64, error) {
 	offset, err := getUint(query, "pagination.offset")
 	if err != nil {
