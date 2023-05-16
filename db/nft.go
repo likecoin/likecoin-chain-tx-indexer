@@ -455,8 +455,8 @@ func GetNftIncomeDetails(conn *pgxpool.Conn, q QueryIncomeDetailsRequest, p Page
 	}
 
 	sql := fmt.Sprintf(`
-		SELECT e.class_id, e.nft_id, e.tx_hash, e.timestamp, iscn.owner, 
-			i.address, e.price, i.amount 
+		SELECT e.class_id, e.nft_id, e.tx_hash, e.timestamp, i.address, 
+			e.price, i.amount 
 		FROM nft_event AS e
 		JOIN nft_class as c
 			ON e.class_id = c.class_id
@@ -501,8 +501,8 @@ func GetNftIncomeDetails(conn *pgxpool.Conn, q QueryIncomeDetailsRequest, p Page
 	for rows.Next() {
 		var r NftIncomeDetailResponse
 		if err = rows.Scan(
-			&r.ClassId, &r.NftId, &r.TxHash, &r.Timestamp, &r.Owner,
-			&r.Address, &r.Price, &r.Amount,
+			&r.ClassId, &r.NftId, &r.TxHash, &r.Timestamp, &r.Address,
+			&r.Price, &r.Amount,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft income details", "error", err, "q", q)
 			return QueryIncomeDetailsResponse{}, fmt.Errorf("query nft income details data failed: %w", err)

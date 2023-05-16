@@ -314,7 +314,6 @@ type NftIncomeDetailResponse struct {
 	NftId     string    `json:"nft_id"`
 	TxHash    string    `json:"tx_hash"`
 	Timestamp time.Time `json:"timestamp"`
-	Owner     string    `json:"owner"`
 	Price     uint64    `json:"price"`
 	Address   string    `json:"address"`
 	Amount    uint64    `json:"amount"`
