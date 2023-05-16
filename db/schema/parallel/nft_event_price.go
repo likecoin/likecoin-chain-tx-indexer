@@ -43,13 +43,41 @@ func MigrateNftEventPrice(conn *pgxpool.Conn, batchSize uint64) error {
 		`, batchHeadId, batchSize)
 		if err != nil {
 			logger.L.Errorw(
-				"Error when executing UPDATE statement",
+				"Error when executing UPDATE by MsgExec statement",
 				"batch_head_id", batchHeadId,
 				"batch_size", batchSize,
 				"error", err,
 			)
 			return err
 		}
+
+		_, err = conn.Exec(context.Background(), `
+			UPDATE nft_event AS e
+			SET price = (
+				SELECT (
+					txs.tx #>> '{"tx", "body", "messages", 0, "price"}'
+				)::bigint
+			)
+			FROM txs
+			WHERE
+				e.id >= $1
+				AND e.id < ($1 + $2)
+				AND e.action = 'buy_nft'
+				AND e.tx_hash = txs.tx ->> 'txhash'
+				AND txs.tx #>> '{"tx", "body", "messages", 0, "@type"}' = '/likechain.likenft.v1.MsgBuyNFT'
+				AND e.price IS NULL
+			;
+		`, batchHeadId, batchSize)
+		if err != nil {
+			logger.L.Errorw(
+				"Error when executing UPDATE by MsgBuyNFT statement",
+				"batch_head_id", batchHeadId,
+				"batch_size", batchSize,
+				"error", err,
+			)
+			return err
+		}
+
 		batchHeadId += batchSize
 		logger.L.Infow(
 			"NFT event migration progress",
