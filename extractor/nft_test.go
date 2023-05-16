@@ -276,7 +276,7 @@ func TestSendNftWithPrice(t *testing.T) {
 	require.Len(t, incomeDetailsRes.IncomeDetails, 2)
 	require.Equal(t, nfts[0].ClassId, incomeDetailsRes.IncomeDetails[0].ClassId)
 	require.Equal(t, nfts[0].NftId, incomeDetailsRes.IncomeDetails[0].NftId)
-	require.Equal(t, ADDR_02_LIKE, incomeDetailsRes.IncomeDetails[0].Owner)
+	require.Equal(t, ADDR_01_LIKE, incomeDetailsRes.IncomeDetails[0].Owner)
 	require.Equal(t, stakeholder1, incomeDetailsRes.IncomeDetails[0].Address)
 	require.Equal(t, royalty1, incomeDetailsRes.IncomeDetails[0].Amount)
 	require.Equal(t, stakeholder2, incomeDetailsRes.IncomeDetails[1].Address)

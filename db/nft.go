@@ -386,6 +386,13 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 	sql := fmt.Sprintf(`
 		SELECT i.address, SUM(i.amount) AS amount
 		FROM nft_event AS e
+		JOIN nft_class as c
+			ON e.class_id = c.class_id
+		JOIN iscn
+			ON iscn.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN iscn_latest_version
+			ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND iscn.version = iscn_latest_version.latest_version
 		JOIN nft_income AS i
 			ON e.class_id = i.class_id 
 			AND e.nft_id = i.nft_id
@@ -394,7 +401,7 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 			AND ($3 = 0 OR i.id < $3)
 			AND ($4 = '' OR e.class_id = $4)
 			AND ($5 = '' OR e.nft_id = $5)
-			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR e.receiver = ANY($6))
+			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR iscn.owner = ANY($6))
 			AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR i.address = ANY($7))
 			AND ($8 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($8)))
 			AND ($9 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($9)))
@@ -448,9 +455,16 @@ func GetNftIncomeDetails(conn *pgxpool.Conn, q QueryIncomeDetailsRequest, p Page
 	}
 
 	sql := fmt.Sprintf(`
-		SELECT e.class_id, e.nft_id, e.tx_hash, e.timestamp, e.receiver, 
+		SELECT e.class_id, e.nft_id, e.tx_hash, e.timestamp, iscn.owner, 
 			i.address, e.price, i.amount 
 		FROM nft_event AS e
+		JOIN nft_class as c
+			ON e.class_id = c.class_id
+		JOIN iscn
+			ON iscn.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN iscn_latest_version
+			ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND iscn.version = iscn_latest_version.latest_version
 		JOIN nft_income AS i
 			ON e.class_id = i.class_id 
 			AND e.nft_id = i.nft_id
@@ -459,7 +473,7 @@ func GetNftIncomeDetails(conn *pgxpool.Conn, q QueryIncomeDetailsRequest, p Page
 			AND ($3 = 0 OR i.id < $3)
 			AND ($4 = '' OR e.class_id = $4)
 			AND ($5 = '' OR e.nft_id = $5)
-			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR e.receiver = ANY($6))
+			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR iscn.owner = ANY($6))
 			AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR i.address = ANY($7))
 			AND ($8 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($8)))
 			AND ($9 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($9)))
