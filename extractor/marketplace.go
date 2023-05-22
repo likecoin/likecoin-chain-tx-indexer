@@ -46,6 +46,7 @@ func createListing(payload *Payload, event *types.StringEvent) error {
 		return err
 	}
 	item.Type = "listing"
+	payload.Batch.DeleteNFTMarketplaceItemSilently(item)
 	payload.Batch.InsertNFTMarketplaceItem(item)
 	return nil
 }
