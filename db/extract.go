@@ -312,15 +312,18 @@ func (batch *Batch) InsertNftIncome(income NftIncome) {
 	_ = pubsub.Publish("NewNFTIncome", income)
 }
 
-func (batch *Batch) DeleteNFTMarketplaceItem(item NftMarketplaceItem) {
+func (batch *Batch) DeleteNFTMarketplaceItemSilently(item NftMarketplaceItem) {
 	sql := `
 	DELETE FROM nft_marketplace
 	WHERE
 		type = $1 AND
 		class_id = $2 AND
-		nft_id = $3 AND
-		creator = $4
+		nft_id = $3
 	`
-	batch.Batch.Queue(sql, item.Type, item.ClassId, item.NftId, item.Creator)
+	batch.Batch.Queue(sql, item.Type, item.ClassId, item.NftId)
+}
+
+func (batch *Batch) DeleteNFTMarketplaceItem(item NftMarketplaceItem) {
+	batch.DeleteNFTMarketplaceItemSilently(item)
 	_ = pubsub.Publish("DeleteNFTMarketplaceItem", item)
 }
