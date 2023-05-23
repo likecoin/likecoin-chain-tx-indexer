@@ -260,12 +260,15 @@ func TestSendNftWithPrice(t *testing.T) {
 		}, PageRequest{Limit: 10, Reverse: true},
 	)
 	require.NoError(t, err)
-	require.Len(t, incomesRes.Incomes, 2)
-	require.Equal(t, stakeholder1, incomesRes.Incomes[0].Address)
-	require.Equal(t, royalty1, incomesRes.Incomes[0].Amount)
-	require.Equal(t, stakeholder2, incomesRes.Incomes[1].Address)
-	require.Equal(t, royalty2, incomesRes.Incomes[1].Amount)
-	require.Equal(t, price, incomesRes.TotalAmount)
+	classIncome := incomesRes.ClassIncomes[0]
+	require.Equal(t, classIncome.ClassId, nftClasses[0].Id)
+	require.Len(t, classIncome.Incomes, 2)
+	require.Equal(t, stakeholder1, classIncome.Incomes[0].Address)
+	require.Equal(t, royalty1, classIncome.Incomes[0].Amount)
+	require.Equal(t, stakeholder2, classIncome.Incomes[1].Address)
+	require.Equal(t, royalty2, classIncome.Incomes[1].Amount)
+	require.Equal(t, price, classIncome.Sales)
+	require.Equal(t, incomesRes.TotalSales, classIncome.Sales)
 
 	row := Conn.QueryRow(context.Background(), `SELECT latest_price, price_updated_at FROM nft WHERE class_id = $1 AND nft_id = $2`, nftClasses[0].Id, nfts[0].NftId)
 	var lastPrice uint64

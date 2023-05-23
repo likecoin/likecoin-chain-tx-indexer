@@ -343,12 +343,15 @@ func TestListing(t *testing.T) {
 		}, PageRequest{Limit: 10},
 	)
 	require.NoError(t, err)
-	require.Len(t, incomesRes.Incomes, 2)
-	require.Equal(t, stakeholder1, incomesRes.Incomes[0].Address)
-	require.Equal(t, royalty1, incomesRes.Incomes[0].Amount)
-	require.Equal(t, stakeholder2, incomesRes.Incomes[1].Address)
-	require.Equal(t, royalty2, incomesRes.Incomes[1].Amount)
-	require.Equal(t, updatedPrice1, incomesRes.TotalAmount)
+	classIncome := incomesRes.ClassIncomes[0]
+	require.Equal(t, classIncome.ClassId, nftClasses[0].Id)
+	require.Len(t, classIncome.Incomes, 2)
+	require.Equal(t, stakeholder2, classIncome.Incomes[0].Address)
+	require.Equal(t, royalty2, classIncome.Incomes[0].Amount)
+	require.Equal(t, stakeholder1, classIncome.Incomes[1].Address)
+	require.Equal(t, royalty1, classIncome.Incomes[1].Amount)
+	require.Equal(t, updatedPrice1, classIncome.Sales)
+	require.Equal(t, incomesRes.TotalSales, classIncome.Sales)
 }
 
 func TestOffer(t *testing.T) {
@@ -546,10 +549,13 @@ func TestOffer(t *testing.T) {
 		}, PageRequest{Limit: 10},
 	)
 	require.NoError(t, err)
-	require.Len(t, incomesRes.Incomes, 2)
-	require.Equal(t, stakeholder1, incomesRes.Incomes[0].Address)
-	require.Equal(t, royalty1, incomesRes.Incomes[0].Amount)
-	require.Equal(t, stakeholder2, incomesRes.Incomes[1].Address)
-	require.Equal(t, royalty2, incomesRes.Incomes[1].Amount)
-	require.Equal(t, updatedPrice1, incomesRes.TotalAmount)
+	classIncome := incomesRes.ClassIncomes[0]
+	require.Equal(t, classIncome.ClassId, nftClasses[0].Id)
+	require.Len(t, classIncome.Incomes, 2)
+	require.Equal(t, stakeholder2, classIncome.Incomes[0].Address)
+	require.Equal(t, royalty2, classIncome.Incomes[0].Amount)
+	require.Equal(t, stakeholder1, classIncome.Incomes[1].Address)
+	require.Equal(t, royalty1, classIncome.Incomes[1].Amount)
+	require.Equal(t, updatedPrice1, classIncome.Sales)
+	require.Equal(t, incomesRes.TotalSales, classIncome.Sales)
 }

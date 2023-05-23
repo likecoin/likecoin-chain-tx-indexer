@@ -278,13 +278,14 @@ type QueryEventsResponse struct {
 }
 
 type QueryIncomesRequest struct {
-	ClassId    string           `form:"class_id"`
-	NftId      string           `form:"nft_id"`
-	Owner      string           `form:"owner"`
-	Address    string           `form:"address"`
-	After      int64            `form:"after"`
-	Before     int64            `form:"before"`
-	ActionType []NftEventAction `form:"action_type"`
+	ClassId             string           `form:"class_id"`
+	Owner               string           `form:"owner"`
+	After               int64            `form:"after"`
+	Before              int64            `form:"before"`
+	ActionType          []NftEventAction `form:"action_type"`
+	OwnerOnly           bool             `form:"owner_only"`
+	IncludeSelfPurchase bool             `form:"include_self_purchase"`
+	OrderBy             string           `form:"order_by"`
 }
 
 type NftIncomeResponse struct {
@@ -292,10 +293,17 @@ type NftIncomeResponse struct {
 	Amount  uint64 `json:"amount"`
 }
 
+type NftClassIncomeResponse struct {
+	ClassId   string              `json:"class_id"`
+	CreatedAt time.Time           `json:"created_at"`
+	Sales     uint64              `json:"sales"`
+	Incomes   []NftIncomeResponse `json:"incomes"`
+}
+
 type QueryIncomesResponse struct {
-	TotalAmount uint64              `json:"total_amount"`
-	Incomes     []NftIncomeResponse `json:"incomes"`
-	Pagination  PageResponse        `json:"pagination"`
+	TotalSales   uint64                   `json:"total_sales"`
+	ClassIncomes []NftClassIncomeResponse `json:"class_incomes"`
+	Pagination   PageResponse             `json:"pagination"`
 }
 
 type QueryRankingRequest struct {
