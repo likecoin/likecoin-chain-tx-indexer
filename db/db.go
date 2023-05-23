@@ -15,7 +15,7 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/pubsub"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
-	"github.com/likecoin/likecoin-chain/v3/app"
+	"github.com/likecoin/likecoin-chain/v4/app"
 	"github.com/spf13/cobra"
 )
 

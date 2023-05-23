@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/likecoin/likecoin-chain/v3/app"
+	"github.com/likecoin/likecoin-chain/v4/app"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db/schema"

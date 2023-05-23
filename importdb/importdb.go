@@ -3,6 +3,7 @@ package importdb
 import (
 	"fmt"
 
+	dbm "github.com/cometbft/cometbft-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
@@ -10,7 +11,6 @@ import (
 	"github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/state/txindex/kv"
 	"github.com/tendermint/tendermint/store"
-	dbm "github.com/tendermint/tm-db"
 )
 
 const batchSize = 10000

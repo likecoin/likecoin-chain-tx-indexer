@@ -11,7 +11,7 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
-	"github.com/likecoin/likecoin-chain/v3/app"
+	"github.com/likecoin/likecoin-chain/v4/app"
 	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/bytes"
 

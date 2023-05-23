@@ -16,7 +16,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	iscntypes "github.com/likecoin/likecoin-chain/v3/x/iscn/types"
+	iscntypes "github.com/likecoin/likecoin-chain/v4/x/iscn/types"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db/schema"

@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
-	"github.com/likecoin/likecoin-chain/v3/app"
+	"github.com/likecoin/likecoin-chain/v4/app"
 )
 
 var encodingConfig = app.MakeEncodingConfig()

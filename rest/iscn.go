@@ -3,7 +3,7 @@ package rest
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
-	iscntypes "github.com/likecoin/likecoin-chain/v3/x/iscn/types"
+	iscntypes "github.com/likecoin/likecoin-chain/v4/x/iscn/types"
 )
 
 func handleIscn(c *gin.Context) {
