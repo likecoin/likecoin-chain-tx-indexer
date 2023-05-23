@@ -60,7 +60,6 @@ func GetRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
 		analysis.GET("/owners", handleNftOwnerList)
 	}
 	router.GET(ISCN_ENDPOINT, handleIscn)
-	router.GET("/txs", handleAminoTxsSearch)
 	router.GET(STARGATE_ENDPOINT, handleStargateTxsSearch)
 	router.GET(LATEST_HEIGHT_ENDPOINT, handleLatestHeight)
 	router.GET(INFO_ENDPOINT, handleInfo)
