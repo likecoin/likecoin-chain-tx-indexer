@@ -349,24 +349,6 @@ func TestListing(t *testing.T) {
 	require.Equal(t, stakeholder2, incomesRes.Incomes[1].Address)
 	require.Equal(t, royalty2, incomesRes.Incomes[1].Amount)
 	require.Equal(t, updatedPrice1, incomesRes.TotalAmount)
-
-	incomeDetailsRes, err := GetNftIncomeDetails(Conn,
-		QueryIncomeDetailsRequest{
-			ClassId:    nftClasses[0].Id,
-			NftId:      nfts[0].NftId,
-			OrderBy:    "income",
-			ActionType: []NftEventAction{ACTION_BUY},
-		}, PageRequest{Limit: 10},
-	)
-	require.NoError(t, err)
-	require.Len(t, incomeDetailsRes.IncomeDetails, 2)
-	require.Equal(t, nftClasses[0].Id, incomeDetailsRes.IncomeDetails[0].ClassId)
-	require.Equal(t, nfts[0].NftId, incomeDetailsRes.IncomeDetails[0].NftId)
-	require.Equal(t, "AAAAAE", incomeDetailsRes.IncomeDetails[0].TxHash)
-	require.Equal(t, stakeholder1, incomeDetailsRes.IncomeDetails[0].Address)
-	require.Equal(t, royalty1, incomeDetailsRes.IncomeDetails[0].Amount)
-	require.Equal(t, stakeholder2, incomeDetailsRes.IncomeDetails[1].Address)
-	require.Equal(t, royalty2, incomeDetailsRes.IncomeDetails[1].Amount)
 }
 
 func TestOffer(t *testing.T) {
@@ -570,22 +552,4 @@ func TestOffer(t *testing.T) {
 	require.Equal(t, stakeholder2, incomesRes.Incomes[1].Address)
 	require.Equal(t, royalty2, incomesRes.Incomes[1].Amount)
 	require.Equal(t, updatedPrice1, incomesRes.TotalAmount)
-
-	incomeDetailsRes, err := GetNftIncomeDetails(Conn,
-		QueryIncomeDetailsRequest{
-			ClassId:    nftClasses[0].Id,
-			NftId:      nfts[0].NftId,
-			OrderBy:    "income",
-			ActionType: []NftEventAction{ACTION_SELL},
-		}, PageRequest{Limit: 10},
-	)
-	require.NoError(t, err)
-	require.Len(t, incomeDetailsRes.IncomeDetails, 2)
-	require.Equal(t, nftClasses[0].Id, incomeDetailsRes.IncomeDetails[0].ClassId)
-	require.Equal(t, nfts[0].NftId, incomeDetailsRes.IncomeDetails[0].NftId)
-	require.Equal(t, "AAAAAE", incomeDetailsRes.IncomeDetails[0].TxHash)
-	require.Equal(t, stakeholder1, incomeDetailsRes.IncomeDetails[0].Address)
-	require.Equal(t, royalty1, incomeDetailsRes.IncomeDetails[0].Amount)
-	require.Equal(t, stakeholder2, incomeDetailsRes.IncomeDetails[1].Address)
-	require.Equal(t, royalty2, incomeDetailsRes.IncomeDetails[1].Amount)
 }

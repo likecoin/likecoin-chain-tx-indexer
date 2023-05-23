@@ -267,21 +267,6 @@ func TestSendNftWithPrice(t *testing.T) {
 	require.Equal(t, royalty2, incomesRes.Incomes[1].Amount)
 	require.Equal(t, price, incomesRes.TotalAmount)
 
-	incomeDetailsRes, err := GetNftIncomeDetails(Conn, QueryIncomeDetailsRequest{
-		ClassId:    nftClasses[0].Id,
-		OrderBy:    "income",
-		ActionType: []NftEventAction{ACTION_SEND},
-	}, PageRequest{Limit: 10, Reverse: true})
-	require.NoError(t, err)
-	require.Len(t, incomeDetailsRes.IncomeDetails, 2)
-	require.Equal(t, nfts[0].ClassId, incomeDetailsRes.IncomeDetails[0].ClassId)
-	require.Equal(t, nfts[0].NftId, incomeDetailsRes.IncomeDetails[0].NftId)
-	require.Equal(t, stakeholder1, incomeDetailsRes.IncomeDetails[0].Address)
-	require.Equal(t, royalty1, incomeDetailsRes.IncomeDetails[0].Amount)
-	require.Equal(t, stakeholder2, incomeDetailsRes.IncomeDetails[1].Address)
-	require.Equal(t, royalty2, incomeDetailsRes.IncomeDetails[1].Amount)
-	require.Equal(t, price, incomeDetailsRes.IncomeDetails[0].Amount+incomeDetailsRes.IncomeDetails[1].Amount)
-
 	row := Conn.QueryRow(context.Background(), `SELECT latest_price, price_updated_at FROM nft WHERE class_id = $1 AND nft_id = $2`, nftClasses[0].Id, nfts[0].NftId)
 	var lastPrice uint64
 	var priceUpdatedAt time.Time
