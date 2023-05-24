@@ -430,7 +430,7 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 			) AS sum_query
 			ORDER BY class_rank, income DESC
 		) AS rank_query
-		WHERE class_rank >= $1 AND class_rank < $2
+		WHERE class_rank > $1 AND class_rank <= $2
 	`, orderBy, ownershipCondition)
 
 	ctx, cancel := GetTimeoutContext()
