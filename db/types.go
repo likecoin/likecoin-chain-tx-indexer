@@ -280,10 +280,11 @@ type QueryEventsResponse struct {
 type QueryIncomesRequest struct {
 	ClassId             string           `form:"class_id"`
 	Owner               string           `form:"owner"`
+	Address             string           `form:"address"`
 	After               int64            `form:"after"`
 	Before              int64            `form:"before"`
 	ActionType          []NftEventAction `form:"action_type"`
-	OwnerOnly           bool             `form:"owner_only"`
+	IscnOwnership       string           `form:"iscn_ownership"`
 	IncludeSelfPurchase bool             `form:"include_self_purchase"`
 	OrderBy             string           `form:"order_by"`
 }

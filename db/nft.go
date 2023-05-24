@@ -381,13 +381,22 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 
 func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (QueryIncomesResponse, error) {
 	ownerVariations := utils.ConvertAddressPrefixes(q.Owner, AddressPrefixes)
-	orderBy := q.OrderBy
-	switch orderBy {
+	beneficiaryVariations := utils.ConvertAddressPrefixes(q.Address, AddressPrefixes)
+
+	ownershipCondition := "true"
+	switch q.IscnOwnership {
+	case "owned":
+		ownershipCondition = "i.address = iscn.owner"
+	case "not_owned":
+		ownershipCondition = "i.address != iscn.owner"
+	case "all":
+	}
+
+	orderBy := "sales"
+	switch q.OrderBy {
 	case "class_created_time":
 		orderBy = "created_at"
 	case "sales":
-	default:
-		orderBy = "sales"
 	}
 
 	sql := fmt.Sprintf(`
@@ -411,17 +420,18 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 					AND e.tx_hash = i.tx_hash
 				WHERE ($3 = '' OR e.class_id = $3)
 					AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR iscn.owner = ANY($4))
-					AND ($5 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($5)))
-					AND ($6 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($6)))
-					AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR e.action = ANY($7))
-					AND ($8 = false OR i.address = iscn.owner)
+					AND ($5::text[] IS NULL OR cardinality($5::text[]) = 0 OR i.address = ANY($5))
+					AND ($6 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($6)))
+					AND ($7 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($7)))
+					AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR e.action = ANY($8))
 					AND ($9 = true OR e.receiver != iscn.owner)
+					AND (%[2]s)
 				GROUP BY e.class_id, c.created_at, i.address
 			) AS sum_query
 			ORDER BY class_rank, income DESC
 		) AS rank_query
 		WHERE class_rank >= $1 AND class_rank < $2
-	`, orderBy)
+	`, orderBy, ownershipCondition)
 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
@@ -430,8 +440,8 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 	rankEnd := rankStart + p.Limit
 	rows, err := conn.Query(
 		ctx, sql,
-		rankStart, rankEnd, q.ClassId, ownerVariations, q.After,
-		q.Before, q.ActionType, q.OwnerOnly, q.IncludeSelfPurchase,
+		rankStart, rankEnd, q.ClassId, ownerVariations, beneficiaryVariations,
+		q.After, q.Before, q.ActionType, q.IncludeSelfPurchase,
 	)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft incomes", "error", err)

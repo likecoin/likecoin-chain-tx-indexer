@@ -204,8 +204,8 @@ func handleNftIncome(c *gin.Context) {
 		return
 	}
 
-	if form.ClassId == "" && form.Owner == "" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "must provide either class_id or owner"})
+	if form.ClassId == "" && form.Owner == "" && form.Address == "" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "must provide either class_id, owner or address"})
 		return
 	}
 
@@ -216,6 +216,11 @@ func handleNftIncome(c *gin.Context) {
 				return
 			}
 		}
+	}
+
+	if form.IscnOwnership != "" && form.IscnOwnership != "all" && form.IscnOwnership != "owned" && form.IscnOwnership != "not_owned" {
+		c.AbortWithStatusJSON(400, gin.H{"error": "iscn_ownership should either be all, owned or not_owned"})
+		return
 	}
 
 	if form.OrderBy != "" && form.OrderBy != "sales" && form.OrderBy != "class_created_time" {
