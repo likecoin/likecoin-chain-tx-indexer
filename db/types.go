@@ -295,14 +295,14 @@ type NftIncomeResponse struct {
 }
 
 type NftClassIncomeResponse struct {
-	ClassId   string              `json:"class_id"`
-	CreatedAt time.Time           `json:"created_at"`
-	Sales     uint64              `json:"sales"`
-	Incomes   []NftIncomeResponse `json:"incomes"`
+	ClassId     string              `json:"class_id"`
+	CreatedAt   time.Time           `json:"created_at"`
+	TotalAmount uint64              `json:"total_amount"`
+	Incomes     []NftIncomeResponse `json:"incomes"`
 }
 
 type QueryIncomesResponse struct {
-	TotalSales   uint64                   `json:"total_sales"`
+	TotalAmount  uint64                   `json:"total_amount"`
 	ClassIncomes []NftClassIncomeResponse `json:"class_incomes"`
 	Pagination   PageResponse             `json:"pagination"`
 }

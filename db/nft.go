@@ -392,11 +392,11 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 	case "all":
 	}
 
-	orderBy := "sales"
+	orderBy := "class_income"
 	switch q.OrderBy {
-	case "class_created_time":
+	case "created_time":
 		orderBy = "created_at"
-	case "sales":
+	case "income":
 	}
 
 	sql := fmt.Sprintf(`
@@ -405,7 +405,7 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 			FROM (
 				SELECT e.class_id, c.created_at, i.address, 
 					SUM(i.amount) AS income,
-					SUM(SUM(i.amount)) OVER(PARTITION BY e.class_id) as sales
+					SUM(SUM(i.amount)) OVER(PARTITION BY e.class_id) as class_income
 				FROM nft_event AS e
 				JOIN nft_class AS c
 					ON e.class_id = c.class_id
@@ -457,7 +457,7 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 		var ci NftClassIncomeResponse
 		var i NftIncomeResponse
 
-		if err = rows.Scan(&ci.ClassId, &ci.CreatedAt, &i.Address, &i.Amount, &ci.Sales, &res.Pagination.NextKey); err != nil {
+		if err = rows.Scan(&ci.ClassId, &ci.CreatedAt, &i.Address, &i.Amount, &ci.TotalAmount, &res.Pagination.NextKey); err != nil {
 			logger.L.Errorw("failed to scan nft incomes", "error", err, "q", q)
 			return QueryIncomesResponse{}, fmt.Errorf("query nft incomes data failed: %w", err)
 		}
@@ -468,7 +468,7 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 			}
 			ciPtr = &ci
 			ciPtr.Incomes = make([]NftIncomeResponse, 0)
-			res.TotalSales += ci.Sales
+			res.TotalAmount += ci.TotalAmount
 		}
 		ciPtr.Incomes = append(ciPtr.Incomes, i)
 	}
