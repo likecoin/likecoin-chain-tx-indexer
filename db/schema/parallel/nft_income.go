@@ -110,7 +110,8 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 				income := incomes[i]
 				_, err = dbTx.Exec(context.Background(), `
 						INSERT INTO nft_income (class_id, nft_id, tx_hash, address, amount)
-						VALUES ($1, $2, $3, $4, $5);
+						VALUES ($1, $2, $3, $4, $5) 
+						ON CONFLICT DO NOTHING;
 					`, income.ClassId, income.NftId, income.TxHash, income.Address, income.Amount)
 				if err != nil {
 					logger.L.Errorw("Error when inserting into nft_income", "error", err)
