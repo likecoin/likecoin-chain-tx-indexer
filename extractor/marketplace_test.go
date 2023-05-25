@@ -351,7 +351,9 @@ func TestListing(t *testing.T) {
 	require.Equal(t, stakeholder1, classIncome.Incomes[1].Address)
 	require.Equal(t, royalty1, classIncome.Incomes[1].Amount)
 	require.Equal(t, updatedPrice1, classIncome.TotalAmount)
+	require.Equal(t, updatedPrice1, classIncome.Sales)
 	require.Equal(t, incomesRes.TotalAmount, classIncome.TotalAmount)
+	require.Equal(t, incomesRes.TotalSales, classIncome.Sales)
 }
 
 func TestOffer(t *testing.T) {
@@ -557,5 +559,7 @@ func TestOffer(t *testing.T) {
 	require.Equal(t, stakeholder1, classIncome.Incomes[1].Address)
 	require.Equal(t, royalty1, classIncome.Incomes[1].Amount)
 	require.Equal(t, updatedPrice1, classIncome.TotalAmount)
+	require.Equal(t, updatedPrice1, classIncome.Sales)
 	require.Equal(t, incomesRes.TotalAmount, classIncome.TotalAmount)
+	require.Equal(t, incomesRes.TotalSales, classIncome.Sales)
 }

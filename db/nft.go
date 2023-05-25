@@ -452,6 +452,7 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 		ClassIncomes: make([]NftClassIncomeResponse, 0),
 	}
 
+	var classIds []string
 	var ciPtr *NftClassIncomeResponse
 	for rows.Next() {
 		var ci NftClassIncomeResponse
@@ -469,6 +470,7 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 			ciPtr = &ci
 			ciPtr.Incomes = make([]NftIncomeResponse, 0)
 			res.TotalAmount += ci.TotalAmount
+			classIds = append(classIds, ci.ClassId)
 		}
 		ciPtr.Incomes = append(ciPtr.Incomes, i)
 	}
@@ -476,6 +478,53 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 		res.ClassIncomes = append(res.ClassIncomes, *ciPtr)
 	}
 	res.Pagination.Count = len(res.ClassIncomes)
+
+	sql = `
+		SELECT e.class_id, SUM(e.price) AS sales
+		FROM nft_event AS e
+		JOIN nft_class AS c
+			ON e.class_id = c.class_id
+		JOIN iscn
+			ON iscn.iscn_id_prefix = c.parent_iscn_id_prefix
+		JOIN iscn_latest_version
+			ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND iscn.version = iscn_latest_version.latest_version
+		WHERE e.class_id = ANY($1)
+			AND ($2 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($2)))
+			AND ($3 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($3)))
+			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR e.action = ANY($4))
+			AND ($5 = true OR e.receiver != iscn.owner)
+		GROUP BY e.class_id
+	`
+	rows, err = conn.Query(
+		ctx, sql,
+		classIds, q.After, q.Before, q.ActionType, q.IncludeSelfPurchase,
+	)
+	if err != nil {
+		logger.L.Errorw("Failed to query nft sales", "error", err)
+		return QueryIncomesResponse{}, fmt.Errorf("query nft sales error: %w", err)
+	}
+
+	salesMap := make(map[string]uint64)
+	for rows.Next() {
+		var classId string
+		var sales uint64
+
+		if err = rows.Scan(&classId, &sales); err != nil {
+			logger.L.Errorw("failed to scan nft sales", "error", err, "q", q)
+			return QueryIncomesResponse{}, fmt.Errorf("query nft sales data failed: %w", err)
+		}
+
+		salesMap[classId] = sales
+	}
+
+	for i := range res.ClassIncomes {
+		classId := res.ClassIncomes[i].ClassId
+		sales := salesMap[classId]
+		res.ClassIncomes[i].Sales = sales
+		res.TotalSales += sales
+	}
+
 	return res, nil
 }
 
