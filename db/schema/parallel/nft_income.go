@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
-	"github.com/likecoin/likecoin-chain-tx-indexer/rest"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
@@ -79,10 +78,11 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 
 				firstMsgAction := utils.GetEventsValue(spreadEvents, "message", "action")
 				if firstMsgAction == "/cosmos.authz.v1beta1.MsgExec" || firstMsgAction == string(db.ACTION_BUY) || firstMsgAction == string(db.ACTION_SELL) {
-					incomeMap := utils.GetIncomeMap(spreadEvents)
-					for _, address := range rest.DefaultApiAddresses {
-						delete(incomeMap, address)
+					rawIncomes := utils.GetRawIncomes(spreadEvents)
+					if firstMsgAction == "/cosmos.authz.v1beta1.MsgExec" {
+						rawIncomes = utils.RemoveAuthzMsgIncome(rawIncomes)
 					}
+					incomeMap := utils.AggregateRawIncomes(rawIncomes)
 					for address, amount := range incomeMap {
 						incomes = append(incomes, db.NftIncome{
 							ClassId: classId,
