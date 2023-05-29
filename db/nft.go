@@ -448,31 +448,36 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 		ClassIncomes: make([]NftClassIncomeResponse, 0),
 	}
 
-	var classIds []string
-	var ciPtr *NftClassIncomeResponse
+	var rank int
+	rankMap := make(map[int]NftClassIncomeResponse)
 	for rows.Next() {
 		var ci NftClassIncomeResponse
 		var i NftIncomeResponse
 
-		if err = rows.Scan(&ci.ClassId, &ci.CreatedAt, &i.Address, &i.Amount, &ci.TotalAmount, &res.Pagination.NextKey); err != nil {
+		if err = rows.Scan(&ci.ClassId, &ci.CreatedAt, &i.Address, &i.Amount, &ci.TotalAmount, &rank); err != nil {
 			logger.L.Errorw("failed to scan nft incomes", "error", err, "q", q)
 			return QueryIncomesResponse{}, fmt.Errorf("query nft incomes data failed: %w", err)
 		}
 
-		if ciPtr == nil || ci.ClassId != ciPtr.ClassId { // is new class
-			if ciPtr != nil { // is not first class
-				res.ClassIncomes = append(res.ClassIncomes, *ciPtr)
-			}
-			ciPtr = &ci
-			ciPtr.Incomes = make([]NftIncomeResponse, 0)
-			res.TotalAmount += ci.TotalAmount
-			classIds = append(classIds, ci.ClassId)
+		classIncome, exists := rankMap[rank]
+		if !exists {
+			classIncome = ci
+			classIncome.Incomes = make([]NftIncomeResponse, 0)
 		}
-		ciPtr.Incomes = append(ciPtr.Incomes, i)
+
+		classIncome.Incomes = append(classIncome.Incomes, i)
+		rankMap[rank] = classIncome
+		res.TotalAmount += i.Amount
 	}
-	if ciPtr != nil { // has last class
-		res.ClassIncomes = append(res.ClassIncomes, *ciPtr)
+	var classIds []string
+	for _, classIncome := range rankMap {
+		res.ClassIncomes = append(res.ClassIncomes, classIncome)
+		classIds = append(classIds, classIncome.ClassId)
 	}
+	for i := 0; i < len(res.ClassIncomes); i++ {
+		res.ClassIncomes[i] = rankMap[i+rankStart+1]
+	}
+	res.Pagination.NextKey = uint64(rank)
 	res.Pagination.Count = len(res.ClassIncomes)
 
 	sql = `
