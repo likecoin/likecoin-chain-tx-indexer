@@ -386,9 +386,9 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 	ownershipCondition := "true"
 	switch q.IscnOwnership {
 	case "owned":
-		ownershipCondition = "i.address = iscn.owner"
+		ownershipCondition = "i.address = e.iscn_owner_at_the_time"
 	case "not_owned":
-		ownershipCondition = "i.address != iscn.owner"
+		ownershipCondition = "i.address != e.iscn_owner_at_the_time"
 	case "all":
 	}
 
@@ -409,22 +409,18 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 				FROM nft_event AS e
 				JOIN nft_class AS c
 					ON e.class_id = c.class_id
-				JOIN iscn
-					ON iscn.iscn_id_prefix = c.parent_iscn_id_prefix
-				JOIN iscn_latest_version
-					ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-					AND iscn.version = iscn_latest_version.latest_version
 				JOIN nft_income AS i
 					ON e.class_id = i.class_id
 					AND e.nft_id = i.nft_id
 					AND e.tx_hash = i.tx_hash
-				WHERE ($3 = '' OR e.class_id = $3)
-					AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR iscn.owner = ANY($4))
+				WHERE e.price > 0
+					AND ($3 = '' OR e.class_id = $3)
+					AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR e.iscn_owner_at_the_time = ANY($4))
 					AND ($5::text[] IS NULL OR cardinality($5::text[]) = 0 OR i.address = ANY($5))
 					AND ($6 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($6)))
 					AND ($7 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($7)))
 					AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR e.action = ANY($8))
-					AND ($9 = true OR e.receiver != iscn.owner)
+					AND ($9 = false OR e.receiver != e.iscn_owner_at_the_time)
 					AND (%[2]s)
 				GROUP BY e.class_id, c.created_at, i.address
 			) AS sum_query
@@ -441,7 +437,7 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 	rows, err := conn.Query(
 		ctx, sql,
 		rankStart, rankEnd, q.ClassId, ownerVariations, beneficiaryVariations,
-		q.After, q.Before, q.ActionType, q.IncludeSelfPurchase,
+		q.After, q.Before, q.ActionType, q.ExcludeSelfPurchase,
 	)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft incomes", "error", err)
@@ -482,23 +478,16 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 	sql = `
 		SELECT e.class_id, SUM(e.price) AS sales
 		FROM nft_event AS e
-		JOIN nft_class AS c
-			ON e.class_id = c.class_id
-		JOIN iscn
-			ON iscn.iscn_id_prefix = c.parent_iscn_id_prefix
-		JOIN iscn_latest_version
-			ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-			AND iscn.version = iscn_latest_version.latest_version
 		WHERE e.class_id = ANY($1)
 			AND ($2 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($2)))
 			AND ($3 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($3)))
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR e.action = ANY($4))
-			AND ($5 = true OR e.receiver != iscn.owner)
+			AND ($5 = false OR e.receiver != e.iscn_owner_at_the_time)
 		GROUP BY e.class_id
 	`
 	rows, err = conn.Query(
 		ctx, sql,
-		classIds, q.After, q.Before, q.ActionType, q.IncludeSelfPurchase,
+		classIds, q.After, q.Before, q.ActionType, q.ExcludeSelfPurchase,
 	)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft sales", "error", err)
