@@ -285,7 +285,7 @@ type QueryIncomesRequest struct {
 	Before              int64            `form:"before"`
 	ActionType          []NftEventAction `form:"action_type"`
 	IscnOwnership       string           `form:"iscn_ownership"`
-	ExcludeSelfPurchase bool             `form:"include_self_purchase"`
+	ExcludeSelfPurchase bool             `form:"exclude_self_purchase"`
 	OrderBy             string           `form:"order_by"`
 }
 
