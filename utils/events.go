@@ -85,7 +85,6 @@ func GetRawIncomes(events types.StringEvents) []RawIncome {
 	incomes := []RawIncome{}
 	address := ""
 	amount := uint64(0)
-	maxAmount := uint64(0)
 	for _, event := range events {
 		if event.Type == "coin_received" {
 			for _, attr := range event.Attributes {
@@ -103,9 +102,6 @@ func GetRawIncomes(events types.StringEvents) []RawIncome {
 					amount = coin.Amount.Uint64()
 				}
 				if address != "" && amount != 0 {
-					if amount > maxAmount {
-						maxAmount = amount
-					}
 					incomes = append(incomes, RawIncome{
 						Address: address,
 						Amount:  amount,
