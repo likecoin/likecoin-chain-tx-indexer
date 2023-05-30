@@ -475,7 +475,7 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 		classIds = append(classIds, classIncome.ClassId)
 	}
 	for i := 0; i < len(res.ClassIncomes); i++ {
-		res.ClassIncomes[i] = rankMap[i+rankStart+1]
+		res.ClassIncomes[i] = rankMap[rankStart+i+1]
 	}
 	res.Pagination.NextKey = uint64(rank)
 	res.Pagination.Count = len(res.ClassIncomes)
