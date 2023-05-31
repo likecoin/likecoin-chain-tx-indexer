@@ -95,15 +95,28 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 		COUNT(DISTINCT t.nft_id) AS sold_count,
 		SUM(t.price) AS total_sold_value
 	FROM (
-		SELECT DISTINCT ON (n.id)
-			n.nft_id,
+		WITH ne AS (
+			SELECT
+				n.id, n.nft_id, n.class_id, n.owner, e.price
+			FROM nft AS n
+			JOIN nft_event AS e
+			ON n.class_id = e.class_id
+				AND n.nft_id = e.nft_id
+			WHERE
+				($3::text[] IS NULL OR cardinality($3::text[]) = 0 OR n.owner != ALL($3))
+				AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR n.owner = ANY($8))
+				AND e.action = '/cosmos.nft.v1beta1.MsgSend'
+				AND ($11 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($11)))
+				AND ($12 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($12)))
+				AND e.sender = ANY($13::text[])
+		)
+		SELECT DISTINCT ON (ne.id)
+			ne.nft_id,
 			c.id AS class_pid,
-			e.price AS price
-		FROM nft_class AS c
-		JOIN nft AS n
-			ON c.class_id = n.class_id
-		JOIN nft_event AS e
-			ON e.nft_id = n.nft_id
+			ne.price AS price
+		FROM ne
+		JOIN nft_class AS c
+			ON c.class_id = ne.class_id
 		JOIN iscn AS i
 			ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 		JOIN iscn_latest_version
@@ -119,19 +132,13 @@ func GetClassesRanking(conn *pgxpool.Conn, q QueryRankingRequest, p PageRequest)
 				AND i.id = iscn_pid
 			)
 		WHERE
-			($2 = true OR n.owner != i.owner)
-			AND ($3::text[] IS NULL OR cardinality($3::text[]) = 0 OR n.owner != ALL($3))
+			($2 = true OR ne.owner != i.owner)
 			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR i.owner = ANY($4))
 			AND ($5 = '' OR i.data #>> '{"contentMetadata", "@type"}' = $5)
 			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR sid = ANY($6))
 			AND ($7 = '' OR sname = $7)
-			AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR n.owner = ANY($8))
 			AND ($9 = 0 OR c.created_at > to_timestamp($9))
 			AND ($10 = 0 OR c.created_at < to_timestamp($10))
-			AND e.action = '/cosmos.nft.v1beta1.MsgSend'
-			AND ($11 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($11)))
-			AND ($12 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($12)))
-			AND e.sender = ANY($13::text[])
 	) AS t
 	JOIN nft_class AS c
 		ON c.id = t.class_pid
