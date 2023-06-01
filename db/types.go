@@ -278,13 +278,15 @@ type QueryEventsResponse struct {
 }
 
 type QueryIncomesRequest struct {
-	ClassId    string           `form:"class_id"`
-	NftId      string           `form:"nft_id"`
-	Owner      string           `form:"owner"`
-	Address    string           `form:"address"`
-	After      int64            `form:"after"`
-	Before     int64            `form:"before"`
-	ActionType []NftEventAction `form:"action_type"`
+	ClassId             string           `form:"class_id"`
+	Owner               string           `form:"owner"`
+	Address             string           `form:"address"`
+	After               int64            `form:"after"`
+	Before              int64            `form:"before"`
+	ActionType          []NftEventAction `form:"action_type"`
+	IscnOwnership       string           `form:"iscn_ownership"`
+	ExcludeSelfPurchase bool             `form:"exclude_self_purchase"`
+	OrderBy             string           `form:"order_by"`
 }
 
 type NftIncomeResponse struct {
@@ -292,36 +294,19 @@ type NftIncomeResponse struct {
 	Amount  uint64 `json:"amount"`
 }
 
-type QueryIncomesResponse struct {
+type NftClassIncomeResponse struct {
+	ClassId     string              `json:"class_id"`
+	CreatedAt   time.Time           `json:"created_at"`
+	Sales       uint64              `json:"sales"`
 	TotalAmount uint64              `json:"total_amount"`
 	Incomes     []NftIncomeResponse `json:"incomes"`
-	Pagination  PageResponse        `json:"pagination"`
 }
 
-type QueryIncomeDetailsRequest struct {
-	ClassId    string           `form:"class_id"`
-	NftId      string           `form:"nft_id"`
-	Owner      string           `form:"owner"`
-	Address    string           `form:"address"`
-	After      int64            `form:"after"`
-	Before     int64            `form:"before"`
-	ActionType []NftEventAction `form:"action_type"`
-	OrderBy    string           `form:"order_by"`
-}
-
-type NftIncomeDetailResponse struct {
-	ClassId   string    `json:"class_id"`
-	NftId     string    `json:"nft_id"`
-	TxHash    string    `json:"tx_hash"`
-	Timestamp time.Time `json:"timestamp"`
-	Price     uint64    `json:"price"`
-	Address   string    `json:"address"`
-	Amount    uint64    `json:"amount"`
-}
-
-type QueryIncomeDetailsResponse struct {
-	IncomeDetails []NftIncomeDetailResponse `json:"income_details"`
-	Pagination    PageResponse              `json:"pagination"`
+type QueryIncomesResponse struct {
+	TotalSales   uint64                   `json:"total_sales"`
+	TotalAmount  uint64                   `json:"total_amount"`
+	ClassIncomes []NftClassIncomeResponse `json:"class_incomes"`
+	Pagination   PageResponse             `json:"pagination"`
 }
 
 type QueryRankingRequest struct {

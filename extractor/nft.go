@@ -137,18 +137,21 @@ func extractNftEvent(event *types.StringEvent, classIdField, nftIdField, senderF
 }
 
 func extractNftIncomes(eventsList db.EventsList) []db.NftIncome {
-	var incomes []db.NftIncome
+	rawIncomes := []utils.RawIncome{}
 	for _, msgEvents := range eventsList {
 		msgAction := utils.GetEventsValue(msgEvents.Events, "message", "action")
 		if msgAction == "/cosmos.bank.v1beta1.MsgSend" || msgAction == string(db.ACTION_BUY) || msgAction == string(db.ACTION_SELL) {
-			incomeMap := utils.GetIncomeMap(msgEvents.Events)
-			for address, amount := range incomeMap {
-				incomes = append(incomes, db.NftIncome{
-					Address: address,
-					Amount:  amount,
-				})
-			}
+			rawIncomes = append(rawIncomes, utils.GetRawIncomes(msgEvents.Events)...)
 		}
+	}
+	incomeMap := utils.AggregateRawIncomes(rawIncomes)
+
+	incomes := []db.NftIncome{}
+	for address, amount := range incomeMap {
+		incomes = append(incomes, db.NftIncome{
+			Address: address,
+			Amount:  amount,
+		})
 	}
 	return incomes
 }
@@ -172,10 +175,10 @@ func sendNft(payload *Payload, event *types.StringEvent) error {
 	firstMsgAction := utils.GetEventsValue(firstMsgEvents, "message", "action")
 	if firstMsgAction == "/cosmos.authz.v1beta1.MsgExec" {
 		e.Price = extractPriceFromEvents(firstMsgEvents)
-		royalties := extractNftIncomes(payload.EventsList)
-		for _, r := range royalties {
-			attachNftIncome(&r, payload, event, "id")
-			payload.Batch.InsertNftIncome(r)
+		incomes := extractNftIncomes(payload.EventsList)
+		for _, i := range incomes {
+			attachNftIncome(&i, payload, event, "id")
+			payload.Batch.InsertNftIncome(i)
 		}
 	}
 	attachNftEvent(&e, payload)

@@ -388,43 +388,63 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 
 func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (QueryIncomesResponse, error) {
 	ownerVariations := utils.ConvertAddressPrefixes(q.Owner, AddressPrefixes)
-	stakeholderVariations := utils.ConvertAddressPrefixes(q.Address, AddressPrefixes)
+	beneficiaryVariations := utils.ConvertAddressPrefixes(q.Address, AddressPrefixes)
+
+	ownershipCondition := "true"
+	switch q.IscnOwnership {
+	case "owned":
+		ownershipCondition = "i.address = e.iscn_owner_at_the_time"
+	case "not_owned":
+		ownershipCondition = "i.address != e.iscn_owner_at_the_time"
+	case "all":
+	}
+
+	orderBy := "class_income"
+	switch q.OrderBy {
+	case "created_time":
+		orderBy = "created_at"
+	case "income":
+	}
 
 	sql := fmt.Sprintf(`
-		SELECT i.address, SUM(i.amount) AS amount
-		FROM nft_event AS e
-		JOIN nft_class as c
-			ON e.class_id = c.class_id
-		JOIN iscn
-			ON iscn.iscn_id_prefix = c.parent_iscn_id_prefix
-		JOIN iscn_latest_version
-			ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-			AND iscn.version = iscn_latest_version.latest_version
-		JOIN nft_income AS i
-			ON e.class_id = i.class_id 
-			AND e.nft_id = i.nft_id
-			AND e.tx_hash = i.tx_hash
-		WHERE ($2 = 0 OR i.id > $2)
-			AND ($3 = 0 OR i.id < $3)
-			AND ($4 = '' OR e.class_id = $4)
-			AND ($5 = '' OR e.nft_id = $5)
-			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR iscn.owner = ANY($6))
-			AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR i.address = ANY($7))
-			AND ($8 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($8)))
-			AND ($9 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($9)))
-			AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.action = ANY($10))
-		GROUP BY i.address
-		ORDER BY amount %[1]s
-		LIMIT $1
-	`, p.Order())
+		SELECT * FROM (
+			SELECT *, DENSE_RANK() OVER(ORDER BY %[1]s DESC, class_id) as class_rank
+			FROM (
+				SELECT e.class_id, c.created_at, i.address, 
+					SUM(i.amount) AS income,
+					SUM(SUM(i.amount)) OVER(PARTITION BY e.class_id) as class_income
+				FROM nft_event AS e
+				JOIN nft_class AS c
+					ON e.class_id = c.class_id
+				JOIN nft_income AS i
+					ON e.class_id = i.class_id
+					AND e.nft_id = i.nft_id
+					AND e.tx_hash = i.tx_hash
+				WHERE e.price > 0
+					AND ($3 = '' OR e.class_id = $3)
+					AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR e.iscn_owner_at_the_time = ANY($4))
+					AND ($5::text[] IS NULL OR cardinality($5::text[]) = 0 OR i.address = ANY($5))
+					AND ($6 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($6)))
+					AND ($7 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($7)))
+					AND ($8::text[] IS NULL OR cardinality($8::text[]) = 0 OR e.action = ANY($8))
+					AND ($9 = false OR e.receiver != e.iscn_owner_at_the_time)
+					AND (%[2]s)
+				GROUP BY e.class_id, c.created_at, i.address
+			) AS sum_query
+			ORDER BY class_rank, income DESC
+		) AS rank_query
+		WHERE class_rank > $1 AND class_rank <= $2
+	`, orderBy, ownershipCondition)
 
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
+	rankStart := int(p.Key)
+	rankEnd := rankStart + p.Limit
 	rows, err := conn.Query(
 		ctx, sql,
-		p.Limit, p.After(), p.Before(), q.ClassId, q.NftId,
-		ownerVariations, stakeholderVariations, q.After, q.Before, q.ActionType,
+		rankStart, rankEnd, q.ClassId, ownerVariations, beneficiaryVariations,
+		q.After, q.Before, q.ActionType, q.ExcludeSelfPurchase,
 	)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft incomes", "error", err)
@@ -432,91 +452,80 @@ func GetNftIncomes(conn *pgxpool.Conn, q QueryIncomesRequest, p PageRequest) (Qu
 	}
 
 	res := QueryIncomesResponse{
-		Incomes: make([]NftIncomeResponse, 0),
+		ClassIncomes: make([]NftClassIncomeResponse, 0),
 	}
+
+	var rank int
+	rankMap := make(map[int]NftClassIncomeResponse)
 	for rows.Next() {
-		var r NftIncomeResponse
-		if err = rows.Scan(&r.Address, &r.Amount); err != nil {
+		var ci NftClassIncomeResponse
+		var i NftIncomeResponse
+
+		if err = rows.Scan(&ci.ClassId, &ci.CreatedAt, &i.Address, &i.Amount, &ci.TotalAmount, &rank); err != nil {
 			logger.L.Errorw("failed to scan nft incomes", "error", err, "q", q)
 			return QueryIncomesResponse{}, fmt.Errorf("query nft incomes data failed: %w", err)
 		}
-		res.Incomes = append(res.Incomes, r)
-		res.TotalAmount += r.Amount
-	}
-	res.Pagination.Count = len(res.Incomes)
-	return res, nil
-}
 
-func GetNftIncomeDetails(conn *pgxpool.Conn, q QueryIncomeDetailsRequest, p PageRequest) (QueryIncomeDetailsResponse, error) {
-	ownerVariations := utils.ConvertAddressPrefixes(q.Owner, AddressPrefixes)
-	stakeholderVariations := utils.ConvertAddressPrefixes(q.Address, AddressPrefixes)
-	orderBy := "i.id"
-	switch q.OrderBy {
-	case "price":
-		orderBy = "e.price"
-	case "income":
-		orderBy = "i.amount"
-	case "default":
-	default:
-		orderBy = "i.id"
-	}
+		classIncome, exists := rankMap[rank]
+		if !exists {
+			classIncome = ci
+			classIncome.Incomes = make([]NftIncomeResponse, 0)
+		}
 
-	sql := fmt.Sprintf(`
-		SELECT e.class_id, e.nft_id, e.tx_hash, e.timestamp, i.address, 
-			e.price, i.amount 
+		classIncome.Incomes = append(classIncome.Incomes, i)
+		rankMap[rank] = classIncome
+		res.TotalAmount += i.Amount
+	}
+	var classIds []string
+	for _, classIncome := range rankMap {
+		res.ClassIncomes = append(res.ClassIncomes, classIncome)
+		classIds = append(classIds, classIncome.ClassId)
+	}
+	for i := 0; i < len(res.ClassIncomes); i++ {
+		res.ClassIncomes[i] = rankMap[rankStart+i+1]
+	}
+	res.Pagination.NextKey = uint64(rank)
+	res.Pagination.Count = len(res.ClassIncomes)
+
+	sql = `
+		SELECT e.class_id, SUM(e.price) AS sales
 		FROM nft_event AS e
-		JOIN nft_class as c
-			ON e.class_id = c.class_id
-		JOIN iscn
-			ON iscn.iscn_id_prefix = c.parent_iscn_id_prefix
-		JOIN iscn_latest_version
-			ON iscn.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-			AND iscn.version = iscn_latest_version.latest_version
-		JOIN nft_income AS i
-			ON e.class_id = i.class_id 
-			AND e.nft_id = i.nft_id
-			AND e.tx_hash = i.tx_hash
-		WHERE ($2 = 0 OR i.id > $2)
-			AND ($3 = 0 OR i.id < $3)
-			AND ($4 = '' OR e.class_id = $4)
-			AND ($5 = '' OR e.nft_id = $5)
-			AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR iscn.owner = ANY($6))
-			AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR i.address = ANY($7))
-			AND ($8 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($8)))
-			AND ($9 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($9)))
-			AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.action = ANY($10))
-		ORDER BY %[1]s %[2]s
-		LIMIT $1
-	`, orderBy, p.Order())
-
-	ctx, cancel := GetTimeoutContext()
-	defer cancel()
-
-	rows, err := conn.Query(
+		WHERE e.class_id = ANY($1)
+			AND ($2 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp > to_timestamp($2)))
+			AND ($3 = 0 OR (e.timestamp IS NOT NULL AND e.timestamp < to_timestamp($3)))
+			AND ($4::text[] IS NULL OR cardinality($4::text[]) = 0 OR e.action = ANY($4))
+			AND ($5 = false OR e.receiver != e.iscn_owner_at_the_time)
+		GROUP BY e.class_id
+	`
+	rows, err = conn.Query(
 		ctx, sql,
-		p.Limit, p.After(), p.Before(), q.ClassId, q.NftId,
-		ownerVariations, stakeholderVariations, q.After, q.Before, q.ActionType,
+		classIds, q.After, q.Before, q.ActionType, q.ExcludeSelfPurchase,
 	)
 	if err != nil {
-		logger.L.Errorw("Failed to query nft income details", "error", err)
-		return QueryIncomeDetailsResponse{}, fmt.Errorf("query nft income details error: %w", err)
+		logger.L.Errorw("Failed to query nft sales", "error", err)
+		return QueryIncomesResponse{}, fmt.Errorf("query nft sales error: %w", err)
 	}
 
-	res := QueryIncomeDetailsResponse{
-		IncomeDetails: make([]NftIncomeDetailResponse, 0),
-	}
+	salesMap := make(map[string]uint64)
 	for rows.Next() {
-		var r NftIncomeDetailResponse
-		if err = rows.Scan(
-			&r.ClassId, &r.NftId, &r.TxHash, &r.Timestamp, &r.Address,
-			&r.Price, &r.Amount,
-		); err != nil {
-			logger.L.Errorw("failed to scan nft income details", "error", err, "q", q)
-			return QueryIncomeDetailsResponse{}, fmt.Errorf("query nft income details data failed: %w", err)
+		var classId string
+		var sales uint64
+
+		if err = rows.Scan(&classId, &sales); err != nil {
+			logger.L.Errorw("failed to scan nft sales", "error", err, "q", q)
+			return QueryIncomesResponse{}, fmt.Errorf("query nft sales data failed: %w", err)
 		}
-		res.IncomeDetails = append(res.IncomeDetails, r)
+
+		salesMap[classId] = sales
 	}
-	res.Pagination.Count = len(res.IncomeDetails)
+
+	for i := range res.ClassIncomes {
+		classId := res.ClassIncomes[i].ClassId
+		sales := salesMap[classId]
+		res.ClassIncomes[i].Sales = sales
+		res.TotalSales += sales
+	}
+
 	return res, nil
 }
 

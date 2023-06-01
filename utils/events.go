@@ -76,8 +76,13 @@ func ParseCoinFromEventString(coinStr string) (uint64, error) {
 	return coin.Amount.Uint64(), nil
 }
 
-func GetIncomeMap(events types.StringEvents) map[string]uint64 {
-	incomeMap := make(map[string]uint64)
+type RawIncome struct {
+	Address string
+	Amount  uint64
+}
+
+func GetRawIncomes(events types.StringEvents) []RawIncome {
+	incomes := []RawIncome{}
 	address := ""
 	amount := uint64(0)
 	for _, event := range events {
@@ -97,12 +102,42 @@ func GetIncomeMap(events types.StringEvents) map[string]uint64 {
 					amount = coin.Amount.Uint64()
 				}
 				if address != "" && amount != 0 {
-					incomeMap[address] += amount
+					incomes = append(incomes, RawIncome{
+						Address: address,
+						Amount:  amount,
+					})
 					address = ""
 					amount = 0
 				}
 			}
 		}
+	}
+	return incomes
+}
+
+// the max amount of income is the authz message sent by API wallet
+// should not counted in the income of the NFT owner
+func RemoveAuthzMsgIncome(incomes []RawIncome) []RawIncome {
+	newIncomes := []RawIncome{}
+	maxAmount := uint64(0)
+	for _, i := range incomes {
+		if i.Amount > maxAmount {
+			maxAmount = i.Amount
+		}
+	}
+	for i := range incomes {
+		if incomes[i].Amount == maxAmount {
+			continue
+		}
+		newIncomes = append(newIncomes, incomes[i])
+	}
+	return newIncomes
+}
+
+func AggregateRawIncomes(rawIncomes []RawIncome) map[string]uint64 {
+	incomeMap := make(map[string]uint64)
+	for _, ri := range rawIncomes {
+		incomeMap[ri.Address] += ri.Amount
 	}
 	return incomeMap
 }

@@ -45,7 +45,6 @@ func GetRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
 		nft.GET("/collector", handleNftCollectors)
 		nft.GET("/creator", handleNftCreators)
 		nft.GET("/income", handleNftIncome)
-		nft.GET("/income/detail", handleNftIncomeDetail)
 		nft.GET("/user-stat", handleNftUserStat)
 		nft.GET("/marketplace", handleNftMarketplaceItem)
 		nft.GET("/collector-top-ranked-creators", handleNftCollectorTopRankedCreatorsRequest)
