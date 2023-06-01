@@ -21,6 +21,7 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 		return err
 	}
 	return conn.BeginFunc(context.Background(), func(dbTx pgx.Tx) error {
+		logger.L.Infow("NFT income table migration started")
 		// use `WHERE rn = 1` to ensure only the latest event with same tx_hash is processed,
 		// that way we can skip most unused `mint_nft` actions mixed in the `/cosmos.nft.v1beta1.MsgSend` actions
 		_, err := dbTx.Exec(context.Background(), `
@@ -98,12 +99,12 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 				break
 			}
 			count := len(incomes)
+			logger.L.Infow(
+				"NFT income table migration progress",
+				"pkey_id", pkeyId,
+				"count", count,
+			)
 			if count == 0 {
-				logger.L.Infow(
-					"NFT income table migration progress",
-					"pkey_id", pkeyId,
-					"count", count,
-				)
 				continue
 			}
 			for i := 0; i < count; i++ {
