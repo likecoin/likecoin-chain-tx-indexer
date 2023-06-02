@@ -244,7 +244,8 @@ type NftResponse struct {
 }
 
 type QueryOwnerRequest struct {
-	ClassId string `form:"class_id" binding:"required"`
+	ClassId          string `form:"class_id" binding:"required"`
+	ExcludeIscnOwner bool   `form:"exclude_iscn_owner"`
 }
 
 type QueryOwnerResponse struct {
