@@ -246,68 +246,114 @@ func TestQueryNftByOwner(t *testing.T) {
 
 func TestOwnerByClassId(t *testing.T) {
 	defer CleanupTestData(Conn)
+	iscns := []IscnInsert{
+		{
+			Iscn:  "iscn://testing/aaaaaa/1",
+			Owner: ADDR_01_LIKE,
+		},
+		{
+			Iscn:  "iscn://testing/bbbbbb/1",
+			Owner: ADDR_02_LIKE,
+		},
+		{
+			Iscn:  "iscn://testing/cccccc/1",
+			Owner: ADDR_02_LIKE,
+		},
+	}
+	nftClasses := []NftClass{
+		{
+			Id:     "likenft1xxxxxx",
+			Parent: NftClassParent{IscnIdPrefix: "iscn://testing/aaaaaa"},
+		},
+		{
+			Id:     "likenft1yyyyyy",
+			Parent: NftClassParent{IscnIdPrefix: "iscn://testing/bbbbbb"},
+		},
+		{
+			Id:     "likenft1zzzzzz",
+			Parent: NftClassParent{IscnIdPrefix: "iscn://testing/cccccc"},
+		},
+	}
 	nfts := []Nft{
 		{
 			NftId:   "testing-nft-1123123098",
-			ClassId: "likenft1xxxxxx",
+			ClassId: nftClasses[0].Id,
 			Owner:   ADDR_01_LIKE,
 		},
 		{
 			NftId:   "testing-nft-1123123099",
-			ClassId: "likenft1xxxxxx",
+			ClassId: nftClasses[0].Id,
 			Owner:   ADDR_02_LIKE,
 		},
 		{
 			NftId:   "testing-nft-1123123100",
-			ClassId: "likenft1xxxxxx",
+			ClassId: nftClasses[0].Id,
 			Owner:   ADDR_02_LIKE,
 		},
 		{
 			NftId:   "testing-nft-1123123101",
-			ClassId: "likenft1yyyyyy",
+			ClassId: nftClasses[1].Id,
 			Owner:   ADDR_02_LIKE,
 		},
 		{
 			NftId:   "testing-nft-1123123102",
-			ClassId: "likenft1yyyyyy",
+			ClassId: nftClasses[1].Id,
 			Owner:   ADDR_03_LIKE,
 		},
 		{
 			NftId:   "testing-nft-1123123103",
-			ClassId: "likenft1zzzzzz",
+			ClassId: nftClasses[2].Id,
 			Owner:   ADDR_03_LIKE,
 		},
 	}
-	InsertTestData(DBTestData{Nfts: nfts})
+	InsertTestData(DBTestData{
+		Iscns:      iscns,
+		NftClasses: nftClasses,
+		Nfts:       nfts,
+	})
 
 	testCases := []struct {
-		classId string
-		owners  []string
-		counts  []int
+		name   string
+		query  QueryOwnerRequest
+		owners []string
+		counts []int
 	}{
 		{
-			nfts[0].ClassId,
+			"default query 1",
+			QueryOwnerRequest{ClassId: nftClasses[0].Id},
 			[]string{ADDR_01_LIKE, ADDR_02_LIKE},
 			[]int{1, 2},
 		},
 		{
-			nfts[3].ClassId,
+			"default query 2",
+			QueryOwnerRequest{ClassId: nftClasses[1].Id},
 			[]string{ADDR_02_LIKE, ADDR_03_LIKE},
 			[]int{1, 1},
 		},
 		{
-			nfts[5].ClassId,
+			"default query 3",
+			QueryOwnerRequest{ClassId: nftClasses[2].Id},
 			[]string{ADDR_03_LIKE},
 			[]int{1},
 		},
-		{"likenft1notexist", nil, nil},
+		{
+			"exclude ISCN owner query",
+			QueryOwnerRequest{ClassId: nftClasses[0].Id, ExcludeIscnOwner: true},
+			[]string{ADDR_02_LIKE},
+			[]int{2},
+		},
+		{
+			"class id not exist",
+			QueryOwnerRequest{ClassId: "likenft1notexist"},
+			nil,
+			nil,
+		},
 	}
 
 	for i, testCase := range testCases {
-		query := QueryOwnerRequest{ClassId: testCase.classId}
-		res, err := GetOwners(Conn, query)
-		require.NoError(t, err, "Error in test case #%02d (classId = %s)", i, testCase.classId)
-		require.Len(t, res.Owners, len(testCase.owners), "error in test case #%02d (classId = %s)", i, testCase.classId)
+		res, err := GetOwners(Conn, testCase.query)
+		require.NoError(t, err, "Error in test case #%02d (%s)", i, testCase.name)
+		require.Len(t, res.Owners, len(testCase.owners), "error in test case #%02d (%s)", i, testCase.name)
 	NEXT_OWNER:
 		for j, owner := range testCase.owners {
 			if len(testCase.owners) == 0 {
@@ -315,11 +361,11 @@ func TestOwnerByClassId(t *testing.T) {
 			}
 			for _, ownerRes := range res.Owners {
 				if ownerRes.Owner == owner {
-					require.Equal(t, testCase.counts[j], ownerRes.Count, "error in test case #%02d (classId = %s)", i, testCase.classId)
+					require.Equal(t, testCase.counts[j], ownerRes.Count, "error in test case #%02d (%s)", i, testCase.name)
 					continue NEXT_OWNER
 				}
 			}
-			t.Errorf("test case #%02d (classId %s): owner %s not found. results = %#v", i, testCase.classId, owner, res.Owners)
+			t.Errorf("test case #%02d (%s): owner %s not found. results = %#v", i, testCase.name, owner, res.Owners)
 		}
 	}
 }

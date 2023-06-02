@@ -241,15 +241,20 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 
 func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, error) {
 	sql := `
-	SELECT owner, array_agg(nft_id)
-	FROM nft
-	WHERE class_id = $1
-	GROUP BY owner
+	SELECT n.owner, array_agg(n.nft_id)
+	FROM nft AS n
+	JOIN nft_class AS c
+		ON n.class_id = c.class_id
+	JOIN iscn AS i
+		ON c.parent_iscn_id_prefix = i.iscn_id_prefix
+	WHERE n.class_id = $1
+		AND ($2 = false OR n.owner != i.owner)
+	GROUP BY n.owner
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.ClassId)
+	rows, err := conn.Query(ctx, sql, q.ClassId, q.ExcludeIscnOwner)
 	if err != nil {
 		logger.L.Errorw("Failed to query owner", "error", err)
 		return QueryOwnerResponse{}, fmt.Errorf("query owner error: %w", err)
