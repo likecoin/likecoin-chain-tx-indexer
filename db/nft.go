@@ -240,6 +240,8 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 }
 
 func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, error) {
+	ignoreListVariations := utils.ConvertAddressArrayPrefixes(q.IgnoreList, AddressPrefixes)
+
 	sql := `
 	SELECT n.owner, array_agg(n.nft_id)
 	FROM nft AS n
@@ -249,12 +251,13 @@ func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, err
 		ON c.parent_iscn_id_prefix = i.iscn_id_prefix
 	WHERE n.class_id = $1
 		AND ($2 = false OR n.owner != i.owner)
+		AND ($3::text[] IS NULL OR cardinality($3::text[]) = 0 OR n.owner != ALL($3))
 	GROUP BY n.owner
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.ClassId, q.ExcludeIscnOwner)
+	rows, err := conn.Query(ctx, sql, q.ClassId, q.ExcludeIscnOwner, ignoreListVariations)
 	if err != nil {
 		logger.L.Errorw("Failed to query owner", "error", err)
 		return QueryOwnerResponse{}, fmt.Errorf("query owner error: %w", err)
