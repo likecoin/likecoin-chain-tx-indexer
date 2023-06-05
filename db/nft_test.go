@@ -249,6 +249,10 @@ func TestOwnerByClassId(t *testing.T) {
 	iscns := []IscnInsert{
 		{
 			Iscn:  "iscn://testing/aaaaaa/1",
+			Owner: ADDR_02_LIKE,
+		},
+		{
+			Iscn:  "iscn://testing/aaaaaa/2",
 			Owner: ADDR_01_LIKE,
 		},
 		{
