@@ -249,6 +249,9 @@ func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, err
 		ON n.class_id = c.class_id
 	JOIN iscn AS i
 		ON c.parent_iscn_id_prefix = i.iscn_id_prefix
+	JOIN iscn_latest_version
+		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND i.version = iscn_latest_version.latest_version
 	WHERE n.class_id = $1
 		AND ($2 = false OR n.owner != i.owner)
 		AND ($3::text[] IS NULL OR cardinality($3::text[]) = 0 OR n.owner != ALL($3))
