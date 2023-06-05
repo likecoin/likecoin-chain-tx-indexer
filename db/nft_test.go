@@ -313,40 +313,44 @@ func TestOwnerByClassId(t *testing.T) {
 	})
 
 	testCases := []struct {
-		name   string
-		query  QueryOwnerRequest
-		owners []string
-		counts []int
+		name                           string
+		query                          QueryOwnerRequest
+		owners                         []string
+		counts                         []int
+		ownerCountExcludeIscnOwner     int
+		collectedCountExcludeIscnOwner int
 	}{
 		{
 			"default query 1",
 			QueryOwnerRequest{ClassId: nftClasses[0].Id},
 			[]string{ADDR_01_LIKE, ADDR_02_LIKE},
 			[]int{1, 2},
+			1,
+			2,
 		},
 		{
 			"default query 2",
 			QueryOwnerRequest{ClassId: nftClasses[1].Id},
 			[]string{ADDR_02_LIKE, ADDR_03_LIKE},
 			[]int{1, 1},
+			1,
+			1,
 		},
 		{
 			"default query 3",
 			QueryOwnerRequest{ClassId: nftClasses[2].Id},
 			[]string{ADDR_03_LIKE},
 			[]int{1},
-		},
-		{
-			"exclude ISCN owner query",
-			QueryOwnerRequest{ClassId: nftClasses[0].Id, ExcludeIscnOwner: true},
-			[]string{ADDR_02_LIKE},
-			[]int{2},
+			1,
+			1,
 		},
 		{
 			"class id not exist",
 			QueryOwnerRequest{ClassId: "likenft1notexist"},
 			nil,
 			nil,
+			0,
+			0,
 		},
 	}
 
@@ -354,6 +358,8 @@ func TestOwnerByClassId(t *testing.T) {
 		res, err := GetOwners(Conn, testCase.query)
 		require.NoError(t, err, "Error in test case #%02d (%s)", i, testCase.name)
 		require.Len(t, res.Owners, len(testCase.owners), "error in test case #%02d (%s)", i, testCase.name)
+		require.Equal(t, testCase.ownerCountExcludeIscnOwner, res.OwnerCountExcludeIscnOwner, "error in test case #%02d (%s)", i, testCase.name)
+		require.Equal(t, testCase.collectedCountExcludeIscnOwner, res.CollectedCountExcludeIscnOwner, "error in test case #%02d (%s)", i, testCase.name)
 	NEXT_OWNER:
 		for j, owner := range testCase.owners {
 			if len(testCase.owners) == 0 {

@@ -241,20 +241,38 @@ func GetNfts(conn *pgxpool.Conn, q QueryNftRequest, p PageRequest) (QueryNftResp
 
 func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, error) {
 	sql := `
-	SELECT n.owner, array_agg(n.nft_id)
-	FROM nft AS n
+	SELECT i.owner FROM iscn AS i 
+	JOIN iscn_latest_version
+		ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+			AND i.version = iscn_latest_version.latest_version
 	JOIN nft_class AS c
-		ON n.class_id = c.class_id
-	JOIN iscn AS i
-		ON c.parent_iscn_id_prefix = i.iscn_id_prefix
-	WHERE n.class_id = $1
-		AND ($2 = false OR n.owner != i.owner)
-	GROUP BY n.owner
+		ON iscn_latest_version.iscn_id_prefix = c.parent_iscn_id_prefix
+	WHERE c.class_id = $1
 	`
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql, q.ClassId, q.ExcludeIscnOwner)
+	rows, err := conn.Query(ctx, sql, q.ClassId)
+	if err != nil {
+		logger.L.Errorw("Failed to query class owner", "error", err)
+		return QueryOwnerResponse{}, fmt.Errorf("query owner error: %w", err)
+	}
+	var owner string
+	for rows.Next() {
+		if err = rows.Scan(&owner); err != nil {
+			logger.L.Errorw("failed to scan owner", "error", err, "q", q)
+			return QueryOwnerResponse{}, fmt.Errorf("query owner data failed: %w", err)
+		}
+	}
+
+	sql = `
+	SELECT owner, array_agg(nft_id)
+	FROM nft
+	WHERE class_id = $1
+	GROUP BY owner
+	`
+
+	rows, err = conn.Query(ctx, sql, q.ClassId)
 	if err != nil {
 		logger.L.Errorw("Failed to query owner", "error", err)
 		return QueryOwnerResponse{}, fmt.Errorf("query owner error: %w", err)
@@ -264,13 +282,17 @@ func GetOwners(conn *pgxpool.Conn, q QueryOwnerRequest) (QueryOwnerResponse, err
 		Owners: make([]OwnerResponse, 0),
 	}
 	for rows.Next() {
-		var owner OwnerResponse
-		if err = rows.Scan(&owner.Owner, &owner.Nfts); err != nil {
-			logger.L.Errorw("failed to scan owner", "error", err, "q", q)
+		var ownerRes OwnerResponse
+		if err = rows.Scan(&ownerRes.Owner, &ownerRes.Nfts); err != nil {
+			logger.L.Errorw("failed to scan owner response", "error", err, "q", q)
 			return QueryOwnerResponse{}, fmt.Errorf("query owner data failed: %w", err)
 		}
-		owner.Count = len(owner.Nfts)
-		res.Owners = append(res.Owners, owner)
+		if ownerRes.Owner != owner {
+			res.OwnerCountExcludeIscnOwner++
+			res.CollectedCountExcludeIscnOwner += len(ownerRes.Nfts)
+		}
+		ownerRes.Count = len(ownerRes.Nfts)
+		res.Owners = append(res.Owners, ownerRes)
 	}
 	res.Pagination.Count = len(res.Owners)
 	return res, nil
@@ -876,15 +898,15 @@ func GetClassesOwners(conn *pgxpool.Conn, q QueryClassesOwnersRequest) (QueryCla
 
 	classIds := make(map[string][]string)
 	for rows.Next() {
-		var owner string
+		var ownerRes string
 		var classId string
-		if err := rows.Scan(&owner, &classId); err != nil {
+		if err := rows.Scan(&ownerRes, &classId); err != nil {
 			logger.L.Errorw("failed to scan owner address and class ID", "error", err)
 			return QueryClassesOwnersResponse{}, fmt.Errorf("failed to scan owner address and class ID: %w", err)
 		}
-		convertedOwner, err := utils.ConvertAddressPrefix(owner, MainAddressPrefix)
+		convertedOwner, err := utils.ConvertAddressPrefix(ownerRes, MainAddressPrefix)
 		if err != nil {
-			logger.L.Errorw("failed to convert address prefix when processing QueryClassesOwnersRequest", "error", err, "owner", owner, "class_id", classId, "request", q)
+			logger.L.Errorw("failed to convert address prefix when processing QueryClassesOwnersRequest", "error", err, "owner", ownerRes, "class_id", classId, "request", q)
 			// non-critical error, just skip this row
 			continue
 		}

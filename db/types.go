@@ -244,13 +244,14 @@ type NftResponse struct {
 }
 
 type QueryOwnerRequest struct {
-	ClassId          string `form:"class_id" binding:"required"`
-	ExcludeIscnOwner bool   `form:"exclude_iscn_owner"`
+	ClassId string `form:"class_id" binding:"required"`
 }
 
 type QueryOwnerResponse struct {
-	Pagination PageResponse    `json:"pagination"`
-	Owners     []OwnerResponse `json:"owners"`
+	Pagination                     PageResponse    `json:"pagination"`
+	OwnerCountExcludeIscnOwner     int             `json:"owner_count_exclude_iscn_owner"`
+	CollectedCountExcludeIscnOwner int             `json:"collected_count_exclude_iscn_owner"`
+	Owners                         []OwnerResponse `json:"owners"`
 }
 
 type OwnerResponse struct {
