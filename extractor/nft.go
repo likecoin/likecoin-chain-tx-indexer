@@ -18,12 +18,6 @@ func attachNftEvent(e *db.NftEvent, payload *Payload) {
 	e.Memo = payload.Memo
 }
 
-func attachNftIncome(r *db.NftIncome, payload *Payload, event *types.StringEvent, nftIdField string) {
-	r.ClassId = utils.GetEventValue(event, "class_id")
-	r.NftId = utils.GetEventValue(event, nftIdField)
-	r.TxHash = payload.TxHash
-}
-
 type nftClassMessage struct {
 	Input   db.NftClass `json:"input"`
 	Creator string      `json:"creator"`
@@ -136,26 +130,6 @@ func extractNftEvent(event *types.StringEvent, classIdField, nftIdField, senderF
 	return e
 }
 
-func extractNftIncomes(eventsList db.EventsList) []db.NftIncome {
-	rawIncomes := []utils.RawIncome{}
-	for _, msgEvents := range eventsList {
-		msgAction := utils.GetEventsValue(msgEvents.Events, "message", "action")
-		if msgAction == "/cosmos.bank.v1beta1.MsgSend" || msgAction == string(db.ACTION_BUY) || msgAction == string(db.ACTION_SELL) {
-			rawIncomes = append(rawIncomes, utils.GetRawIncomes(msgEvents.Events)...)
-		}
-	}
-	incomeMap := utils.AggregateRawIncomes(rawIncomes)
-
-	incomes := []db.NftIncome{}
-	for address, amount := range incomeMap {
-		incomes = append(incomes, db.NftIncome{
-			Address: address,
-			Amount:  amount,
-		})
-	}
-	return incomes
-}
-
 func sendNft(payload *Payload, event *types.StringEvent) error {
 	e := extractNftEvent(event, "class_id", "id", "sender", "receiver")
 	e.Action = db.ACTION_SEND
@@ -171,19 +145,57 @@ func sendNft(payload *Payload, event *types.StringEvent) error {
 
 	// We assume the first message is the authz message with token send
 	// TODO: also check if authz grantee is API address
-	firstMsgEvents := payload.EventsList[0].Events
-	firstMsgAction := utils.GetEventsValue(firstMsgEvents, "message", "action")
-	if firstMsgAction == "/cosmos.authz.v1beta1.MsgExec" {
-		e.Price = extractPriceFromEvents(firstMsgEvents)
-		incomes := extractNftIncomes(payload.EventsList)
-		for _, i := range incomes {
-			attachNftIncome(&i, payload, event, "id")
-			payload.Batch.InsertNftIncome(i)
+	sendNftMsgIndex := payload.MsgIndex
+	if sendNftMsgIndex > 0 {
+		prevMsgEvents := payload.EventsList[sendNftMsgIndex-1].Events
+		prevMsgAction := utils.GetEventsValue(prevMsgEvents, "message", "action")
+		if prevMsgAction == "/cosmos.authz.v1beta1.MsgExec" {
+			e.Price = extractPriceFromEvents(prevMsgEvents)
+
+			rawIncomes := GetRawIncomeFromSendNftMsg(payload.EventsList, sendNftMsgIndex)
+
+			incomeMap := utils.AggregateRawIncomes(rawIncomes)
+			for address, amount := range incomeMap {
+				payload.Batch.InsertNftIncome(db.NftIncome{
+					ClassId: e.ClassId,
+					NftId:   e.NftId,
+					TxHash:  payload.TxHash,
+					Address: address,
+					Amount:  amount,
+				})
+			}
 		}
 	}
 	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)
 	return nil
+}
+
+func GetRawIncomeFromSendNftMsg(eventsList db.EventsList, msgIndex int) []utils.RawIncome {
+	// We assume the first message is the authz message with token send
+	authzMsgIndex := msgIndex - 1
+	authzMsgEvents := eventsList[authzMsgIndex].Events
+	authzMsgAction := utils.GetEventsValue(authzMsgEvents, "message", "action")
+	if authzMsgAction != "/cosmos.authz.v1beta1.MsgExec" {
+		return []utils.RawIncome{}
+	}
+
+	sendTokenMsgStartIndex := msgIndex + 1
+	rawIncomes := []utils.RawIncome{}
+	for i := sendTokenMsgStartIndex; i < len(eventsList); i++ {
+		currMsgEvents := eventsList[i].Events
+		currMsgAction := utils.GetEventsValue(currMsgEvents, "message", "action")
+		if currMsgAction != "/cosmos.bank.v1beta1.MsgSend" {
+			break
+		}
+		address := utils.GetEventsValue(currMsgEvents, "coin_received", "receiver")
+		amount := extractPriceFromEvents(currMsgEvents)
+		rawIncomes = append(rawIncomes, utils.RawIncome{
+			Address: address,
+			Amount:  amount,
+		})
+	}
+	return rawIncomes
 }
 
 func init() {

@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 )
 
 func GetEventStrings(events types.StringEvents) []string {
@@ -79,59 +78,6 @@ func ParseCoinFromEventString(coinStr string) (uint64, error) {
 type RawIncome struct {
 	Address string
 	Amount  uint64
-}
-
-func GetRawIncomes(events types.StringEvents) []RawIncome {
-	incomes := []RawIncome{}
-	address := ""
-	amount := uint64(0)
-	for _, event := range events {
-		if event.Type == "coin_received" {
-			for _, attr := range event.Attributes {
-				if attr.Key == "receiver" {
-					address = attr.Value
-				}
-				if attr.Key == "amount" {
-					amountStr := attr.Value
-					coin, err := types.ParseCoinNormalized(amountStr)
-					if err != nil {
-						logger.L.Warnw("Failed to parse income from event", "income_str", amountStr, "error", err)
-						address = ""
-						continue
-					}
-					amount = coin.Amount.Uint64()
-				}
-				if address != "" && amount != 0 {
-					incomes = append(incomes, RawIncome{
-						Address: address,
-						Amount:  amount,
-					})
-					address = ""
-					amount = 0
-				}
-			}
-		}
-	}
-	return incomes
-}
-
-// the max amount of income is the authz message sent by API wallet
-// should not counted in the income of the NFT owner
-func RemoveAuthzMsgIncome(incomes []RawIncome) []RawIncome {
-	newIncomes := []RawIncome{}
-	maxAmount := uint64(0)
-	for _, i := range incomes {
-		if i.Amount > maxAmount {
-			maxAmount = i.Amount
-		}
-	}
-	for i := range incomes {
-		if incomes[i].Amount == maxAmount {
-			continue
-		}
-		newIncomes = append(newIncomes, incomes[i])
-	}
-	return newIncomes
 }
 
 func AggregateRawIncomes(rawIncomes []RawIncome) map[string]uint64 {

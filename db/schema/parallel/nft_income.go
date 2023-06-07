@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/extractor"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
@@ -25,16 +27,13 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 		// that way we can skip most unused `mint_nft` actions mixed in the `/cosmos.nft.v1beta1.MsgSend` actions
 		_, err := dbTx.Exec(context.Background(), `
 			DECLARE nft_income_migration_cursor CURSOR FOR
-				SELECT id, class_id, nft_id, tx_hash, events
+				SELECT s.id, s.class_id, s.nft_id, s.tx_hash, txs.tx -> 'logs' AS events
 				FROM (
-					SELECT e.id, e.class_id, e.nft_id, e.tx_hash, t.events, ROW_NUMBER() OVER (PARTITION BY e.tx_hash ORDER BY e.id DESC) AS rn
+					SELECT e.id, e.class_id, e.nft_id, e.tx_hash, ROW_NUMBER() OVER (PARTITION BY e.tx_hash ORDER BY e.id DESC) AS rn
 					FROM nft_event AS e
-					JOIN (
-						SELECT DISTINCT ON (tx ->> 'txhash') tx ->> 'txhash' AS tx_hash, events
-						FROM txs
-					) AS t ON e.tx_hash = t.tx_hash
 					WHERE e.action IN ('/cosmos.nft.v1beta1.MsgSend', 'buy_nft', 'sell_nft')
-				) subquery
+				) AS s
+				JOIN txs ON s.tx_hash = txs.tx ->> 'txhash'
 				WHERE rn = 1
 				ORDER BY id
 			;
@@ -61,26 +60,28 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 				var classId string
 				var nftId string
 				var txHash string
-				var eventRaw []string
-				err = rows.Scan(&pkeyId, &classId, &nftId, &txHash, &eventRaw)
+				var eventData pgtype.JSONB
+				err = rows.Scan(&pkeyId, &classId, &nftId, &txHash, &eventData)
 				if err != nil {
 					logger.L.Errorw("Error when scanning row", "error", err)
 					return err
 				}
 
-				// `spreadEvents` includes events of 'ALL' messages in the tx, not just a message.
-				// this is different from the case in `extractNftIncomes()`
-				spreadEvents, err := utils.ParseEvents(eventRaw)
+				var eventsList db.EventsList
+				err = eventData.AssignTo(&eventsList)
 				if err != nil {
 					logger.L.Errorw("Error when parsing events", "error", err)
 					return err
 				}
 
-				firstMsgAction := utils.GetEventsValue(spreadEvents, "message", "action")
-				if firstMsgAction == "/cosmos.authz.v1beta1.MsgExec" || firstMsgAction == string(db.ACTION_BUY) || firstMsgAction == string(db.ACTION_SELL) {
-					rawIncomes := utils.GetRawIncomes(spreadEvents)
-					if firstMsgAction == "/cosmos.authz.v1beta1.MsgExec" {
-						rawIncomes = utils.RemoveAuthzMsgIncome(rawIncomes)
+				for i, events := range eventsList {
+					msgEvents := events.Events
+					msgAction := utils.GetEventsValue(msgEvents, "message", "action")
+					rawIncomes := []utils.RawIncome{}
+					if msgAction == string(db.ACTION_SEND) {
+						rawIncomes = extractor.GetRawIncomeFromSendNftMsg(eventsList, i)
+					} else if msgAction == string(db.ACTION_BUY) || msgAction == string(db.ACTION_SELL) {
+						rawIncomes = extractor.GetRawIncomeFromNftMarketplaceMsgEvents(msgEvents)
 					}
 					incomeMap := utils.AggregateRawIncomes(rawIncomes)
 					for address, amount := range incomeMap {
