@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
+	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
@@ -122,14 +123,59 @@ func marketplaceDeal(payload *Payload, event *types.StringEvent, actionType db.N
 	e.Action = actionType
 	sql := `UPDATE nft SET owner = $1 WHERE class_id = $2 AND nft_id = $3`
 	payload.Batch.Batch.Queue(sql, e.Receiver, e.ClassId, e.NftId)
-	incomes := extractNftIncomes(payload.EventsList)
-	for _, r := range incomes {
-		attachNftIncome(&r, payload, event, "nft_id")
-		payload.Batch.InsertNftIncome(r)
+
+	msgIndex := payload.MsgIndex
+	msgEvents := payload.EventsList[msgIndex].Events
+	rawIncomes := GetRawIncomeFromNftMarketplaceMsgEvents(msgEvents)
+	incomeMap := utils.AggregateRawIncomes(rawIncomes)
+	for address, amount := range incomeMap {
+		payload.Batch.InsertNftIncome(db.NftIncome{
+			ClassId: e.ClassId,
+			NftId:   e.NftId,
+			TxHash:  payload.TxHash,
+			Address: address,
+			Amount:  amount,
+		})
 	}
 	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)
 	return nil
+}
+
+// marketplace messages may contain multiple coin_received events,
+// should not directly use GetEventValue() or GetEventsValue() since it only returns the first one
+func GetRawIncomeFromNftMarketplaceMsgEvents(events types.StringEvents) []utils.RawIncome {
+	incomes := []utils.RawIncome{}
+	address := ""
+	amount := uint64(0)
+	for _, event := range events {
+		if event.Type == "coin_received" {
+			for _, attr := range event.Attributes {
+				if attr.Key == "receiver" {
+					address = attr.Value
+				}
+				if attr.Key == "amount" {
+					amountStr := attr.Value
+					coin, err := types.ParseCoinNormalized(amountStr)
+					if err != nil {
+						logger.L.Warnw("Failed to parse income from event", "income_str", amountStr, "error", err)
+						address = ""
+						continue
+					}
+					amount = coin.Amount.Uint64()
+				}
+				if address != "" && amount != 0 {
+					incomes = append(incomes, utils.RawIncome{
+						Address: address,
+						Amount:  amount,
+					})
+					address = ""
+					amount = 0
+				}
+			}
+		}
+	}
+	return incomes
 }
 
 func init() {

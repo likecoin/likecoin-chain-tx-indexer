@@ -280,6 +280,165 @@ func TestSendNftWithPrice(t *testing.T) {
 	require.Equal(t, price, lastPrice)
 	require.Equal(t, timestamp.UTC(), priceUpdatedAt.UTC())
 }
+func TestSendMultipleNftsWithPrice(t *testing.T) {
+	defer CleanupTestData(Conn)
+	buyer := ADDR_01_LIKE
+	prefixA := "iscn://testing/aaaaaa"
+	prefixB := "iscn://testing/bbbbbb"
+	iscns := []IscnInsert{
+		{
+			Iscn:  "iscn://testing/aaaaaa/1",
+			Owner: ADDR_01_LIKE,
+		},
+		{
+			Iscn:  "iscn://testing/aaaaaa/2",
+			Owner: ADDR_02_LIKE,
+		},
+		{
+			Iscn:  "iscn://testing/bbbbbb/1",
+			Owner: ADDR_03_LIKE,
+		},
+	}
+	nftClasses := []NftClass{
+		{
+			Id:     "nftlike1aaaaa1",
+			Parent: NftClassParent{IscnIdPrefix: prefixA},
+		},
+		{
+			Id:     "nftlike1bbbbb1",
+			Parent: NftClassParent{IscnIdPrefix: prefixB},
+		},
+	}
+	nfts := []Nft{
+		{
+			NftId:   "testing-nft-919775",
+			ClassId: nftClasses[0].Id,
+			Owner:   buyer,
+		},
+		{
+			NftId:   "testing-nft-919776",
+			ClassId: nftClasses[1].Id,
+			Owner:   buyer,
+		},
+	}
+	timestamp := time.Unix(1234567890, 0).UTC()
+	apiWallet := ADDR_04_LIKE
+	stakeholderA1 := ADDR_02_LIKE
+	stakeholderA2 := apiWallet
+	stakeholderB1 := ADDR_03_LIKE
+	stakeholderB2 := apiWallet
+	priceA := uint64(100)
+	priceB := uint64(200)
+	royaltyA1 := uint64(95)
+	royaltyA2 := priceA - royaltyA1
+	royaltyB1 := uint64(190)
+	royaltyB2 := priceB - royaltyB1
+	txs := []string{
+		fmt.Sprintf(`
+{"height":"1234","txhash":"AAAAAA","logs":[{"msg_index":0,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[2]s"},{"key":"amount","value":"%[12]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[12]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.authz.v1beta1.MsgExec"},{"key":"sender","value":"%[1]s"},{"key":"authz_msg_index","value":"0"},{"key":"module","value":"bank"},{"key":"authz_msg_index","value":"0"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[1]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[12]dnanolike"},{"key":"authz_msg_index","value":"0"}]}]},{"msg_index":1,"events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[7]s\""},{"key":"id","value":"\"%[9]s\""},{"key":"receiver","value":"\"%[1]s\""},{"key":"sender","value":"\"%[2]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]},{"msg_index":2,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[4]s"},{"key":"amount","value":"%[15]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[15]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[4]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[15]dnanolike"}]}]},{"msg_index":3,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[3]s"},{"key":"amount","value":"%[14]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[14]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[3]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[14]dnanolike"}]}]},{"msg_index":4,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[2]s"},{"key":"amount","value":"%[13]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[13]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.authz.v1beta1.MsgExec"},{"key":"sender","value":"%[1]s"},{"key":"authz_msg_index","value":"0"},{"key":"module","value":"bank"},{"key":"authz_msg_index","value":"0"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[2]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"%[13]dnanolike"},{"key":"authz_msg_index","value":"0"}]}]},{"msg_index":5,"events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[8]s\""},{"key":"id","value":"\"%[10]s\""},{"key":"receiver","value":"\"%[1]s\""},{"key":"sender","value":"\"%[2]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]},{"msg_index":6,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[6]s"},{"key":"amount","value":"%[17]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[17]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[6]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[17]dnanolike"}]}]},{"msg_index":7,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[5]s"},{"key":"amount","value":"%[16]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[16]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[5]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[16]dnanolike"}]}]}],"tx":{"body":{"messages":[{"@type":"/cosmos.authz.v1beta1.MsgExec","grantee":"%[2]s","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[2]s","amount":[{"denom":"nanolike","amount":"%[12]d"}]}]},{"@type":"/cosmos.nft.v1beta1.MsgSend","class_id":"%[7]s","id":"%[9]s","sender":"%[2]s","receiver":"%[1]s"},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[4]s","amount":[{"denom":"nanolike","amount":"%[15]d"}]},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[3]s","amount":[{"denom":"nanolike","amount":"%[14]d"}]},{"@type":"/cosmos.authz.v1beta1.MsgExec","grantee":"%[2]s","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[2]s","amount":[{"denom":"nanolike","amount":"%[13]d"}]}]},{"@type":"/cosmos.nft.v1beta1.MsgSend","class_id":"%[8]s","id":"%[10]s","sender":"%[2]s","receiver":"%[1]s"},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[6]s","amount":[{"denom":"nanolike","amount":"%[17]d"}]},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[5]s","amount":[{"denom":"nanolike","amount":"%[16]d"}]}],"memo":"(multiple purchases)"}},"timestamp":"%[11]s"}`,
+			buyer, apiWallet, stakeholderA1, stakeholderA2, stakeholderB1,
+			stakeholderB2, nftClasses[0].Id, nftClasses[1].Id, nfts[0].NftId, nfts[1].NftId,
+			timestamp.Format(time.RFC3339), priceA, priceB, royaltyA1, royaltyA2,
+			royaltyB1, royaltyB2,
+		),
+	}
+	InsertTestData(DBTestData{
+		Iscns:      iscns,
+		NftClasses: nftClasses,
+		Nfts:       nfts,
+		Txs:        txs,
+	})
+
+	finished, err := Extract(Conn, extractor.ExtractFunc)
+	require.NoError(t, err)
+	require.True(t, finished)
+
+	ownersRes, err := GetOwners(Conn, QueryOwnerRequest{
+		ClassId: nftClasses[0].Id,
+	})
+	require.NoError(t, err)
+	require.Len(t, ownersRes.Owners, 1)
+	require.Equal(t, buyer, ownersRes.Owners[0].Owner)
+	ownersRes, err = GetOwners(Conn, QueryOwnerRequest{
+		ClassId: nftClasses[1].Id,
+	})
+	require.NoError(t, err)
+	require.Len(t, ownersRes.Owners, 1)
+	require.Equal(t, buyer, ownersRes.Owners[0].Owner)
+
+	eventRes, err := GetNftEvents(Conn, QueryEventsRequest{
+		ClassId: nftClasses[0].Id,
+	}, PageRequest{Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, eventRes.Events, 1)
+	nftEvent := eventRes.Events[0]
+	require.Equal(t, nfts[0].NftId, nftEvent.NftId)
+	require.Equal(t, apiWallet, nftEvent.Sender)
+	require.Equal(t, buyer, nftEvent.Receiver)
+	require.Equal(t, "AAAAAA", nftEvent.TxHash)
+	require.Equal(t, ACTION_SEND, nftEvent.Action)
+	require.Equal(t, priceA, nftEvent.Price)
+	eventRes, err = GetNftEvents(Conn, QueryEventsRequest{
+		ClassId: nftClasses[1].Id,
+	}, PageRequest{Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, eventRes.Events, 1)
+	nftEvent = eventRes.Events[0]
+	require.Equal(t, nfts[1].NftId, nftEvent.NftId)
+	require.Equal(t, apiWallet, nftEvent.Sender)
+	require.Equal(t, buyer, nftEvent.Receiver)
+	require.Equal(t, "AAAAAA", nftEvent.TxHash)
+	require.Equal(t, ACTION_SEND, nftEvent.Action)
+	require.Equal(t, priceB, nftEvent.Price)
+
+	incomesRes, err := GetNftIncomes(Conn,
+		QueryIncomesRequest{
+			ClassId: nftClasses[0].Id,
+		}, PageRequest{Limit: 10, Reverse: true},
+	)
+	require.NoError(t, err)
+	classIncome := incomesRes.ClassIncomes[0]
+	require.Equal(t, classIncome.ClassId, nftClasses[0].Id)
+	require.Len(t, classIncome.Incomes, 2)
+	require.Equal(t, stakeholderA1, classIncome.Incomes[0].Address)
+	require.Equal(t, royaltyA1, classIncome.Incomes[0].Amount)
+	require.Equal(t, stakeholderA2, classIncome.Incomes[1].Address)
+	require.Equal(t, royaltyA2, classIncome.Incomes[1].Amount)
+	require.Equal(t, priceA, classIncome.TotalAmount)
+	require.Equal(t, priceA, classIncome.Sales)
+	require.Equal(t, incomesRes.TotalAmount, classIncome.TotalAmount)
+	require.Equal(t, incomesRes.TotalSales, classIncome.Sales)
+	incomesRes, err = GetNftIncomes(Conn,
+		QueryIncomesRequest{
+			ClassId: nftClasses[1].Id,
+		}, PageRequest{Limit: 10, Reverse: true},
+	)
+	require.NoError(t, err)
+	classIncome = incomesRes.ClassIncomes[0]
+	require.Equal(t, classIncome.ClassId, nftClasses[1].Id)
+	require.Len(t, classIncome.Incomes, 2)
+	require.Equal(t, stakeholderB1, classIncome.Incomes[0].Address)
+	require.Equal(t, royaltyB1, classIncome.Incomes[0].Amount)
+	require.Equal(t, stakeholderB2, classIncome.Incomes[1].Address)
+	require.Equal(t, royaltyB2, classIncome.Incomes[1].Amount)
+	require.Equal(t, priceB, classIncome.TotalAmount)
+	require.Equal(t, priceB, classIncome.Sales)
+	require.Equal(t, incomesRes.TotalAmount, classIncome.TotalAmount)
+	require.Equal(t, incomesRes.TotalSales, classIncome.Sales)
+
+	row := Conn.QueryRow(context.Background(), `SELECT latest_price, price_updated_at FROM nft WHERE class_id = $1 AND nft_id = $2`, nftClasses[0].Id, nfts[0].NftId)
+	var lastPrice uint64
+	var priceUpdatedAt time.Time
+	err = row.Scan(&lastPrice, &priceUpdatedAt)
+	require.NoError(t, err)
+	require.Equal(t, priceA, lastPrice)
+	require.Equal(t, timestamp.UTC(), priceUpdatedAt.UTC())
+	row = Conn.QueryRow(context.Background(), `SELECT latest_price, price_updated_at FROM nft WHERE class_id = $1 AND nft_id = $2`, nftClasses[1].Id, nfts[1].NftId)
+	err = row.Scan(&lastPrice, &priceUpdatedAt)
+	require.NoError(t, err)
+	require.Equal(t, priceB, lastPrice)
+	require.Equal(t, timestamp.UTC(), priceUpdatedAt.UTC())
+}
 
 func TestMintNft(t *testing.T) {
 	defer CleanupTestData(Conn)
