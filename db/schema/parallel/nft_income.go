@@ -80,6 +80,9 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 					msgAction := utils.GetEventsValue(msgEvents, "message", "action")
 					rawIncomes := []utils.RawIncome{}
 					if msgAction == string(db.ACTION_SEND) {
+						// refresh classId and nftId in case of multiple purchases in one tx
+						classId = utils.GetEventsValue(msgEvents, "cosmos.nft.v1beta1.EventSend", "class_id")
+						nftId = utils.GetEventsValue(msgEvents, "cosmos.nft.v1beta1.EventSend", "id")
 						rawIncomes = extractor.GetRawIncomeFromSendNftMsg(eventsList, i)
 					} else if msgAction == string(db.ACTION_BUY) || msgAction == string(db.ACTION_SELL) {
 						rawIncomes = extractor.GetRawIncomeFromNftMarketplaceMsgEvents(msgEvents)
