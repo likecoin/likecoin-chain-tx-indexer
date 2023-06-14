@@ -127,14 +127,15 @@ func marketplaceDeal(payload *Payload, event *types.StringEvent, actionType db.N
 	msgIndex := payload.MsgIndex
 	msgEvents := payload.EventsList[msgIndex].Events
 	rawIncomes := GetRawIncomeFromNftMarketplaceMsgEvents(msgEvents)
-	incomeMap := utils.AggregateRawIncomes(rawIncomes)
-	for address, amount := range incomeMap {
+	aggregatedIncomes := utils.AggregateRawIncomes(rawIncomes)
+	for _, income := range aggregatedIncomes {
 		payload.Batch.InsertNftIncome(db.NftIncome{
-			ClassId: e.ClassId,
-			NftId:   e.NftId,
-			TxHash:  payload.TxHash,
-			Address: address,
-			Amount:  amount,
+			ClassId:   e.ClassId,
+			NftId:     e.NftId,
+			TxHash:    payload.TxHash,
+			Address:   income.Address,
+			Amount:    income.Amount,
+			IsRoyalty: income.IsRoyalty,
 		})
 	}
 	attachNftEvent(&e, payload)
@@ -145,6 +146,14 @@ func marketplaceDeal(payload *Payload, event *types.StringEvent, actionType db.N
 // marketplace messages may contain multiple coin_received events,
 // should not directly use GetEventValue() or GetEventsValue() since it only returns the first one
 func GetRawIncomeFromNftMarketplaceMsgEvents(events types.StringEvents) []utils.RawIncome {
+	seller := ""
+	for _, event := range events {
+		seller = utils.GetEventValue(&event, "seller")
+		if seller != "" {
+			break
+		}
+	}
+
 	incomes := []utils.RawIncome{}
 	address := ""
 	amount := uint64(0)
@@ -166,8 +175,9 @@ func GetRawIncomeFromNftMarketplaceMsgEvents(events types.StringEvents) []utils.
 				}
 				if address != "" && amount != 0 {
 					incomes = append(incomes, utils.RawIncome{
-						Address: address,
-						Amount:  amount,
+						Address:   address,
+						Amount:    amount,
+						IsRoyalty: address != seller,
 					})
 					address = ""
 					amount = 0

@@ -154,14 +154,16 @@ func sendNft(payload *Payload, event *types.StringEvent) error {
 
 			rawIncomes := GetRawIncomeFromSendNftMsg(payload.EventsList, sendNftMsgIndex)
 
-			incomeMap := utils.AggregateRawIncomes(rawIncomes)
-			for address, amount := range incomeMap {
+			aggregatedIncomes := utils.AggregateRawIncomes(rawIncomes)
+
+			for _, income := range aggregatedIncomes {
 				payload.Batch.InsertNftIncome(db.NftIncome{
-					ClassId: e.ClassId,
-					NftId:   e.NftId,
-					TxHash:  payload.TxHash,
-					Address: address,
-					Amount:  amount,
+					ClassId:   e.ClassId,
+					NftId:     e.NftId,
+					TxHash:    payload.TxHash,
+					Address:   income.Address,
+					Amount:    income.Amount,
+					IsRoyalty: income.IsRoyalty,
 				})
 			}
 		}
@@ -172,6 +174,9 @@ func sendNft(payload *Payload, event *types.StringEvent) error {
 }
 
 func GetRawIncomeFromSendNftMsg(eventsList db.EventsList, msgIndex int) []utils.RawIncome {
+	if msgIndex < 1 {
+		return []utils.RawIncome{}
+	}
 	// We assume the first message is the authz message with token send
 	authzMsgIndex := msgIndex - 1
 	authzMsgEvents := eventsList[authzMsgIndex].Events
@@ -191,8 +196,9 @@ func GetRawIncomeFromSendNftMsg(eventsList db.EventsList, msgIndex int) []utils.
 		address := utils.GetEventsValue(currMsgEvents, "coin_received", "receiver")
 		amount := extractPriceFromEvents(currMsgEvents)
 		rawIncomes = append(rawIncomes, utils.RawIncome{
-			Address: address,
-			Amount:  amount,
+			Address:   address,
+			Amount:    amount,
+			IsRoyalty: true, // first-hand selling revenue is classified as royalty
 		})
 	}
 	return rawIncomes

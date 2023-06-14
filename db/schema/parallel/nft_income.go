@@ -23,6 +23,7 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 		return err
 	}
 	return conn.BeginFunc(context.Background(), func(dbTx pgx.Tx) error {
+		logger.L.Infow("NFT income table migration started")
 		// use `WHERE rn = 1` to ensure only the latest event with same tx_hash is processed,
 		// that way we can skip most unused `mint_nft` actions mixed in the `/cosmos.nft.v1beta1.MsgSend` actions
 		_, err := dbTx.Exec(context.Background(), `
@@ -83,14 +84,15 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 					} else if msgAction == string(db.ACTION_BUY) || msgAction == string(db.ACTION_SELL) {
 						rawIncomes = extractor.GetRawIncomeFromNftMarketplaceMsgEvents(msgEvents)
 					}
-					incomeMap := utils.AggregateRawIncomes(rawIncomes)
-					for address, amount := range incomeMap {
+					aggregatedIncome := utils.AggregateRawIncomes(rawIncomes)
+					for _, income := range aggregatedIncome {
 						incomes = append(incomes, db.NftIncome{
-							ClassId: classId,
-							NftId:   nftId,
-							TxHash:  txHash,
-							Address: address,
-							Amount:  amount,
+							ClassId:   classId,
+							NftId:     nftId,
+							TxHash:    txHash,
+							Address:   income.Address,
+							Amount:    income.Amount,
+							IsRoyalty: income.IsRoyalty,
 						})
 					}
 				}
@@ -99,21 +101,22 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 				break
 			}
 			count := len(incomes)
+			logger.L.Infow(
+				"NFT income table migration progress",
+				"pkey_id", pkeyId,
+				"count", count,
+			)
 			if count == 0 {
-				logger.L.Infow(
-					"NFT income table migration progress",
-					"pkey_id", pkeyId,
-					"count", count,
-				)
 				continue
 			}
 			for i := 0; i < count; i++ {
 				income := incomes[i]
 				_, err = dbTx.Exec(context.Background(), `
-						INSERT INTO nft_income (class_id, nft_id, tx_hash, address, amount)
-						VALUES ($1, $2, $3, $4, $5) 
-						ON CONFLICT DO NOTHING;
-					`, income.ClassId, income.NftId, income.TxHash, income.Address, income.Amount)
+						INSERT INTO nft_income (class_id, nft_id, tx_hash, address, amount, is_royalty)
+						VALUES ($1, $2, $3, $4, $5, $6) 
+						ON CONFLICT (class_id, nft_id, tx_hash, address) DO UPDATE
+						SET amount = excluded.amount, is_royalty = excluded.is_royalty
+					`, income.ClassId, income.NftId, income.TxHash, income.Address, income.Amount, income.IsRoyalty)
 				if err != nil {
 					logger.L.Errorw("Error when inserting into nft_income", "error", err)
 					return err
@@ -128,6 +131,7 @@ func MigrateNftIncome(conn *pgxpool.Conn, batchSize uint64) error {
 				"tx_hash", lastIncome.TxHash,
 				"address", lastIncome.Address,
 				"amount", lastIncome.Amount,
+				"is_royalty", lastIncome.IsRoyalty,
 			)
 		}
 		logger.L.Infow("NFT income table migration completed")

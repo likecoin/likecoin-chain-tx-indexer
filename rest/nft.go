@@ -218,11 +218,6 @@ func handleNftIncome(c *gin.Context) {
 		}
 	}
 
-	if form.IscnOwnership != "" && form.IscnOwnership != "all" && form.IscnOwnership != "owned" && form.IscnOwnership != "not_owned" {
-		c.AbortWithStatusJSON(400, gin.H{"error": "iscn_ownership should either be all, owned or not_owned"})
-		return
-	}
-
 	if form.OrderBy != "" && form.OrderBy != "income" && form.OrderBy != "created_time" {
 		c.AbortWithStatusJSON(400, gin.H{"error": "order_by should either be income or created_time"})
 		return

@@ -1,0 +1,3 @@
+ALTER TABLE nft_income
+  ADD COLUMN is_royalty BOOLEAN DEFAULT TRUE NOT NULL
+;

@@ -139,11 +139,12 @@ type NftMarketplaceItem struct {
 }
 
 type NftIncome struct {
-	ClassId string `json:"class_id"`
-	NftId   string `json:"nft_id"`
-	TxHash  string `json:"tx_hash"`
-	Address string `json:"address"`
-	Amount  uint64 `json:"amount"`
+	ClassId   string `json:"class_id"`
+	NftId     string `json:"nft_id"`
+	TxHash    string `json:"tx_hash"`
+	Address   string `json:"address"`
+	Amount    uint64 `json:"amount"`
+	IsRoyalty bool   `json:"is_royalty"`
 }
 
 type LegacyPageRequest struct {
@@ -286,14 +287,16 @@ type QueryIncomesRequest struct {
 	After               int64            `form:"after"`
 	Before              int64            `form:"before"`
 	ActionType          []NftEventAction `form:"action_type"`
-	IscnOwnership       string           `form:"iscn_ownership"`
+	IsIscnOwner         *bool            `form:"is_iscn_owner"`
+	IsRoyalty           *bool            `form:"is_royalty"`
 	ExcludeSelfPurchase bool             `form:"exclude_self_purchase"`
 	OrderBy             string           `form:"order_by"`
 }
 
 type NftIncomeResponse struct {
-	Address string `json:"address"`
-	Amount  uint64 `json:"amount"`
+	Address   string `json:"address"`
+	Amount    uint64 `json:"amount"`
+	IsRoyalty bool   `json:"is_royalty"`
 }
 
 type NftClassIncomeResponse struct {
