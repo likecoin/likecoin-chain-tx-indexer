@@ -126,16 +126,9 @@ func marketplaceDeal(payload *Payload, event *types.StringEvent, actionType db.N
 
 	msgIndex := payload.MsgIndex
 	msgEvents := payload.EventsList[msgIndex].Events
-	rawIncomes := GetRawIncomeFromNftMarketplaceMsgEvents(msgEvents)
-	incomeMap := utils.AggregateRawIncomes(rawIncomes)
-	for address, amount := range incomeMap {
-		payload.Batch.InsertNftIncome(db.NftIncome{
-			ClassId: e.ClassId,
-			NftId:   e.NftId,
-			TxHash:  payload.TxHash,
-			Address: address,
-			Amount:  amount,
-		})
+	incomes := GetIncomesFromBuySellNftMsg(msgEvents, payload.TxHash)
+	for _, income := range incomes {
+		payload.Batch.InsertNftIncome(income)
 	}
 	attachNftEvent(&e, payload)
 	payload.Batch.InsertNftEvent(e)
@@ -144,8 +137,16 @@ func marketplaceDeal(payload *Payload, event *types.StringEvent, actionType db.N
 
 // marketplace messages may contain multiple coin_received events,
 // should not directly use GetEventValue() or GetEventsValue() since it only returns the first one
-func GetRawIncomeFromNftMarketplaceMsgEvents(events types.StringEvents) []utils.RawIncome {
-	incomes := []utils.RawIncome{}
+func GetIncomesFromBuySellNftMsg(events types.StringEvents, txHash string) []db.NftIncome {
+	seller := ""
+	for _, event := range events {
+		seller = utils.GetEventValue(&event, "seller")
+		if seller != "" {
+			break
+		}
+	}
+
+	rawIncomes := []utils.RawIncome{}
 	address := ""
 	amount := uint64(0)
 	for _, event := range events {
@@ -165,15 +166,40 @@ func GetRawIncomeFromNftMarketplaceMsgEvents(events types.StringEvents) []utils.
 					amount = coin.Amount.Uint64()
 				}
 				if address != "" && amount != 0 {
-					incomes = append(incomes, utils.RawIncome{
-						Address: address,
-						Amount:  amount,
+					rawIncomes = append(rawIncomes, utils.RawIncome{
+						Address:   address,
+						Amount:    amount,
+						IsRoyalty: address != seller,
 					})
 					address = ""
 					amount = 0
 				}
 			}
 		}
+	}
+
+	aggregatedIncomes := utils.AggregateRawIncomes(rawIncomes)
+
+	classId := ""
+	nftId := ""
+	for _, event := range events {
+		classId = utils.GetEventValue(&event, "class_id")
+		nftId = utils.GetEventValue(&event, "nft_id")
+		if classId != "" && nftId != "" {
+			break
+		}
+	}
+
+	incomes := []db.NftIncome{}
+	for _, income := range aggregatedIncomes {
+		incomes = append(incomes, db.NftIncome{
+			ClassId:   classId,
+			NftId:     nftId,
+			TxHash:    txHash,
+			Address:   income.Address,
+			Amount:    income.Amount,
+			IsRoyalty: income.IsRoyalty,
+		})
 	}
 	return incomes
 }

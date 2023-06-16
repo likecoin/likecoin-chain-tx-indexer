@@ -76,14 +76,28 @@ func ParseCoinFromEventString(coinStr string) (uint64, error) {
 }
 
 type RawIncome struct {
-	Address string
-	Amount  uint64
+	Address   string
+	Amount    uint64
+	IsRoyalty bool
 }
 
-func AggregateRawIncomes(rawIncomes []RawIncome) map[string]uint64 {
-	incomeMap := make(map[string]uint64)
-	for _, ri := range rawIncomes {
-		incomeMap[ri.Address] += ri.Amount
+func AggregateRawIncomes(rawIncomes []RawIncome) []RawIncome {
+	incomeMap := map[bool]map[string]uint64{}
+	for _, income := range rawIncomes {
+		if incomeMap[income.IsRoyalty] == nil {
+			incomeMap[income.IsRoyalty] = map[string]uint64{}
+		}
+		incomeMap[income.IsRoyalty][income.Address] += income.Amount
 	}
-	return incomeMap
+	incomes := []RawIncome{}
+	for isRoyalty, incomeMap := range incomeMap {
+		for address, amount := range incomeMap {
+			incomes = append(incomes, RawIncome{
+				Address:   address,
+				IsRoyalty: isRoyalty,
+				Amount:    amount,
+			})
+		}
+	}
+	return incomes
 }

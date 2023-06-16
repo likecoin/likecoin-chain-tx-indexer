@@ -191,6 +191,7 @@ func TestSendNft(t *testing.T) {
 
 func TestSendNftWithPrice(t *testing.T) {
 	defer CleanupTestData(Conn)
+	buyer := ADDR_02_LIKE
 	prefixA := "iscn://testing/aaaaaa"
 	iscns := []IscnInsert{
 		{
@@ -208,21 +209,21 @@ func TestSendNftWithPrice(t *testing.T) {
 		{
 			NftId:   "testing-nft-919775",
 			ClassId: nftClasses[0].Id,
-			Owner:   ADDR_01_LIKE,
+			Owner:   buyer,
 		},
 	}
 	timestamp := time.Unix(1234567890, 0).UTC()
-	receiver := ADDR_01_LIKE
-	stakeholder1 := ADDR_02_LIKE
-	stakeholder2 := ADDR_03_LIKE
+	iscnOwner := iscns[0].Owner
+	apiWallet := ADDR_03_LIKE
+	stakeholder := apiWallet
 	price := uint64(100)
 	royalty1 := uint64(78)
 	royalty2 := price - royalty1
 	txs := []string{
 		fmt.Sprintf(`
-{"height":"1234","txhash":"AAAAAA","logs":[{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[1]s"},{"key":"amount","value":"%[7]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[7]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"cosmos.authz.v1beta1.EventRevoke","attributes":[{"key":"grantee","value":"\"%[1]s\""},{"key":"granter","value":"\"%[2]s\""},{"key":"msg_type_url","value":"\"/cosmos.bank.v1beta1.MsgSend\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.authz.v1beta1.MsgExec"},{"key":"sender","value":"%[2]s"},{"key":"authz_msg_index","value":"0"},{"key":"module","value":"bank"},{"key":"authz_msg_index","value":"0"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[1]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[7]dnanolike"},{"key":"authz_msg_index","value":"0"}]}]},{"events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[4]s\""},{"key":"id","value":"\"%[5]s\""},{"key":"receiver","value":"\"%[2]s\""},{"key":"sender","value":"\"%[1]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]},{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[3]s"},{"key":"amount","value":"%[9]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[9]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[1]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[3]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"%[9]dnanolike"}]}]},{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[2]s"},{"key":"amount","value":"%[8]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[8]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[1]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[2]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"%[8]dnanolike"}]}]}],"tx":{"body":{"messages":[{"@type":"/cosmos.authz.v1beta1.MsgExec","grantee":"%[1]s","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[1]s","amount":[{"denom":"nanolike","amount":"%[7]d"}]}]},{"@type":"/cosmos.nft.v1beta1.MsgSend","class_id":"%[4]s","id":"%[5]s","sender":"%[1]s","receiver":"%[2]s"},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[3]s","amount":[{"denom":"nanolike","amount":"%[9]d"}]},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[2]s","amount":[{"denom":"nanolike","amount":"%[8]d"}]}],"memo":"AAAAAA"}},"timestamp":"%[6]s"}`,
-			receiver, stakeholder1, stakeholder2, nftClasses[0].Id, nfts[0].NftId,
-			timestamp.Format(time.RFC3339), price, royalty1, royalty2),
+{"height":"1234","txhash":"AAAAAA","logs":[{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[2]s"},{"key":"amount","value":"%[8]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[8]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"cosmos.authz.v1beta1.EventRevoke","attributes":[{"key":"grantee","value":"\"%[2]s\""},{"key":"granter","value":"\"%[1]s\""},{"key":"msg_type_url","value":"\"/cosmos.bank.v1beta1.MsgSend\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.authz.v1beta1.MsgExec"},{"key":"sender","value":"%[1]s"},{"key":"authz_msg_index","value":"0"},{"key":"module","value":"bank"},{"key":"authz_msg_index","value":"0"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[2]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"%[8]dnanolike"},{"key":"authz_msg_index","value":"0"}]}]},{"events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[5]s\""},{"key":"id","value":"\"%[6]s\""},{"key":"receiver","value":"\"%[1]s\""},{"key":"sender","value":"\"%[2]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]},{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[4]s"},{"key":"amount","value":"%[10]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[10]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[4]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[10]dnanolike"}]}]},{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[3]s"},{"key":"amount","value":"%[9]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[9]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[3]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[9]dnanolike"}]}]}],"tx":{"body":{"messages":[{"@type":"/cosmos.authz.v1beta1.MsgExec","grantee":"%[2]s","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[2]s","amount":[{"denom":"nanolike","amount":"%[8]d"}]}]},{"@type":"/cosmos.nft.v1beta1.MsgSend","class_id":"%[5]s","id":"%[6]s","sender":"%[2]s","receiver":"%[1]s"},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[3]s","amount":[{"denom":"nanolike","amount":"%[10]d"}]},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[4]s","amount":[{"denom":"nanolike","amount":"%[9]d"}]}],"memo":"AAAAAA"}},"timestamp":"%[7]s"}`,
+			buyer, apiWallet, iscnOwner, stakeholder, nftClasses[0].Id,
+			nfts[0].NftId, timestamp.Format(time.RFC3339), price, royalty1, royalty2),
 	}
 	InsertTestData(DBTestData{
 		Iscns:      iscns,
@@ -248,8 +249,8 @@ func TestSendNftWithPrice(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, eventRes.Events, 1)
 	require.Equal(t, nfts[0].NftId, eventRes.Events[0].NftId)
-	require.Equal(t, ADDR_01_LIKE, eventRes.Events[0].Sender)
-	require.Equal(t, ADDR_02_LIKE, eventRes.Events[0].Receiver)
+	require.Equal(t, apiWallet, eventRes.Events[0].Sender)
+	require.Equal(t, buyer, eventRes.Events[0].Receiver)
 	require.Equal(t, "AAAAAA", eventRes.Events[0].TxHash)
 	require.Equal(t, ACTION_SEND, eventRes.Events[0].Action)
 	require.Equal(t, price, eventRes.Events[0].Price)
@@ -263,10 +264,12 @@ func TestSendNftWithPrice(t *testing.T) {
 	classIncome := incomesRes.ClassIncomes[0]
 	require.Equal(t, classIncome.ClassId, nftClasses[0].Id)
 	require.Len(t, classIncome.Incomes, 2)
-	require.Equal(t, stakeholder1, classIncome.Incomes[0].Address)
+	require.Equal(t, iscnOwner, classIncome.Incomes[0].Address)
 	require.Equal(t, royalty1, classIncome.Incomes[0].Amount)
-	require.Equal(t, stakeholder2, classIncome.Incomes[1].Address)
+	require.Equal(t, true, classIncome.Incomes[0].IsRoyalty)
+	require.Equal(t, stakeholder, classIncome.Incomes[1].Address)
 	require.Equal(t, royalty2, classIncome.Incomes[1].Amount)
+	require.Equal(t, true, classIncome.Incomes[1].IsRoyalty)
 	require.Equal(t, price, classIncome.TotalAmount)
 	require.Equal(t, price, classIncome.Sales)
 	require.Equal(t, incomesRes.TotalAmount, classIncome.TotalAmount)
@@ -323,10 +326,10 @@ func TestSendMultipleNftsWithPrice(t *testing.T) {
 	}
 	timestamp := time.Unix(1234567890, 0).UTC()
 	apiWallet := ADDR_04_LIKE
-	stakeholderA1 := ADDR_02_LIKE
-	stakeholderA2 := apiWallet
-	stakeholderB1 := ADDR_03_LIKE
-	stakeholderB2 := apiWallet
+	iscnOwnerA := iscns[1].Owner
+	stakeholderA := apiWallet
+	iscnOwnerB := iscns[2].Owner
+	stakeholderB := apiWallet
 	priceA := uint64(100)
 	priceB := uint64(200)
 	royaltyA1 := uint64(95)
@@ -335,9 +338,9 @@ func TestSendMultipleNftsWithPrice(t *testing.T) {
 	royaltyB2 := priceB - royaltyB1
 	txs := []string{
 		fmt.Sprintf(`
-{"height":"1234","txhash":"AAAAAA","logs":[{"msg_index":0,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[2]s"},{"key":"amount","value":"%[12]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[12]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.authz.v1beta1.MsgExec"},{"key":"sender","value":"%[1]s"},{"key":"authz_msg_index","value":"0"},{"key":"module","value":"bank"},{"key":"authz_msg_index","value":"0"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[1]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[12]dnanolike"},{"key":"authz_msg_index","value":"0"}]}]},{"msg_index":1,"events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[7]s\""},{"key":"id","value":"\"%[9]s\""},{"key":"receiver","value":"\"%[1]s\""},{"key":"sender","value":"\"%[2]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]},{"msg_index":2,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[4]s"},{"key":"amount","value":"%[15]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[15]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[4]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[15]dnanolike"}]}]},{"msg_index":3,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[3]s"},{"key":"amount","value":"%[14]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[14]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[3]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[14]dnanolike"}]}]},{"msg_index":4,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[2]s"},{"key":"amount","value":"%[13]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[13]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.authz.v1beta1.MsgExec"},{"key":"sender","value":"%[1]s"},{"key":"authz_msg_index","value":"0"},{"key":"module","value":"bank"},{"key":"authz_msg_index","value":"0"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[2]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"%[13]dnanolike"},{"key":"authz_msg_index","value":"0"}]}]},{"msg_index":5,"events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[8]s\""},{"key":"id","value":"\"%[10]s\""},{"key":"receiver","value":"\"%[1]s\""},{"key":"sender","value":"\"%[2]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]},{"msg_index":6,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[6]s"},{"key":"amount","value":"%[17]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[17]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[6]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[17]dnanolike"}]}]},{"msg_index":7,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[5]s"},{"key":"amount","value":"%[16]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[16]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[5]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[16]dnanolike"}]}]}],"tx":{"body":{"messages":[{"@type":"/cosmos.authz.v1beta1.MsgExec","grantee":"%[2]s","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[2]s","amount":[{"denom":"nanolike","amount":"%[12]d"}]}]},{"@type":"/cosmos.nft.v1beta1.MsgSend","class_id":"%[7]s","id":"%[9]s","sender":"%[2]s","receiver":"%[1]s"},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[4]s","amount":[{"denom":"nanolike","amount":"%[15]d"}]},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[3]s","amount":[{"denom":"nanolike","amount":"%[14]d"}]},{"@type":"/cosmos.authz.v1beta1.MsgExec","grantee":"%[2]s","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[2]s","amount":[{"denom":"nanolike","amount":"%[13]d"}]}]},{"@type":"/cosmos.nft.v1beta1.MsgSend","class_id":"%[8]s","id":"%[10]s","sender":"%[2]s","receiver":"%[1]s"},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[6]s","amount":[{"denom":"nanolike","amount":"%[17]d"}]},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[5]s","amount":[{"denom":"nanolike","amount":"%[16]d"}]}],"memo":"(multiple purchases)"}},"timestamp":"%[11]s"}`,
-			buyer, apiWallet, stakeholderA1, stakeholderA2, stakeholderB1,
-			stakeholderB2, nftClasses[0].Id, nftClasses[1].Id, nfts[0].NftId, nfts[1].NftId,
+{"height":"1234","txhash":"AAAAAA","logs":[{"msg_index":0,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[2]s"},{"key":"amount","value":"%[12]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[12]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.authz.v1beta1.MsgExec"},{"key":"sender","value":"%[1]s"},{"key":"authz_msg_index","value":"0"},{"key":"module","value":"bank"},{"key":"authz_msg_index","value":"0"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[2]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"%[12]dnanolike"},{"key":"authz_msg_index","value":"0"}]}]},{"msg_index":1,"events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[7]s\""},{"key":"id","value":"\"%[9]s\""},{"key":"receiver","value":"\"%[1]s\""},{"key":"sender","value":"\"%[2]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]},{"msg_index":2,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[4]s"},{"key":"amount","value":"%[15]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[15]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[4]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[15]dnanolike"}]}]},{"msg_index":3,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[3]s"},{"key":"amount","value":"%[14]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[14]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[3]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[14]dnanolike"}]}]},{"msg_index":4,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[2]s"},{"key":"amount","value":"%[13]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[1]s"},{"key":"amount","value":"%[13]dnanolike"},{"key":"authz_msg_index","value":"0"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.authz.v1beta1.MsgExec"},{"key":"sender","value":"%[1]s"},{"key":"authz_msg_index","value":"0"},{"key":"module","value":"bank"},{"key":"authz_msg_index","value":"0"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[2]s"},{"key":"sender","value":"%[1]s"},{"key":"amount","value":"%[13]dnanolike"},{"key":"authz_msg_index","value":"0"}]}]},{"msg_index":5,"events":[{"type":"cosmos.nft.v1beta1.EventSend","attributes":[{"key":"class_id","value":"\"%[8]s\""},{"key":"id","value":"\"%[10]s\""},{"key":"receiver","value":"\"%[1]s\""},{"key":"sender","value":"\"%[2]s\""}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.nft.v1beta1.MsgSend"}]}]},{"msg_index":6,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[6]s"},{"key":"amount","value":"%[17]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[17]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[6]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[17]dnanolike"}]}]},{"msg_index":7,"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"%[5]s"},{"key":"amount","value":"%[16]dnanolike"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"%[2]s"},{"key":"amount","value":"%[16]dnanolike"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"%[2]s"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"%[5]s"},{"key":"sender","value":"%[2]s"},{"key":"amount","value":"%[16]dnanolike"}]}]}],"tx":{"body":{"messages":[{"@type":"/cosmos.authz.v1beta1.MsgExec","grantee":"%[2]s","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[2]s","amount":[{"denom":"nanolike","amount":"%[12]d"}]}]},{"@type":"/cosmos.nft.v1beta1.MsgSend","class_id":"%[7]s","id":"%[9]s","sender":"%[2]s","receiver":"%[1]s"},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[4]s","amount":[{"denom":"nanolike","amount":"%[15]d"}]},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[3]s","amount":[{"denom":"nanolike","amount":"%[14]d"}]},{"@type":"/cosmos.authz.v1beta1.MsgExec","grantee":"%[2]s","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[1]s","to_address":"%[2]s","amount":[{"denom":"nanolike","amount":"%[13]d"}]}]},{"@type":"/cosmos.nft.v1beta1.MsgSend","class_id":"%[8]s","id":"%[10]s","sender":"%[2]s","receiver":"%[1]s"},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[6]s","amount":[{"denom":"nanolike","amount":"%[17]d"}]},{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%[2]s","to_address":"%[5]s","amount":[{"denom":"nanolike","amount":"%[16]d"}]}],"memo":"(multiple purchases)"}},"timestamp":"%[11]s"}`,
+			buyer, apiWallet, iscnOwnerA, stakeholderA, iscnOwnerB,
+			stakeholderB, nftClasses[0].Id, nftClasses[1].Id, nfts[0].NftId, nfts[1].NftId,
 			timestamp.Format(time.RFC3339), priceA, priceB, royaltyA1, royaltyA2,
 			royaltyB1, royaltyB2,
 		),
@@ -400,10 +403,12 @@ func TestSendMultipleNftsWithPrice(t *testing.T) {
 	classIncome := incomesRes.ClassIncomes[0]
 	require.Equal(t, classIncome.ClassId, nftClasses[0].Id)
 	require.Len(t, classIncome.Incomes, 2)
-	require.Equal(t, stakeholderA1, classIncome.Incomes[0].Address)
+	require.Equal(t, iscnOwnerA, classIncome.Incomes[0].Address)
 	require.Equal(t, royaltyA1, classIncome.Incomes[0].Amount)
-	require.Equal(t, stakeholderA2, classIncome.Incomes[1].Address)
+	require.Equal(t, true, classIncome.Incomes[0].IsRoyalty)
+	require.Equal(t, stakeholderA, classIncome.Incomes[1].Address)
 	require.Equal(t, royaltyA2, classIncome.Incomes[1].Amount)
+	require.Equal(t, true, classIncome.Incomes[1].IsRoyalty)
 	require.Equal(t, priceA, classIncome.TotalAmount)
 	require.Equal(t, priceA, classIncome.Sales)
 	require.Equal(t, incomesRes.TotalAmount, classIncome.TotalAmount)
@@ -417,10 +422,12 @@ func TestSendMultipleNftsWithPrice(t *testing.T) {
 	classIncome = incomesRes.ClassIncomes[0]
 	require.Equal(t, classIncome.ClassId, nftClasses[1].Id)
 	require.Len(t, classIncome.Incomes, 2)
-	require.Equal(t, stakeholderB1, classIncome.Incomes[0].Address)
+	require.Equal(t, iscnOwnerB, classIncome.Incomes[0].Address)
 	require.Equal(t, royaltyB1, classIncome.Incomes[0].Amount)
-	require.Equal(t, stakeholderB2, classIncome.Incomes[1].Address)
+	require.Equal(t, true, classIncome.Incomes[0].IsRoyalty)
+	require.Equal(t, stakeholderB, classIncome.Incomes[1].Address)
 	require.Equal(t, royaltyB2, classIncome.Incomes[1].Amount)
+	require.Equal(t, true, classIncome.Incomes[1].IsRoyalty)
 	require.Equal(t, priceB, classIncome.TotalAmount)
 	require.Equal(t, priceB, classIncome.Sales)
 	require.Equal(t, incomesRes.TotalAmount, classIncome.TotalAmount)

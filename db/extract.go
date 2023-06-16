@@ -305,10 +305,10 @@ func (batch *Batch) InsertNFTMarketplaceItem(item NftMarketplaceItem) {
 
 func (batch *Batch) InsertNftIncome(income NftIncome) {
 	sql := `
-	INSERT INTO nft_income (class_id, nft_id, tx_hash, address, amount)
-	VALUES ($1, $2, $3, $4, $5)
+	INSERT INTO nft_income (class_id, nft_id, tx_hash, address, amount, is_royalty)
+	VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	batch.Batch.Queue(sql, income.ClassId, income.NftId, income.TxHash, income.Address, income.Amount)
+	batch.Batch.Queue(sql, income.ClassId, income.NftId, income.TxHash, income.Address, income.Amount, income.IsRoyalty)
 	_ = pubsub.Publish("NewNFTIncome", income)
 }
 
