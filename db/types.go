@@ -98,10 +98,10 @@ type NoTimeZoneTime struct {
 	time.Time
 }
 
-const noTimeZoneTimeLayout = "2006-01-02T15:04:05"
+const NoTimeZoneTimeLayout = "2006-01-02T15:04:05"
 
 func (ntzt *NoTimeZoneTime) UnmarshalJSON(b []byte) error {
-	t, err := time.Parse(noTimeZoneTimeLayout, strings.Trim(string(b), "\""))
+	t, err := time.Parse(NoTimeZoneTimeLayout, strings.Trim(string(b), "\""))
 	if err != nil {
 		return err
 	}
