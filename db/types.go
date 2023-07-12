@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -93,6 +94,21 @@ type NftClassParent struct {
 	Account      string `json:"account"`
 }
 
+type NoTimeZoneTime struct {
+	time.Time
+}
+
+const noTimeZoneTimeLayout = "2006-01-02T15:04:05"
+
+func (ntzt *NoTimeZoneTime) UnmarshalJSON(b []byte) error {
+	t, err := time.Parse(noTimeZoneTimeLayout, strings.Trim(string(b), "\""))
+	if err != nil {
+		return err
+	}
+	ntzt.Time = t
+	return nil
+}
+
 type Nft struct {
 	NftId          string          `json:"nft_id"`
 	ClassId        string          `json:"class_id"`
@@ -102,7 +118,7 @@ type Nft struct {
 	Metadata       json.RawMessage `json:"metadata"`
 	Timestamp      time.Time       `json:"timestamp"`
 	LatestPrice    uint64          `json:"latest_price,omitempty"`
-	PriceUpdatedAt *time.Time      `json:"price_updated_at,omitempty"`
+	PriceUpdatedAt *NoTimeZoneTime `json:"price_updated_at,omitempty"`
 }
 
 type NftEventAction string
