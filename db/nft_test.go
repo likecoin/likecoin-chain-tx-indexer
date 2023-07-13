@@ -49,26 +49,32 @@ func TestQueryNftClass(t *testing.T) {
 		{
 			NftId:   "testing-nft-1123123098",
 			ClassId: nftClasses[0].Id,
+			Owner:   ADDR_01_COSMOS,
 		},
 		{
 			NftId:   "testing-nft-1123123099",
 			ClassId: nftClasses[0].Id,
+			Owner:   ADDR_02_COSMOS,
 		},
 		{
 			NftId:   "testing-nft-1123123100",
 			ClassId: nftClasses[1].Id,
+			Owner:   ADDR_02_COSMOS,
 		},
 		{
 			NftId:   "testing-nft-1123123101",
 			ClassId: nftClasses[1].Id,
+			Owner:   ADDR_03_COSMOS,
 		},
 		{
 			NftId:   "testing-nft-1123123102",
 			ClassId: nftClasses[2].Id,
+			Owner:   ADDR_03_COSMOS,
 		},
 		{
 			NftId:   "testing-nft-1123123103",
 			ClassId: nftClasses[2].Id,
+			Owner:   ADDR_01_COSMOS,
 		},
 	}
 	InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
@@ -139,6 +145,30 @@ func TestQueryNftClass(t *testing.T) {
 			QueryClassRequest{
 				IscnOwner: []string{ADDR_02_LIKE, ADDR_03_LIKE},
 			}, 3, []string{nftClasses[0].Id, nftClasses[1].Id, nftClasses[2].Id},
+		},
+		{
+			"query by NFT owner 1 (LIKE prefix)",
+			QueryClassRequest{Owner: ADDR_01_LIKE}, 2,
+			[]string{nftClasses[0].Id, nftClasses[2].Id},
+		},
+		{
+			"query by non existing NFT owner",
+			QueryClassRequest{Owner: "nosuchowner"}, 0, nil,
+		},
+		{
+			"query by ISCN owner 2, NFT owner 1 (LIKE prefix)",
+			QueryClassRequest{
+				IscnOwner: []string{ADDR_02_LIKE},
+				Owner:     ADDR_01_LIKE,
+			}, 1,
+			[]string{nftClasses[0].Id},
+		},
+		{
+			"query by ISCN owner 3, NFT owner 2 (LIKE prefix)",
+			QueryClassRequest{
+				IscnOwner: []string{ADDR_03_LIKE},
+				Owner:     ADDR_02_LIKE,
+			}, 0, nil,
 		},
 	}
 
