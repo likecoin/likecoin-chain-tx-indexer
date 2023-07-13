@@ -30,7 +30,10 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	LEFT JOIN iscn AS i ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	LEFT JOIN iscn_latest_version
 	ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
-	JOIN nft AS n ON n.class_id = c.class_id
+	LEFT JOIN nft AS n 
+		-- this is for optimizing out a left join when nft data is not needed
+		ON ($9::text[] IS NOT NULL AND cardinality($9::text[]) > 0)
+		AND n.class_id = c.class_id
 	WHERE ($4 = '' OR c.parent_iscn_id_prefix = $4)
 		AND ($5::text[] IS NULL OR cardinality($5::text[]) = 0 OR c.parent_account = ANY($5))
 		AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR i.owner = ANY($6))
