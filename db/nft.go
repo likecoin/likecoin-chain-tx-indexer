@@ -13,6 +13,7 @@ import (
 func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryClassResponse, error) {
 	accountVariations := utils.ConvertAddressPrefixes(q.Account, AddressPrefixes)
 	iscnOwnerVariations := utils.ConvertAddressArrayPrefixes(q.IscnOwner, AddressPrefixes)
+	ownerVariations := utils.ConvertAddressPrefixes(q.Owner, AddressPrefixes)
 	sql := fmt.Sprintf(`
 	SELECT DISTINCT ON (c.id)
 		c.id, c.class_id, c.name, c.description, c.symbol,
@@ -29,9 +30,11 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	LEFT JOIN iscn AS i ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	LEFT JOIN iscn_latest_version
 	ON i.iscn_id_prefix = iscn_latest_version.iscn_id_prefix
+	JOIN nft AS n ON n.class_id = c.class_id
 	WHERE ($4 = '' OR c.parent_iscn_id_prefix = $4)
 		AND ($5::text[] IS NULL OR cardinality($5::text[]) = 0 OR c.parent_account = ANY($5))
 		AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR i.owner = ANY($6))
+		AND ($9::text[] IS NULL OR cardinality($9::text[]) = 0 OR n.owner = ANY($9))
 		AND ($8 = true OR i.version = iscn_latest_version.latest_version)
 		AND ($1 = 0 OR c.id > $1)
 		AND ($2 = 0 OR c.id < $2)
@@ -43,7 +46,7 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	rows, err := conn.Query(
 		ctx, sql,
 		p.After(), p.Before(), p.Limit, q.IscnIdPrefix, accountVariations,
-		iscnOwnerVariations, q.Expand, q.AllIscnVersions)
+		iscnOwnerVariations, q.Expand, q.AllIscnVersions, ownerVariations)
 	if err != nil {
 		logger.L.Errorw("Failed to query nft class by iscn id prefix", "error", err, "q", q)
 		return QueryClassResponse{}, fmt.Errorf("query nft class by iscn id prefix error: %w", err)
