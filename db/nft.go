@@ -24,6 +24,7 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 		FROM nft as n
 		WHERE n.class_id = c.class_id
 			AND $7 = true
+			AND ($9::text[] IS NULL OR cardinality($9::text[]) = 0 OR n.owner = ANY($9))
 		GROUP BY n.class_id
 	) as nfts
 	FROM nft_class as c
