@@ -18,15 +18,34 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 	SELECT DISTINCT ON (c.id)
 		c.id, c.class_id, c.name, c.description, c.symbol,
 		c.uri, c.uri_hash, c.config, c.metadata, c.latest_price,
-		c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at, c.price_updated_at, i.owner,
-	(
-		SELECT array_agg(row_to_json((n.*)))
-		FROM nft as n
-		WHERE n.class_id = c.class_id
-			AND $7 = true
-			AND ($9::text[] IS NULL OR cardinality($9::text[]) = 0 OR n.owner = ANY($9))
-		GROUP BY n.class_id
-	) as nfts
+		c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at, c.price_updated_at,
+		i.owner,
+		(
+			SELECT COUNT(*)
+			FROM nft AS n
+			WHERE ($9::text[] IS NOT NULL AND cardinality($9::text[]) > 0 AND n.owner = ANY($9))
+				AND n.class_id = c.class_id
+			GROUP BY n.class_id
+		) AS nft_owned_count,
+		(
+			SELECT MAX(timestamp)
+			FROM nft_event AS e
+			WHERE ($9::text[] IS NOT NULL AND cardinality($9::text[]) > 0) 
+				AND (
+					e.receiver = ANY($9)
+					OR (e.sender = ANY($9) AND e.action = 'mint_nft') -- for pre-mint nfts
+				)
+				AND e.class_id = c.class_id
+			GROUP BY e.class_id
+		) AS nft_last_owned_at,
+		(
+			SELECT array_agg(row_to_json((n.*)))
+			FROM nft as n
+			WHERE n.class_id = c.class_id
+				AND $7 = true
+				AND ($9::text[] IS NULL OR cardinality($9::text[]) = 0 OR n.owner = ANY($9))
+			GROUP BY n.class_id
+		) as nfts
 	FROM nft_class as c
 	LEFT JOIN iscn AS i ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	LEFT JOIN iscn_latest_version
@@ -66,7 +85,7 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 			&res.Pagination.NextKey, &c.Id, &c.Name, &c.Description, &c.Symbol,
 			&c.URI, &c.URIHash, &c.Config, &c.Metadata, &c.LatestPrice,
 			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account, &c.CreatedAt, &c.PriceUpdatedAt,
-			&c.Owner, &nfts,
+			&c.Owner, &c.NftOwnedCount, &c.NftLastOwnedAt, &nfts,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft class", "error", err)
 			return QueryClassResponse{}, fmt.Errorf("query nft class data failed: %w", err)
