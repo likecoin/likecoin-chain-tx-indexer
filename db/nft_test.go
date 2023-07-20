@@ -853,6 +853,7 @@ func TestQueryNftRanking(t *testing.T) {
 		name            string
 		query           QueryRankingRequest
 		classIDs        []string
+		Owners          []string
 		totalSoldValues []int64
 		soldCounts      []int
 	}{
@@ -860,6 +861,7 @@ func TestQueryNftRanking(t *testing.T) {
 			name:            "empty request",
 			query:           QueryRankingRequest{},
 			classIDs:        []string{nftClasses[0].Id, nftClasses[1].Id},
+			Owners:          []string{iscns[1].Owner, iscns[2].Owner},
 			soldCounts:      []int{2, 1},
 			totalSoldValues: []int64{3000, 2500},
 		},
@@ -872,6 +874,7 @@ func TestQueryNftRanking(t *testing.T) {
 			name:            "query by creator (2)",
 			query:           QueryRankingRequest{Creator: ADDR_06_COSMOS},
 			classIDs:        []string{nftClasses[0].Id},
+			Owners:          []string{iscns[1].Owner},
 			soldCounts:      []int{2},
 			totalSoldValues: []int64{3000},
 		},
@@ -879,6 +882,7 @@ func TestQueryNftRanking(t *testing.T) {
 			name:            "query by type",
 			query:           QueryRankingRequest{Type: "CreativeWorks"},
 			classIDs:        []string{nftClasses[0].Id},
+			Owners:          []string{iscns[1].Owner},
 			soldCounts:      []int{2},
 			totalSoldValues: []int64{3000},
 		},
@@ -886,6 +890,7 @@ func TestQueryNftRanking(t *testing.T) {
 			name:            "query by stakeholder ID",
 			query:           QueryRankingRequest{StakeholderId: iscns[0].Stakeholders[0].Entity.Id},
 			classIDs:        []string{nftClasses[0].Id},
+			Owners:          []string{iscns[1].Owner},
 			soldCounts:      []int{2},
 			totalSoldValues: []int64{3000},
 		},
@@ -893,6 +898,7 @@ func TestQueryNftRanking(t *testing.T) {
 			name:            "query by stakeholder name",
 			query:           QueryRankingRequest{StakeholderName: iscns[2].Stakeholders[1].Entity.Name},
 			classIDs:        []string{nftClasses[1].Id},
+			Owners:          []string{iscns[2].Owner},
 			soldCounts:      []int{1},
 			totalSoldValues: []int64{2500},
 		},
@@ -900,6 +906,7 @@ func TestQueryNftRanking(t *testing.T) {
 			name:            "query by collector",
 			query:           QueryRankingRequest{Collector: ADDR_03_COSMOS},
 			classIDs:        []string{nftClasses[1].Id, nftClasses[0].Id},
+			Owners:          []string{iscns[2].Owner, iscns[1].Owner},
 			soldCounts:      []int{1, 1},
 			totalSoldValues: []int64{2500, 2000},
 		},
@@ -907,6 +914,7 @@ func TestQueryNftRanking(t *testing.T) {
 			name:            "query created after",
 			query:           QueryRankingRequest{CreatedAfter: 1},
 			classIDs:        []string{nftClasses[1].Id},
+			Owners:          []string{iscns[2].Owner},
 			soldCounts:      []int{1},
 			totalSoldValues: []int64{2500},
 		},
@@ -914,6 +922,7 @@ func TestQueryNftRanking(t *testing.T) {
 			name:            "query created before",
 			query:           QueryRankingRequest{CreatedBefore: 2},
 			classIDs:        []string{nftClasses[0].Id},
+			Owners:          []string{iscns[1].Owner},
 			soldCounts:      []int{2},
 			totalSoldValues: []int64{3000},
 		},
@@ -921,6 +930,7 @@ func TestQueryNftRanking(t *testing.T) {
 			name:            "query sold after",
 			query:           QueryRankingRequest{After: 4},
 			classIDs:        []string{nftClasses[1].Id},
+			Owners:          []string{iscns[2].Owner},
 			soldCounts:      []int{1},
 			totalSoldValues: []int64{2500},
 		},
@@ -928,6 +938,7 @@ func TestQueryNftRanking(t *testing.T) {
 			name:            "query sold before",
 			query:           QueryRankingRequest{Before: 4},
 			classIDs:        []string{nftClasses[0].Id},
+			Owners:          []string{iscns[1].Owner},
 			soldCounts:      []int{1},
 			totalSoldValues: []int64{1000},
 		},
@@ -944,6 +955,7 @@ func TestQueryNftRanking(t *testing.T) {
 		require.Len(t, res.Classes, len(testCase.classIDs), "test case #%02d (%s): expect len(res.Classes) = %d, got %d. results = %#v", i, testCase.name, len(testCase.classIDs), len(res.Classes), res.Classes)
 		for j, class := range res.Classes {
 			require.Equal(t, testCase.classIDs[j], class.NftClass.Id, "test case #%02d (%s), class %d: expect class ID = %s, got %s. results = %#v", i, testCase.name, j, testCase.classIDs[j], class.NftClass.Id, res.Classes)
+			require.Equal(t, testCase.Owners[j], class.Owner, "test case #%02d (%s), class %d: expect owner = %s, got %s. results = %#v", i, testCase.name, j, testCase.Owners[j], class.Owner, res.Classes)
 			require.Equal(t, testCase.soldCounts[j], class.SoldCount, "test case #%02d (%s), class %d: expect sold count = %d, got %d. results = %#v", i, testCase.name, j, testCase.soldCounts[j], class.SoldCount, res.Classes)
 			require.Equal(t, testCase.totalSoldValues[j], class.TotalSoldValue, "test case #%02d (%s), class %d: expect total sold value = %d, got %d. results = %#v", i, testCase.name, j, testCase.totalSoldValues[j], class.TotalSoldValue, res.Classes)
 		}
