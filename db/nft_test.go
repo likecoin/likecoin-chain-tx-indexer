@@ -80,11 +80,11 @@ func TestQueryNftClass(t *testing.T) {
 	InsertTestData(DBTestData{Iscns: iscns, NftClasses: nftClasses, Nfts: nfts})
 
 	testCases := []struct {
-		name     string
-		query    QueryClassRequest
-		count    int
-		classIds []string
-		nftIds   [][]string
+		name      string
+		query     QueryClassRequest
+		count     int
+		classIds  []string
+		nftCounts []int
 	}{
 		{"empty requset", QueryClassRequest{}, 3, nil, nil},
 		{
@@ -105,23 +105,16 @@ func TestQueryNftClass(t *testing.T) {
 			"query by iscn prefix, AllIscnVersions = false (2)",
 			QueryClassRequest{
 				IscnIdPrefix: nftClasses[2].Parent.IscnIdPrefix,
-				Expand:       true,
 			}, 1,
-			[]string{nftClasses[2].Id},
-			[][]string{{nfts[4].NftId, nfts[5].NftId}},
+			[]string{nftClasses[2].Id}, nil,
 		},
 		{
 			"query by iscn owner 1 (LIKE prefix), AllIscnVersions = true",
 			QueryClassRequest{
 				IscnOwner:       []string{ADDR_01_LIKE},
 				AllIscnVersions: true,
-				Expand:          true,
 			}, 2,
-			[]string{nftClasses[0].Id, nftClasses[1].Id},
-			[][]string{
-				{nfts[0].NftId, nfts[1].NftId},
-				{nfts[2].NftId, nfts[3].NftId},
-			},
+			[]string{nftClasses[0].Id, nftClasses[1].Id}, nil,
 		},
 		{
 			"query by iscn owner 1 (LIKE prefix), AllIscnVersions = false",
@@ -158,9 +151,9 @@ func TestQueryNftClass(t *testing.T) {
 		},
 		{
 			"query by NFT owner 1 (LIKE prefix)",
-			QueryClassRequest{Owner: ADDR_01_LIKE, Expand: true}, 2,
+			QueryClassRequest{Owner: ADDR_01_LIKE}, 2,
 			[]string{nftClasses[0].Id, nftClasses[2].Id},
-			[][]string{{nfts[0].NftId}, {nfts[5].NftId}},
+			[]int{1, 1},
 		},
 		{
 			"query by non existing NFT owner",
@@ -171,10 +164,9 @@ func TestQueryNftClass(t *testing.T) {
 			QueryClassRequest{
 				IscnOwner: []string{ADDR_02_LIKE},
 				Owner:     ADDR_01_LIKE,
-				Expand:    true,
 			}, 1,
 			[]string{nftClasses[0].Id},
-			[][]string{{nfts[0].NftId}},
+			[]int{1},
 		},
 		{
 			"query by ISCN owner 3, NFT owner 2 (LIKE prefix)",
@@ -193,11 +185,6 @@ NEXT_TESTCASE:
 		res, err := GetClasses(Conn, testCase.query, p)
 		require.NoError(t, err, "Error in test case #%02d (%s)", i, testCase.name)
 		require.Len(t, res.Classes, testCase.count, "error in test case #%02d (%s)", i, testCase.name)
-		for _, c := range res.Classes {
-			for _, n := range c.Nfts {
-				require.Equal(t, c.Id, n.ClassId, "error in test case #%02d (%s)", i, testCase.name)
-			}
-		}
 		if len(testCase.classIds) > 0 {
 		NEXT_CLASS:
 			for _, c := range res.Classes {
@@ -210,20 +197,9 @@ NEXT_TESTCASE:
 				continue NEXT_TESTCASE
 			}
 		}
-		if testCase.nftIds != nil {
-		NEXT_NFT:
-			for i, c := range res.Classes {
-				require.Len(t, c.Nfts, len(testCase.nftIds[i]), "error in test case #%02d (%s)", i, testCase.name)
-				for _, n := range c.Nfts {
-					for _, ids := range testCase.nftIds {
-						for _, id := range ids {
-							if n.NftId == id {
-								continue NEXT_NFT
-							}
-						}
-					}
-					continue NEXT_TESTCASE
-				}
+		if testCase.nftCounts != nil {
+			for j, c := range res.Classes {
+				require.Equal(t, &testCase.nftCounts[j], c.NftOwnedCount, "error in test case #%02d (%s): expect NftOwnedCount = %d, got %d. results = %#v", i, testCase.name, testCase.nftCounts[j], c.NftOwnedCount, res.Classes)
 			}
 		}
 	}

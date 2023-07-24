@@ -229,7 +229,6 @@ type QueryClassRequest struct {
 	Account         string   `form:"account"`
 	IscnOwner       []string `form:"iscn_owner"`
 	Owner           string   `form:"owner"`
-	Expand          bool     `form:"expand"`
 	AllIscnVersions bool     `form:"all_iscn_versions"`
 }
 
@@ -243,8 +242,6 @@ type NftClassResponse struct {
 	Owner          string     `json:"owner"`
 	NftOwnedCount  *int       `json:"nft_owned_count,omitempty"`
 	NftLastOwnedAt *time.Time `json:"nft_last_owned_at,omitempty"`
-	Count          int        `json:"count,omitempty"`
-	Nfts           []Nft      `json:"nfts,omitempty"`
 }
 
 type QueryNftRequest struct {
