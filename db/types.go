@@ -242,6 +242,7 @@ type NftClassResponse struct {
 	Owner          string     `json:"owner"`
 	NftOwnedCount  *int       `json:"nft_owned_count,omitempty"`
 	NftLastOwnedAt *time.Time `json:"nft_last_owned_at,omitempty"`
+	LastOwnedNftId *string    `json:"last_owned_nft_id,omitempty"`
 }
 
 type QueryNftRequest struct {
