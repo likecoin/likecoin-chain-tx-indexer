@@ -8,6 +8,19 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
 )
 
+func GetISCNOwnerCount(conn *pgxpool.Conn) (count QueryCountResponse, err error) {
+	sql := `SELECT COUNT(DISTINCT owner) FROM iscn;`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	err = conn.QueryRow(ctx, sql).Scan(&count.Count)
+	if err != nil {
+		err = fmt.Errorf("get iscn owner count failed: %w", err)
+		logger.L.Error(err)
+	}
+	return
+}
+
 func GetNftCount(conn *pgxpool.Conn, q QueryNftCountRequest) (count QueryCountResponse, err error) {
 	sql := `
 	SELECT COUNT(DISTINCT n.id)

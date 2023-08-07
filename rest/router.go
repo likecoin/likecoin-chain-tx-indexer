@@ -14,7 +14,7 @@ const STARGATE_ENDPOINT = "/cosmos/tx/v1beta1/txs"
 const ISCN_ENDPOINT = "/iscn/records"
 const LATEST_HEIGHT_ENDPOINT = "/indexer/height/latest"
 const NFT_ENDPOINT = "/likechain/likenft/v1"
-const ANALYSIS_ENDPOINT = "/statistics/nft"
+const ANALYSIS_ENDPOINT = "/statistics"
 const INFO_ENDPOINT = "/indexer/info"
 
 func Run(pool *pgxpool.Pool, listenAddr string, lcdEndpoint string, defaultApiAddresses []string) {
@@ -52,11 +52,12 @@ func GetRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
 	}
 	analysis := router.Group(ANALYSIS_ENDPOINT)
 	{
-		analysis.GET("/nft-count", handleNftCount)
-		analysis.GET("/trade", handleNftTradeStats)
-		analysis.GET("/creator-count", handleNftCreatorCount)
-		analysis.GET("/owner-count", handleNftOwnerCount)
-		analysis.GET("/owners", handleNftOwnerList)
+		analysis.GET("/iscn/owner-count", handleISCNOwnerCount)
+		analysis.GET("/nft/nft-count", handleNftCount)
+		analysis.GET("/nft/trade", handleNftTradeStats)
+		analysis.GET("/nft/creator-count", handleNftCreatorCount)
+		analysis.GET("/nft/owner-count", handleNftOwnerCount)
+		analysis.GET("/nft/owners", handleNftOwnerList)
 	}
 	router.GET(ISCN_ENDPOINT, handleIscn)
 	router.GET(STARGATE_ENDPOINT, handleStargateTxsSearch)

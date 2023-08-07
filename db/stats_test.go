@@ -9,6 +9,29 @@ import (
 	. "github.com/likecoin/likecoin-chain-tx-indexer/test"
 )
 
+func TestISCNOwnerCount(t *testing.T) {
+	defer CleanupTestData(Conn)
+	iscns := []IscnInsert{
+		{
+			Iscn:  "iscn://testing/aaaaaa/1",
+			Owner: ADDR_01_LIKE,
+		},
+		{
+			Iscn:  "iscn://testing/aaaaaa/2",
+			Owner: ADDR_02_LIKE,
+		},
+		{
+			Iscn:  "iscn://testing/bbbbbb/1",
+			Owner: ADDR_01_LIKE,
+		},
+	}
+	InsertTestData(DBTestData{Iscns: iscns})
+
+	res, err := GetISCNOwnerCount(Conn)
+	require.NoError(t, err)
+	require.Equal(t, uint64(2), res.Count)
+}
+
 func TestNftCount(t *testing.T) {
 	defer CleanupTestData(Conn)
 	prefixA := "iscn://testing/aaaaaa"
