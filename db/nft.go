@@ -21,21 +21,22 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 		WHERE ($8::text[] IS NOT NULL AND cardinality($8::text[]) > 0 AND n.owner = ANY($8))
 		GROUP BY n.class_id
 	),
-	event_data AS (
-		SELECT e.class_id, e.nft_id AS last_owned_nft_id, MAX(e.timestamp) AS nft_last_owned_at
+	last_owned_events AS (
+		SELECT DISTINCT ON (e.class_id) 
+			e.class_id, e.nft_id, e.timestamp
 		FROM nft_event AS e
 		WHERE ($8::text[] IS NOT NULL AND cardinality($8::text[]) > 0) 
 			AND (
 				e.receiver = ANY($8)
 				OR (e.sender = ANY($8) AND e.action = 'mint_nft') -- for pre-mint nfts
 			)
-		GROUP BY e.class_id, e.nft_id
+		ORDER BY e.class_id, e.timestamp DESC
 	)
 	SELECT DISTINCT ON (c.id)
 		c.id, c.class_id, c.name, c.description, c.symbol,
 		c.uri, c.uri_hash, c.config, c.metadata, c.latest_price,
 		c.parent_type, c.parent_iscn_id_prefix, c.parent_account, c.created_at, c.price_updated_at,
-		i.owner, owner_nfts.nft_owned_count, event_data.nft_last_owned_at, event_data.last_owned_nft_id
+		i.owner, owner_nfts.nft_owned_count, last_owned_events.nft_id, last_owned_events.timestamp
 	FROM nft_class as c
 	LEFT JOIN iscn AS i ON i.iscn_id_prefix = c.parent_iscn_id_prefix
 	LEFT JOIN iscn_latest_version
@@ -46,8 +47,8 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 			AND n.class_id = c.class_id
 	LEFT JOIN owner_nfts 
 		ON c.class_id = owner_nfts.class_id
-	LEFT JOIN event_data 
-		ON c.class_id = event_data.class_id
+	LEFT JOIN last_owned_events 
+		ON c.class_id = last_owned_events.class_id
 	WHERE ($4 = '' OR c.parent_iscn_id_prefix = $4)
 		AND ($5::text[] IS NULL OR cardinality($5::text[]) = 0 OR c.parent_account = ANY($5))
 		AND ($6::text[] IS NULL OR cardinality($6::text[]) = 0 OR i.owner = ANY($6))
@@ -78,7 +79,7 @@ func GetClasses(conn *pgxpool.Conn, q QueryClassRequest, p PageRequest) (QueryCl
 			&res.Pagination.NextKey, &c.Id, &c.Name, &c.Description, &c.Symbol,
 			&c.URI, &c.URIHash, &c.Config, &c.Metadata, &c.LatestPrice,
 			&c.Parent.Type, &c.Parent.IscnIdPrefix, &c.Parent.Account, &c.CreatedAt, &c.PriceUpdatedAt,
-			&c.Owner, &c.NftOwnedCount, &c.NftLastOwnedAt, &c.LastOwnedNftId,
+			&c.Owner, &c.NftOwnedCount, &c.LastOwnedNftId, &c.NftLastOwnedAt,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft class", "error", err)
 			return QueryClassResponse{}, fmt.Errorf("query nft class data failed: %w", err)
