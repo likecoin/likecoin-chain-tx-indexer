@@ -53,6 +53,22 @@ func handleNftCreatorCount(c *gin.Context) {
 	c.JSON(200, res)
 }
 
+func handleNftRecentCreatorCount(c *gin.Context) {
+	var q db.QueryNftRecentCreatorCountRequest
+	if err := c.ShouldBindQuery(&q); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": "invalid inputs: " + err.Error()})
+		return
+	}
+
+	res, err := db.GetNftRecentCreatorCount(getConn(c), q)
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, res)
+}
+
 func handleNftOwnerCount(c *gin.Context) {
 	res, err := db.GetNftOwnerCount(getConn(c))
 	if err != nil {

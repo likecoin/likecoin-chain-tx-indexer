@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
@@ -73,6 +74,47 @@ func GetNftCreatorCount(conn *pgxpool.Conn) (count QueryCountResponse, err error
 	err = conn.QueryRow(ctx, sql).Scan(&count.Count)
 	if err != nil {
 		err = fmt.Errorf("get nft creator count failed: %w", err)
+		logger.L.Error(err)
+	}
+	return
+}
+
+func GetNftRecentCreatorCount(conn *pgxpool.Conn, q QueryNftRecentCreatorCountRequest) (res QueryNftRecentCreatorCountResponse, err error) {
+	ts := time.Now().Unix()
+	if q.Time != nil {
+		ts = int64(*q.Time)
+	}
+	ts -= int64(q.PeriodDays * 24 * 60 * 60)
+
+	sql := `
+	WITH recent_creators AS (
+		SELECT DISTINCT sender FROM nft_event
+		WHERE action = 'new_class'
+			AND timestamp >= to_timestamp($1)
+	),
+	early_creators AS (
+		SELECT DISTINCT sender FROM nft_event
+		WHERE action = 'new_class'
+			AND timestamp < to_timestamp($1)
+	)
+
+	SELECT 
+		(SELECT COUNT(DISTINCT rc.sender)
+			FROM recent_creators AS rc
+			LEFT JOIN early_creators AS ec 
+				ON rc.sender = ec.sender
+			WHERE ec.sender IS NULL) AS new_creator_count,
+		(SELECT COUNT(DISTINCT rc.sender)
+			FROM recent_creators AS rc
+			JOIN early_creators AS ec 
+				ON rc.sender = ec.sender) AS returning_creator_count;
+	`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	err = conn.QueryRow(ctx, sql, ts).Scan(&res.NewCreatorCount, &res.ReturningCreatorCount)
+	if err != nil {
+		err = fmt.Errorf("get nft recent creator count failed: %w", err)
 		logger.L.Error(err)
 	}
 	return

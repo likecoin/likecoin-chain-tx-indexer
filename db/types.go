@@ -424,6 +424,16 @@ type QueryCountResponse struct {
 	Count uint64 `json:"count"`
 }
 
+type QueryNftRecentCreatorCountRequest struct {
+	PeriodDays int    `form:"period_days"`
+	Time       *int64 `form:"time"`
+}
+
+type QueryNftRecentCreatorCountResponse struct {
+	NewCreatorCount       uint64 `json:"new_creator_count"`
+	ReturningCreatorCount uint64 `json:"returning_creator_count"`
+}
+
 type QueryNftCountRequest struct {
 	IncludeOwner bool     `form:"include_owner"`
 	IgnoreList   []string `form:"ignore_list"`
