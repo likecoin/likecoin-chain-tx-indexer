@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
@@ -79,45 +78,51 @@ func GetNftCreatorCount(conn *pgxpool.Conn) (count QueryCountResponse, err error
 	return
 }
 
-func GetNftRecentCreatorCount(conn *pgxpool.Conn, q QueryNftRecentCreatorCountRequest) (res QueryNftRecentCreatorCountResponse, err error) {
-	ts := time.Now().Unix()
-	if q.Time != nil {
-		ts = int64(*q.Time)
-	}
-	ts -= int64(q.PeriodDays * 24 * 60 * 60)
-
-	sql := `
-	WITH recent_creators AS (
-		SELECT DISTINCT sender FROM nft_event
+func GetNftReturningCreatorCount(conn *pgxpool.Conn, q QueryNftReturningCreatorCountRequest) (res QueryNftReturningCreatorCountResponse, err error) {
+	sql := fmt.Sprintf(`
+	WITH user_actions AS (
+		SELECT 
+			sender,
+			timestamp - MIN(timestamp) OVER (PARTITION BY sender) < INTERVAL '%[1]d days' AS is_new,
+			DATE_TRUNC('week', timestamp) AS week_start
+		FROM nft_event
 		WHERE action = 'new_class'
-			AND timestamp >= to_timestamp($1)
-	),
-	early_creators AS (
-		SELECT DISTINCT sender FROM nft_event
-		WHERE action = 'new_class'
-			AND timestamp < to_timestamp($1)
 	)
 
 	SELECT 
-		(SELECT COUNT(DISTINCT rc.sender)
-			FROM recent_creators AS rc
-			LEFT JOIN early_creators AS ec 
-				ON rc.sender = ec.sender
-			WHERE ec.sender IS NULL) AS new_creator_count,
-		(SELECT COUNT(DISTINCT rc.sender)
-			FROM recent_creators AS rc
-			JOIN early_creators AS ec 
-				ON rc.sender = ec.sender) AS returning_creator_count;
-	`
+		week_start,
+		COUNT(DISTINCT CASE WHEN is_new THEN sender END) AS new_creator_count,
+		COUNT(DISTINCT CASE WHEN NOT is_new THEN sender END) AS returning_creator_count
+	FROM user_actions
+	GROUP BY week_start
+	ORDER BY week_start;
+	`, q.PeriodDays)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	err = conn.QueryRow(ctx, sql, ts).Scan(&res.NewCreatorCount, &res.ReturningCreatorCount)
+	rows, err := conn.Query(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("get nft recent creator count failed: %w", err)
+		err = fmt.Errorf("get nft returning creator count failed: %w", err)
 		logger.L.Error(err)
+		return res, err
 	}
-	return
+
+	res = QueryNftReturningCreatorCountResponse{
+		Weeks: make([]NftReturningCreatorCountResponse, 0),
+	}
+
+	for rows.Next() {
+		var week NftReturningCreatorCountResponse
+		err = rows.Scan(&week.WeekStart, &week.NewCreatorCount, &week.ReturningCreatorCount)
+		if err != nil {
+			err = fmt.Errorf("scan nft returning creator count failed: %w", err)
+			logger.L.Error(err)
+			return
+		}
+		res.Weeks = append(res.Weeks, week)
+	}
+
+	return res, nil
 }
 
 func GetNftOwnerCount(conn *pgxpool.Conn) (count QueryCountResponse, err error) {

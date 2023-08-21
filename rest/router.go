@@ -56,7 +56,7 @@ func GetRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
 		analysis.GET("/nft/nft-count", handleNftCount)
 		analysis.GET("/nft/trade", handleNftTradeStats)
 		analysis.GET("/nft/creator-count", handleNftCreatorCount)
-		analysis.GET("/nft/recent-creator-count", handleNftRecentCreatorCount)
+		analysis.GET("/nft/returning-creator-count", handleNftRecentCreatorCount)
 		analysis.GET("/nft/owner-count", handleNftOwnerCount)
 		analysis.GET("/nft/owners", handleNftOwnerList)
 	}
