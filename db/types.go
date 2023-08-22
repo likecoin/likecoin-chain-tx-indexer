@@ -425,17 +425,20 @@ type QueryCountResponse struct {
 }
 
 type QueryNftReturningCreatorCountRequest struct {
-	PeriodDays int `form:"period_days"`
+	ReturningThresholdDays int    `form:"returning_threshold_days"`
+	Interval               string `form:"interval"`
+	After                  int64  `form:"after"`
+	Before                 int64  `form:"before"`
 }
 
 type NftReturningCreatorCountResponse struct {
-	WeekStart             time.Time `json:"week_start"`
+	StartAt               time.Time `json:"start_at"`
 	NewCreatorCount       uint64    `json:"new_creator_count"`
 	ReturningCreatorCount uint64    `json:"returning_creator_count"`
 }
 
 type QueryNftReturningCreatorCountResponse struct {
-	Weeks []NftReturningCreatorCountResponse `json:"weeks"`
+	Intervals []NftReturningCreatorCountResponse `json:"intervals"`
 }
 
 type QueryNftCountRequest struct {

@@ -6,6 +6,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/likecoin/likecoin-chain-tx-indexer/logger"
 	"github.com/likecoin/likecoin-chain-tx-indexer/utils"
+	"github.com/tendermint/tendermint/types/time"
 )
 
 func GetISCNOwnerCount(conn *pgxpool.Conn) (count QueryCountResponse, err error) {
@@ -79,14 +80,33 @@ func GetNftCreatorCount(conn *pgxpool.Conn) (count QueryCountResponse, err error
 }
 
 func GetNftReturningCreatorCount(conn *pgxpool.Conn, q QueryNftReturningCreatorCountRequest) (res QueryNftReturningCreatorCountResponse, err error) {
+	interval := q.Interval
+	if interval == "" {
+		interval = "week"
+	}
+
+	now := time.Now().Unix()
+	oneYear := int64(60 * 60 * 24 * 365.25)
+	after, before := q.After, q.Before
+	switch {
+	case after == 0 && before == 0:
+		before = now
+		after = now - oneYear
+	case after == 0:
+		after = before - oneYear
+	case before == 0:
+		before = after + oneYear
+	}
+
 	sql := fmt.Sprintf(`
 	WITH user_actions AS (
 		SELECT 
 			sender,
 			timestamp - MIN(timestamp) OVER (PARTITION BY sender) < INTERVAL '%[1]d days' AS is_new,
-			DATE_TRUNC('week', timestamp) AS week_start
+			DATE_TRUNC('%[2]s', timestamp) AS week_start
 		FROM nft_event
 		WHERE action = 'new_class'
+			AND timestamp BETWEEN to_timestamp($1) AND to_timestamp($2)
 	)
 
 	SELECT 
@@ -96,11 +116,11 @@ func GetNftReturningCreatorCount(conn *pgxpool.Conn, q QueryNftReturningCreatorC
 	FROM user_actions
 	GROUP BY week_start
 	ORDER BY week_start;
-	`, q.PeriodDays)
+	`, q.ReturningThresholdDays, interval)
 	ctx, cancel := GetTimeoutContext()
 	defer cancel()
 
-	rows, err := conn.Query(ctx, sql)
+	rows, err := conn.Query(ctx, sql, after, before)
 	if err != nil {
 		err = fmt.Errorf("get nft returning creator count failed: %w", err)
 		logger.L.Error(err)
@@ -108,18 +128,18 @@ func GetNftReturningCreatorCount(conn *pgxpool.Conn, q QueryNftReturningCreatorC
 	}
 
 	res = QueryNftReturningCreatorCountResponse{
-		Weeks: make([]NftReturningCreatorCountResponse, 0),
+		Intervals: make([]NftReturningCreatorCountResponse, 0),
 	}
 
 	for rows.Next() {
 		var week NftReturningCreatorCountResponse
-		err = rows.Scan(&week.WeekStart, &week.NewCreatorCount, &week.ReturningCreatorCount)
+		err = rows.Scan(&week.StartAt, &week.NewCreatorCount, &week.ReturningCreatorCount)
 		if err != nil {
 			err = fmt.Errorf("scan nft returning creator count failed: %w", err)
 			logger.L.Error(err)
 			return
 		}
-		res.Weeks = append(res.Weeks, week)
+		res.Intervals = append(res.Intervals, week)
 	}
 
 	return res, nil
