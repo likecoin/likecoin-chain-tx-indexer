@@ -424,6 +424,23 @@ type QueryCountResponse struct {
 	Count uint64 `json:"count"`
 }
 
+type QueryNftReturningCreatorCountRequest struct {
+	ReturningThresholdDays int    `form:"returning_threshold_days"`
+	Interval               string `form:"interval"`
+	After                  int64  `form:"after"`
+	Before                 int64  `form:"before"`
+}
+
+type NftReturningCreatorCountResponse struct {
+	StartAt               time.Time `json:"start_at"`
+	NewCreatorCount       uint64    `json:"new_creator_count"`
+	ReturningCreatorCount uint64    `json:"returning_creator_count"`
+}
+
+type QueryNftReturningCreatorCountResponse struct {
+	Intervals []NftReturningCreatorCountResponse `json:"intervals"`
+}
+
 type QueryNftCountRequest struct {
 	IncludeOwner bool     `form:"include_owner"`
 	IgnoreList   []string `form:"ignore_list"`
