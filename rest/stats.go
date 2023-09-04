@@ -5,6 +5,16 @@ import (
 	"github.com/likecoin/likecoin-chain-tx-indexer/db"
 )
 
+func handleISCNRecordCount(c *gin.Context) {
+	res, err := db.GetISCNRecordCount(getConn(c))
+	if err != nil {
+		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, res)
+}
+
 func handleISCNOwnerCount(c *gin.Context) {
 	res, err := db.GetISCNOwnerCount(getConn(c))
 	if err != nil {

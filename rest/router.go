@@ -52,6 +52,7 @@ func GetRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
 	}
 	analysis := router.Group(ANALYSIS_ENDPOINT)
 	{
+		analysis.GET("/iscn/record-count", handleISCNRecordCount)
 		analysis.GET("/iscn/owner-count", handleISCNOwnerCount)
 		analysis.GET("/nft/nft-count", handleNftCount)
 		analysis.GET("/nft/trade", handleNftTradeStats)
