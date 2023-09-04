@@ -354,7 +354,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 					AND ($6 = '' OR c.parent_iscn_id_prefix = $6)
 					AND ($10::text[] IS NULL OR cardinality($10::text[]) = 0 OR e.sender = ANY($10))
 					AND ($11::text[] IS NULL OR cardinality($11::text[]) = 0 OR e.receiver = ANY($11))
-					AND ($13::text[] IS NULL OR cardinality($13::text[]) = 0 OR i.owner = ANY($13))
+					AND ($13::text[] IS NOT NULL AND cardinality($13::text[]) > 0 AND i.owner = ANY($13))
 					AND ($1 = 0 OR e.id > $1)
 					AND ($2 = 0 OR e.id < $2)
 					AND ($7::text[] IS NULL OR cardinality($7::text[]) = 0 OR e.action = ANY($7))
