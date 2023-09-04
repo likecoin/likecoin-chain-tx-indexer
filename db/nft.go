@@ -306,13 +306,12 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 	creatorVariations := utils.ConvertAddressArrayPrefixes(q.Creator, AddressPrefixes)
 	involverVariations := utils.ConvertAddressArrayPrefixes(q.Involver, AddressPrefixes)
 	sql := fmt.Sprintf(`
-		SELECT DISTINCT ON (e.id)
-			e.id, e.action, e.class_id, e.nft_id, e.sender,
-			e.receiver, e.timestamp, e.tx_hash, e.events, e.price,
-			e.memo
-		FROM (
+		SELECT * FROM (
 			(
-				SELECT DISTINCT ON (e.id) e.*
+				SELECT
+					e.id, e.action, e.class_id, e.nft_id, e.sender,
+					e.receiver, e.timestamp, e.tx_hash, e.events, e.price,
+					e.memo
 				FROM nft_event as e
 				JOIN nft_class as c
 				ON e.class_id = c.class_id
@@ -338,8 +337,11 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 					AND ($9::text[] IS NULL OR cardinality($9::text[]) = 0 OR e.receiver != ALL($9))
 				ORDER BY e.id %[1]s
 				LIMIT $3
-			) UNION ALL (
-				SELECT DISTINCT ON (e.id) e.*
+			) UNION (
+				SELECT
+					e.id, e.action, e.class_id, e.nft_id, e.sender,
+					e.receiver, e.timestamp, e.tx_hash, e.events, e.price,
+					e.memo
 				FROM nft_event as e
 				JOIN nft_class as c
 				ON e.class_id = c.class_id
