@@ -9,6 +9,19 @@ import (
 	"github.com/tendermint/tendermint/types/time"
 )
 
+func GetISCNRecordCount(conn *pgxpool.Conn) (count QueryCountResponse, err error) {
+	sql := `SELECT COUNT(DISTINCT iscn_id_prefix) FROM iscn;`
+	ctx, cancel := GetTimeoutContext()
+	defer cancel()
+
+	err = conn.QueryRow(ctx, sql).Scan(&count.Count)
+	if err != nil {
+		err = fmt.Errorf("get iscn record count failed: %w", err)
+		logger.L.Error(err)
+	}
+	return
+}
+
 func GetISCNOwnerCount(conn *pgxpool.Conn) (count QueryCountResponse, err error) {
 	sql := `SELECT COUNT(DISTINCT owner) FROM iscn;`
 	ctx, cancel := GetTimeoutContext()
