@@ -5,11 +5,11 @@ go 1.18
 require (
 	cloud.google.com/go/pubsub v1.33.0
 	github.com/cometbft/cometbft-db v0.7.0
-	github.com/cosmos/cosmos-sdk v0.46.15
+	github.com/cosmos/cosmos-sdk v0.46.16
 	github.com/gin-gonic/gin v1.7.4
 	github.com/jackc/pgtype v1.8.1
 	github.com/jackc/pgx/v4 v4.13.0
-	github.com/likecoin/likecoin-chain/v4 v4.1.1
+	github.com/likecoin/likecoin-chain/v4 v4.2.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/go-amino v0.16.0
@@ -45,8 +45,8 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.6 // indirect
-	github.com/cosmos/ibc-go/v6 v6.2.1 // indirect
-	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
+	github.com/cosmos/ibc-go/v6 v6.3.0 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.12.4 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
@@ -153,8 +153,8 @@ require (
 	github.com/tidwall/btree v1.5.0 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	github.com/ulikunitz/xz v0.5.8 // indirect
-	github.com/zondax/hid v0.9.1 // indirect
-	github.com/zondax/ledger-go v0.14.1 // indirect
+	github.com/zondax/hid v0.9.2 // indirect
+	github.com/zondax/ledger-go v0.14.3 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
@@ -188,7 +188,7 @@ replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// likecoin fork for dual address prefix
-	github.com/cosmos/cosmos-sdk => github.com/likecoin/cosmos-sdk v0.46.15-dual-prefix
+	github.com/cosmos/cosmos-sdk => github.com/likecoin/cosmos-sdk v0.46.16-dual-prefix
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
