@@ -3,6 +3,7 @@ package extractor
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -30,6 +31,10 @@ func parseMessage(payload *Payload) (db.NftMarketplaceItem, error) {
 		price, err = strconv.ParseUint(item.Price, 10, 64)
 		if err != nil {
 			return db.NftMarketplaceItem{}, fmt.Errorf("failed to parse price in marketplace related message: %w", err)
+		}
+		// HACK: pg cannot store MaxUInt64
+		if price > math.MaxInt64 {
+			price = math.MaxInt64
 		}
 	}
 	return db.NftMarketplaceItem{
@@ -105,6 +110,10 @@ func getPriceFromEvent(event *types.StringEvent) uint64 {
 	if err != nil {
 		// TODO: should we return error?
 		return 0
+	}
+	// HACK: pg cannot store MaxUInt64
+	if price > math.MaxInt64 {
+		price = math.MaxInt64
 	}
 	return price
 }
