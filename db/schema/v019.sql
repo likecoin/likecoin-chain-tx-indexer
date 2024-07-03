@@ -1,0 +1,3 @@
+ALTER TABLE nft_class
+  ALTER COLUMN price TYPE BIGINT
+;
