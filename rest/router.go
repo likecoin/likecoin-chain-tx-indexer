@@ -61,6 +61,7 @@ func GetRouter(pool *pgxpool.Pool, defaultApiAddresses []string) *gin.Engine {
 		analysis.GET("/nft/owner-count", handleNftOwnerCount)
 		analysis.GET("/nft/owners", handleNftOwnerList)
 	}
+	router.Use(filterContentFingerprints())
 	router.GET(ISCN_ENDPOINT, handleIscn)
 	router.GET(STARGATE_ENDPOINT, handleStargateTxsSearch)
 	router.GET(LATEST_HEIGHT_ENDPOINT, handleLatestHeight)
