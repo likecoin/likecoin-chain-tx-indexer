@@ -1,0 +1,3 @@
+ALTER TABLE nft_event
+  ADD COLUMN msg_index INT DEFAULT 0 NOT NULL
+;

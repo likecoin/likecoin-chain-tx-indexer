@@ -138,6 +138,7 @@ type NftEvent struct {
 	NftId     string             `json:"nft_id"`
 	Sender    string             `json:"sender"`
 	Receiver  string             `json:"receiver"`
+	MsgIndex  int                `json:"msg_index,omitempty"`
 	Events    types.StringEvents `json:"events,omitempty"`
 	TxHash    string             `json:"tx_hash"`
 	Timestamp time.Time          `json:"timestamp"`

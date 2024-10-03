@@ -311,7 +311,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 				SELECT
 					e.id, e.action, e.class_id, e.nft_id, e.sender,
 					e.receiver, e.timestamp, e.tx_hash, e.events, e.price,
-					e.memo
+					e.memo, e.msg_index
 				FROM nft_event as e
 				JOIN nft_class as c
 				ON e.class_id = c.class_id
@@ -341,7 +341,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 				SELECT
 					e.id, e.action, e.class_id, e.nft_id, e.sender,
 					e.receiver, e.timestamp, e.tx_hash, e.events, e.price,
-					e.memo
+					e.memo, e.msg_index
 				FROM nft_event as e
 				JOIN nft_class as c
 				ON e.class_id = c.class_id
@@ -394,7 +394,7 @@ func GetNftEvents(conn *pgxpool.Conn, q QueryEventsRequest, p PageRequest) (Quer
 		if err = rows.Scan(
 			&res.Pagination.NextKey, &e.Action, &e.ClassId, &e.NftId, &e.Sender,
 			&e.Receiver, &e.Timestamp, &e.TxHash, &eventRaw, &price,
-			&e.Memo,
+			&e.Memo, &e.MsgIndex,
 		); err != nil {
 			logger.L.Errorw("failed to scan nft events", "error", err, "q", q)
 			return QueryEventsResponse{}, fmt.Errorf("query nft events data failed: %w", err)

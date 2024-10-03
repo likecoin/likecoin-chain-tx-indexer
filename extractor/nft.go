@@ -16,6 +16,7 @@ func attachNftEvent(e *db.NftEvent, payload *Payload) {
 	e.Timestamp = payload.Timestamp
 	e.TxHash = payload.TxHash
 	e.Memo = payload.Memo
+	e.MsgIndex = payload.MsgIndex
 }
 
 type nftClassMessage struct {
